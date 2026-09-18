@@ -1,0 +1,682 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isOperator() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+          in ['admin', 'operator'];
+    }
+
+    function validUsername(username) {
+      return username is string
+        && username.size() >= 3
+        && username.size() <= 20
+        && username.matches('^[a-z0-9][a-z0-9._]{1,18}[a-z0-9]$');
+    }
+
+    function validUsernameChange(uid) {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['username'])
+        || (validUsername(request.resource.data.username)
+          && getAfter(
+            /databases/$(database)/documents/usernames/$(request.resource.data.username)
+          ).data.uid == uid);
+    }
+
+    match /app_config/{configId} {
+      allow read: if true;
+      allow create, update: if isOperator();
+      allow delete: if false;
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow create: if isOwner(uid)
+        && request.resource.data.role == 'user'
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() >= 2
+        && request.resource.data.displayName.size() <= 24
+        && !request.resource.data.keys().hasAny(['email']);
+      allow update: if isOwner(uid)
+        && request.resource.data.role == resource.data.role
+        && !request.resource.data.keys().hasAny(['email'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() >= 2
+        && request.resource.data.displayName.size() <= 24
+        && (!request.resource.data.keys().hasAny(['bio'])
+          || (request.resource.data.bio is string
+            && request.resource.data.bio.size() <= 120))
+        && validUsernameChange(uid);
+      allow delete: if isOwner(uid);
+    }
+
+    match /private_users/{uid} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['email', 'updatedAt'])
+        && (request.resource.data.email is string
+          || request.resource.data.email == null)
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isOwner(uid);
+    }
+
+    match /usernames/{username} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && validUsername(username)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && getAfter(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        ).data.username == username;
+      allow update: if false;
+      allow delete: if signedIn()
+        && resource.data.uid == request.auth.uid
+        && (!existsAfter(
+            /databases/$(database)/documents/users/$(request.auth.uid)
+          )
+          || getAfter(
+            /databases/$(database)/documents/users/$(request.auth.uid)
+          ).data.username != username);
+    }
+
+    match /courts/{courtId} {
+      allow read: if signedIn();
+      allow create: if isOperator();
+      allow update: if isOperator()
+        || (signedIn()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'updatedAt', 'lastCheckinAt', 'checkinCount', 'reviewCount',
+            'ratingSum'
+          ]));
+      allow delete: if isOperator();
+    }
+
+    match /checkins/{checkinId} {
+      allow read: if signedIn();
+      allow create: if isOwner(request.resource.data.uid)
+        && checkinId == request.resource.data.courtId + '_'
+          + request.auth.uid + '_' + request.resource.data.dateKey
+        && request.resource.data.distanceMeters is number
+        && request.resource.data.distanceMeters >= 0
+        && request.resource.data.distanceMeters <= 100
+        && request.resource.data.checkedInAt == request.time
+        && request.resource.data.courtId is string
+        && request.resource.data.dateKey is string
+        && request.resource.data.monthKey is string;
+      allow update: if false;
+      allow delete: if isOwner(resource.data.uid);
+    }
+
+    match /active_play_sessions/{uid} {
+      function linkedCheckin() {
+        return get(
+          /databases/$(database)/documents/checkins/$(request.resource.data.checkinId)
+        ).data;
+      }
+
+      allow read: if isOwner(uid) || isOperator();
+      allow create: if isOwner(uid)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.checkinId is string
+        && request.resource.data.courtId is string
+        && request.resource.data.monthKey is string
+        && request.resource.data.weekKey is string
+        && request.resource.data.startedAt == request.time
+        && linkedCheckin().uid == request.auth.uid
+        && linkedCheckin().courtId == request.resource.data.courtId
+        && request.time
+          < linkedCheckin().checkedInAt + duration.value(24, 'h');
+      allow update: if false;
+      allow delete: if isOwner(uid) || isOperator();
+    }
+
+    match /play_sessions/{sessionId} {
+      function activeSession() {
+        return get(
+          /databases/$(database)/documents/active_play_sessions/$(request.auth.uid)
+        ).data;
+      }
+
+      allow read: if isOwner(resource.data.uid) || isOperator();
+      allow create: if isOwner(request.resource.data.uid)
+        && request.resource.data.courtId is string
+        && request.resource.data.monthKey is string
+        && request.resource.data.weekKey is string
+        && request.resource.data.durationMinutes is int
+        && request.resource.data.durationMinutes >= 1
+        && request.resource.data.durationMinutes <= 720
+        && request.resource.data.endedAt == request.time
+        && activeSession().uid == request.auth.uid
+        && activeSession().courtId == request.resource.data.courtId
+        && activeSession().monthKey == request.resource.data.monthKey
+        && activeSession().weekKey == request.resource.data.weekKey
+        && activeSession().startedAt == request.resource.data.startedAt
+        && request.time >= activeSession().startedAt
+          + duration.value(request.resource.data.durationMinutes - 1, 'm')
+        && !existsAfter(
+          /databases/$(database)/documents/active_play_sessions/$(request.auth.uid)
+        );
+      allow update: if false;
+      allow delete: if isOwner(resource.data.uid);
+    }
+
+    match /monthly_play_stats/{statId} {
+      function linkedSession() {
+        return getAfter(
+          /databases/$(database)/documents/play_sessions/$(request.resource.data.lastSessionId)
+        ).data;
+      }
+
+      function validLinkedSession() {
+        return request.resource.data.lastSessionId is string
+          && linkedSession().uid == request.auth.uid
+          && linkedSession().courtId == request.resource.data.courtId
+          && linkedSession().monthKey == request.resource.data.monthKey
+          && request.resource.data.updatedAt == request.time;
+      }
+
+      allow read: if signedIn();
+      allow create: if isOwner(request.resource.data.uid)
+        && statId == request.resource.data.scopeKey + '_' + request.auth.uid
+        && request.resource.data.monthKey is string
+        && request.resource.data.scopeKey is string
+        && request.resource.data.courtId is string
+        && request.resource.data.totalMinutes is int
+        && request.resource.data.totalMinutes == linkedSession().durationMinutes
+        && request.resource.data.sessionCount == 1
+        && validLinkedSession();
+      allow update: if isOwner(resource.data.uid)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.monthKey == resource.data.monthKey
+        && request.resource.data.scopeKey == resource.data.scopeKey
+        && request.resource.data.courtId == resource.data.courtId
+        && request.resource.data.totalMinutes
+          == resource.data.totalMinutes + linkedSession().durationMinutes
+        && request.resource.data.sessionCount == resource.data.sessionCount + 1
+        && validLinkedSession()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'displayName', 'username', 'photoUrl', 'totalMinutes',
+          'sessionCount', 'lastSessionId', 'updatedAt'
+        ]);
+      allow delete: if isOwner(resource.data.uid);
+    }
+
+    match /weekly_play_stats/{statId} {
+      function linkedSession() {
+        return getAfter(
+          /databases/$(database)/documents/play_sessions/$(request.resource.data.lastSessionId)
+        ).data;
+      }
+
+      function validLinkedSession() {
+        return request.resource.data.lastSessionId is string
+          && linkedSession().uid == request.auth.uid
+          && linkedSession().courtId == request.resource.data.courtId
+          && linkedSession().weekKey == request.resource.data.weekKey
+          && request.resource.data.updatedAt == request.time;
+      }
+
+      allow read: if signedIn();
+      allow create: if isOwner(request.resource.data.uid)
+        && statId == request.resource.data.scopeKey + '_' + request.auth.uid
+        && request.resource.data.weekKey is string
+        && request.resource.data.scopeKey is string
+        && request.resource.data.courtId is string
+        && request.resource.data.totalMinutes is int
+        && request.resource.data.totalMinutes == linkedSession().durationMinutes
+        && request.resource.data.sessionCount == 1
+        && validLinkedSession();
+      allow update: if isOwner(resource.data.uid)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.weekKey == resource.data.weekKey
+        && request.resource.data.scopeKey == resource.data.scopeKey
+        && request.resource.data.courtId == resource.data.courtId
+        && request.resource.data.totalMinutes
+          == resource.data.totalMinutes + linkedSession().durationMinutes
+        && request.resource.data.sessionCount == resource.data.sessionCount + 1
+        && validLinkedSession()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'displayName', 'username', 'photoUrl', 'totalMinutes',
+          'sessionCount', 'lastSessionId', 'updatedAt'
+        ]);
+      allow delete: if isOwner(resource.data.uid);
+    }
+
+    match /court_play_stats/{statId} {
+      function linkedSession() {
+        return getAfter(
+          /databases/$(database)/documents/play_sessions/$(request.resource.data.lastSessionId)
+        ).data;
+      }
+
+      function validLinkedSession() {
+        return request.resource.data.lastSessionId is string
+          && linkedSession().uid == request.auth.uid
+          && linkedSession().courtId == request.resource.data.courtId
+          && request.resource.data.updatedAt == request.time;
+      }
+
+      allow read: if signedIn();
+      allow create: if isOwner(request.resource.data.uid)
+        && statId == request.resource.data.scopeKey + '_' + request.auth.uid
+        && request.resource.data.scopeKey is string
+        && request.resource.data.courtId is string
+        && request.resource.data.totalMinutes is int
+        && request.resource.data.totalMinutes == linkedSession().durationMinutes
+        && request.resource.data.sessionCount == 1
+        && validLinkedSession();
+      allow update: if isOwner(resource.data.uid)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.scopeKey == resource.data.scopeKey
+        && request.resource.data.courtId == resource.data.courtId
+        && request.resource.data.totalMinutes
+          == resource.data.totalMinutes + linkedSession().durationMinutes
+        && request.resource.data.sessionCount == resource.data.sessionCount + 1
+        && validLinkedSession()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'displayName', 'username', 'photoUrl', 'totalMinutes',
+          'sessionCount', 'lastSessionId', 'updatedAt'
+        ]);
+      allow delete: if isOwner(resource.data.uid);
+    }
+
+    match /reviews/{reviewId} {
+      function linkedCheckin() {
+        return get(
+          /databases/$(database)/documents/checkins/$(request.resource.data.checkinId)
+        ).data;
+      }
+
+      allow read: if signedIn();
+      allow create: if isOwner(request.resource.data.uid)
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 1000
+        && linkedCheckin().uid == request.auth.uid
+        && linkedCheckin().courtId == request.resource.data.courtId
+        && request.time < linkedCheckin().checkedInAt + duration.value(48, 'h');
+      allow update: if isOwner(resource.data.uid)
+        && request.time < resource.data.editableUntil
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'text', 'media', 'courtCondition', 'lighting', 'netCondition',
+          'crowdLevel', 'updatedAt'
+        ]);
+      allow delete: if isOwner(resource.data.uid) || isOperator();
+    }
+
+    match /meetups/{meetupId} {
+      allow read: if signedIn();
+      allow create: if isOwner(request.resource.data.createdBy)
+        && request.resource.data.capacity >= 2
+        && request.resource.data.capacity <= 30
+        && request.resource.data.participantUids.size() == 1
+        && request.auth.uid in request.resource.data.participantUids
+        && request.resource.data.startsAt > request.time;
+      allow update: if (signedIn()
+          && request.resource.data.participantUids.size()
+            <= request.resource.data.capacity
+          && ((request.resource.data.participantUids.size()
+                == resource.data.participantUids.size() + 1
+              && request.resource.data.participantUids
+                .hasAll(resource.data.participantUids)
+              && request.auth.uid in request.resource.data.participantUids
+              && !(request.auth.uid in resource.data.participantUids))
+            || (request.resource.data.participantUids.size()
+                == resource.data.participantUids.size() - 1
+              && resource.data.participantUids
+                .hasAll(request.resource.data.participantUids)
+              && request.auth.uid in resource.data.participantUids
+              && !(request.auth.uid in request.resource.data.participantUids)))
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'participantUids', 'updatedAt'
+          ]))
+        || (isOwner(resource.data.createdBy)
+          && resource.data.status == 'open'
+          && request.resource.data.status == 'cancelled'
+          && request.resource.data.cancelledAt == request.time
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'status', 'cancelledAt', 'updatedAt'
+          ]));
+      allow delete: if isOwner(resource.data.createdBy) || isOperator();
+    }
+
+    match /favorite_courts/{favoriteId} {
+      allow read: if signedIn();
+      allow create: if isOwner(request.resource.data.uid)
+        && favoriteId == request.auth.uid + '_' + request.resource.data.courtId
+        && request.resource.data.courtId is string
+        && request.resource.data.courtName is string
+        && request.resource.data.location is latlng
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isOwner(resource.data.uid);
+    }
+
+    match /notifications/{notificationId} {
+      allow read, delete: if isOwner(resource.data.targetUid);
+      allow create: if false;
+      allow update: if isOwner(resource.data.targetUid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'readAt'
+        ])
+        && request.resource.data.readAt == request.time;
+    }
+
+    match /notification_events/{eventId} {
+      function liveSource() {
+        return getAfter(
+          /databases/$(database)/documents/live_court_statuses/$(request.auth.uid)
+        ).data;
+      }
+
+      function meetupBefore() {
+        return get(
+          /databases/$(database)/documents/meetups/$(request.resource.data.entityId)
+        ).data;
+      }
+
+      function meetupAfter() {
+        return getAfter(
+          /databases/$(database)/documents/meetups/$(request.resource.data.entityId)
+        ).data;
+      }
+
+      function commentSource() {
+        return getAfter(
+          /databases/$(database)/documents/comments/$(request.resource.data.entityId)
+        ).data;
+      }
+
+      function validCommonEvent() {
+        return signedIn()
+          && request.resource.data.keys().hasOnly([
+            'actorUid', 'type', 'title', 'body', 'courtId', 'entityId',
+            'createdAt', 'status'
+          ])
+          && request.resource.data.actorUid == request.auth.uid
+          && request.resource.data.type in [
+            'live', 'meetup', 'meetup_join', 'meetup_cancelled',
+            'comment', 'court_report'
+          ]
+          && request.resource.data.title is string
+          && request.resource.data.title.size() >= 1
+          && request.resource.data.title.size() <= 60
+          && request.resource.data.body is string
+          && request.resource.data.body.size() <= 300
+          && request.resource.data.entityId is string
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.status == 'pending';
+      }
+
+      function validLiveEvent() {
+        return request.resource.data.type == 'live'
+          && request.resource.data.entityId == request.auth.uid
+          && liveSource().uid == request.auth.uid
+          && liveSource().courtId == request.resource.data.courtId
+          && liveSource().updatedAt == request.time;
+      }
+
+      function validMeetupEvent() {
+        return request.resource.data.type == 'meetup'
+          && meetupAfter().createdBy == request.auth.uid
+          && meetupAfter().courtId == request.resource.data.courtId
+          && meetupAfter().status == 'open'
+          && meetupAfter().createdAt == request.time;
+      }
+
+      function validMeetupJoinEvent() {
+        return request.resource.data.type == 'meetup_join'
+          && meetupAfter().courtId == request.resource.data.courtId
+          && meetupAfter().updatedAt == request.time
+          && meetupAfter().participantUids.size()
+            == meetupBefore().participantUids.size() + 1
+          && meetupAfter().participantUids.hasAll(meetupBefore().participantUids)
+          && request.auth.uid in meetupAfter().participantUids
+          && !(request.auth.uid in meetupBefore().participantUids);
+      }
+
+      function validMeetupCancelledEvent() {
+        return request.resource.data.type == 'meetup_cancelled'
+          && meetupBefore().createdBy == request.auth.uid
+          && meetupAfter().courtId == request.resource.data.courtId
+          && meetupAfter().status == 'cancelled'
+          && meetupAfter().cancelledAt == request.time;
+      }
+
+      function validCommentEvent() {
+        return request.resource.data.type == 'comment'
+          && commentSource().uid == request.auth.uid
+          && commentSource().courtId == request.resource.data.courtId
+          && commentSource().createdAt == request.time;
+      }
+
+      function validReportEvent() {
+        return request.resource.data.type == 'court_report'
+          && isOperator()
+          && ((existsAfter(
+                /databases/$(database)/documents/court_name_requests/$(request.resource.data.entityId)
+              )
+              && getAfter(
+                /databases/$(database)/documents/court_name_requests/$(request.resource.data.entityId)
+              ).data.reviewedBy == request.auth.uid
+              && getAfter(
+                /databases/$(database)/documents/court_name_requests/$(request.resource.data.entityId)
+              ).data.updatedAt == request.time)
+            || (existsAfter(
+                /databases/$(database)/documents/content_reports/$(request.resource.data.entityId)
+              )
+              && getAfter(
+                /databases/$(database)/documents/content_reports/$(request.resource.data.entityId)
+              ).data.reviewedBy == request.auth.uid
+              && getAfter(
+                /databases/$(database)/documents/content_reports/$(request.resource.data.entityId)
+              ).data.updatedAt == request.time));
+      }
+
+      allow create: if validCommonEvent()
+        && (validLiveEvent()
+          || validMeetupEvent()
+          || validMeetupJoinEvent()
+          || validMeetupCancelledEvent()
+          || validCommentEvent()
+          || validReportEvent());
+      allow read, update, delete: if false;
+    }
+
+    match /push_tokens/{tokenId} {
+      allow read, write: if false;
+    }
+
+    match /live_court_statuses/{statusId} {
+      function validLiveStatus() {
+        return request.resource.data.keys().hasAll([
+            'uid', 'displayName', 'username', 'photoUrl', 'courtId',
+            'courtName', 'location', 'activity',
+            'playerCount', 'neededPlayers', 'distanceMeters', 'arrivalUids',
+            'startedAt', 'updatedAt', 'expiresAt'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'uid', 'displayName', 'username', 'photoUrl', 'courtId',
+            'courtName', 'location', 'activity',
+            'playerCount', 'neededPlayers', 'distanceMeters', 'arrivalUids',
+            'startedAt', 'updatedAt', 'expiresAt'
+          ])
+          && request.resource.data.uid == statusId
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() >= 2
+          && request.resource.data.displayName.size() <= 24
+          && request.resource.data.username is string
+          && request.resource.data.username.size() <= 20
+          && request.resource.data.photoUrl is string
+          && request.resource.data.photoUrl.size() <= 2048
+          && request.resource.data.courtId is string
+          && request.resource.data.courtName is string
+          && request.resource.data.location is latlng
+          && request.resource.data.activity in [
+            'shooting', 'playing', 'looking', 'full', 'wet'
+          ]
+          && request.resource.data.playerCount is int
+          && request.resource.data.playerCount >= 0
+          && request.resource.data.playerCount <= 30
+          && request.resource.data.neededPlayers is int
+          && request.resource.data.neededPlayers >= 0
+          && request.resource.data.neededPlayers <= 20
+          && request.resource.data.distanceMeters is number
+          && request.resource.data.distanceMeters >= 0
+          && request.resource.data.distanceMeters <= 100
+          && request.resource.data.arrivalUids is list
+          && request.resource.data.arrivalUids.size() <= 30
+          && request.resource.data.startedAt is timestamp
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.expiresAt is timestamp
+          && request.resource.data.expiresAt > request.time
+          && request.resource.data.expiresAt
+            <= request.time + duration.value(91, 'm');
+      }
+
+      allow read: if signedIn();
+      allow create: if isOwner(request.resource.data.uid)
+        && validLiveStatus()
+        && request.resource.data.startedAt == request.time
+        && request.resource.data.arrivalUids.size() == 0;
+      allow update: if validLiveStatus()
+        && ((isOwner(resource.data.uid)
+            && request.resource.data.uid == resource.data.uid
+            && (request.resource.data.arrivalUids == resource.data.arrivalUids
+              || request.resource.data.arrivalUids.size() == 0))
+          || (signedIn()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'arrivalUids', 'updatedAt'
+            ])
+            && ((request.resource.data.arrivalUids.size()
+                    == resource.data.arrivalUids.size() + 1
+                  && request.resource.data.arrivalUids
+                    .hasAll(resource.data.arrivalUids)
+                  && request.auth.uid in request.resource.data.arrivalUids
+                  && !(request.auth.uid in resource.data.arrivalUids))
+                || (request.resource.data.arrivalUids.size()
+                    == resource.data.arrivalUids.size() - 1
+                  && resource.data.arrivalUids
+                    .hasAll(request.resource.data.arrivalUids)
+                  && request.auth.uid in resource.data.arrivalUids
+                  && !(request.auth.uid in request.resource.data.arrivalUids)))));
+      allow delete: if isOwner(resource.data.uid) || isOperator();
+    }
+
+    match /posts/{postId} {
+      allow read: if signedIn();
+      allow create: if isOwner(request.resource.data.uid)
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 1500
+        && request.resource.data.likeUids.size() == 0;
+      allow update: if signedIn()
+        && ((request.resource.data.likeUids.size() <= 5000
+          && ((request.resource.data.likeUids.size()
+              == resource.data.likeUids.size() + 1
+            && request.resource.data.likeUids.hasAll(resource.data.likeUids)
+            && request.auth.uid in request.resource.data.likeUids
+            && !(request.auth.uid in resource.data.likeUids))
+          || (request.resource.data.likeUids.size()
+              == resource.data.likeUids.size() - 1
+            && resource.data.likeUids.hasAll(request.resource.data.likeUids)
+            && request.auth.uid in resource.data.likeUids
+            && !(request.auth.uid in request.resource.data.likeUids)))
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'likeUids', 'updatedAt'
+          ]))
+          || (request.resource.data.commentCount is int
+            && request.resource.data.commentCount >= 0
+            && ((resource.data.commentCount is int
+                && (request.resource.data.commentCount
+                    == resource.data.commentCount + 1
+                  || request.resource.data.commentCount
+                    == resource.data.commentCount - 1))
+              || (!(resource.data.commentCount is int)
+                && request.resource.data.commentCount == 1))
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'commentCount', 'updatedAt'
+            ])));
+      allow delete: if isOwner(resource.data.uid) || isOperator();
+    }
+
+    match /comments/{commentId} {
+      allow read: if signedIn();
+      allow create: if isOwner(request.resource.data.uid)
+        && request.resource.data.postId is string
+        && request.resource.data.postOwnerUid is string
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 1
+        && request.resource.data.text.size() <= 500
+        && request.resource.data.createdAt == request.time
+        && get(
+          /databases/$(database)/documents/posts/$(request.resource.data.postId)
+        ).data.uid == request.resource.data.postOwnerUid;
+      allow update: if false;
+      allow delete: if isOwner(resource.data.uid)
+        || isOwner(resource.data.postOwnerUid)
+        || isOperator();
+    }
+
+    match /content_reports/{reportId} {
+      allow create: if isOwner(request.resource.data.reporterUid)
+        && request.resource.data.targetType in ['post', 'comment', 'user']
+        && request.resource.data.targetId is string
+        && request.resource.data.targetOwnerUid is string
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() >= 2
+        && request.resource.data.reason.size() <= 200
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time;
+      allow read: if isOwner(resource.data.reporterUid) || isOperator();
+      allow update: if isOperator();
+      allow delete: if isOwner(resource.data.reporterUid) || isOperator();
+    }
+
+    match /blocked_users/{blockId} {
+      allow read: if isOwner(resource.data.blockerUid);
+      allow create: if isOwner(request.resource.data.blockerUid)
+        && blockId == request.auth.uid + '_' + request.resource.data.blockedUid
+        && request.resource.data.blockedUid is string
+        && request.resource.data.blockedUid != request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isOwner(resource.data.blockerUid);
+    }
+
+    match /court_name_requests/{requestId} {
+      allow create: if isOwner(request.resource.data.uid)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.reportType in ['name', 'duplicate', 'closed']
+        && request.resource.data.currentName is string
+        && request.resource.data.currentName.size() >= 2
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() >= 2
+        && request.resource.data.reason.size() <= 200
+        && request.resource.data.createdAt == request.time
+        && (request.resource.data.reportType != 'name'
+          || (request.resource.data.requestedName is string
+            && request.resource.data.requestedName.size() >= 2
+            && request.resource.data.requestedName.size() <= 50));
+      allow read: if signedIn()
+        && (resource.data.uid == request.auth.uid || isOperator());
+      allow update: if isOperator()
+        && resource.data.status in ['pending', 'on_hold']
+        && request.resource.data.status in ['on_hold', 'approved', 'rejected']
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'resolutionNote', 'reviewedBy', 'reviewedAt', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+  }
+}

@@ -1,0 +1,281 @@
+import 'package:flutter/material.dart';
+
+import '../theme/app_theme.dart';
+
+class NmLogo extends StatelessWidget {
+  const NmLogo({super.key, this.compact = false});
+
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(compact ? 9 : 11),
+          child: Image.asset(
+            'icon.png',
+            width: compact ? 32 : 38,
+            height: compact ? 32 : 38,
+            fit: BoxFit.cover,
+          ),
+        ),
+        if (!compact) ...[
+          const SizedBox(width: 9),
+          const Text(
+            '빽코트',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class PageHeader extends StatelessWidget {
+  const PageHeader({
+    super.key,
+    required this.eyebrow,
+    required this.title,
+    this.action,
+  });
+
+  final String eyebrow;
+  final String title;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                eyebrow.toUpperCase(),
+                style: const TextStyle(
+                  color: AppColors.accent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.7,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(title, style: Theme.of(context).textTheme.headlineLarge),
+            ],
+          ),
+        ),
+        ?action,
+      ],
+    );
+  }
+}
+
+class RoundIconButton extends StatelessWidget {
+  const RoundIconButton({
+    super.key,
+    required this.icon,
+    required this.onTap,
+    this.light = false,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool light;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: light ? Colors.white : AppColors.surfaceHigh,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Icon(
+            icon,
+            color: light ? Colors.black : Colors.white,
+            size: 21,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class UserAvatar extends StatelessWidget {
+  const UserAvatar({
+    super.key,
+    required this.initials,
+    this.size = 34,
+    this.color,
+    this.photoUrl,
+  });
+
+  final String initials;
+  final double size;
+  final Color? color;
+  final String? photoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color ?? AppColors.surfaceHigh,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 1.5),
+      ),
+      alignment: Alignment.center,
+      clipBehavior: Clip.antiAlias,
+      child: photoUrl?.isNotEmpty == true
+          ? Image.network(
+              photoUrl!,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _AvatarInitials(
+                initials: initials,
+                size: size,
+                color: color,
+              ),
+            )
+          : _AvatarInitials(initials: initials, size: size, color: color),
+    );
+  }
+}
+
+class _AvatarInitials extends StatelessWidget {
+  const _AvatarInitials({
+    required this.initials,
+    required this.size,
+    required this.color,
+  });
+
+  final String initials;
+  final double size;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Text(
+      initials,
+      style: TextStyle(
+        color: color == null ? Colors.white : Colors.black,
+        fontWeight: FontWeight.w900,
+        fontSize: size * .28,
+      ),
+    ),
+  );
+}
+
+class AvatarStack extends StatelessWidget {
+  const AvatarStack({super.key, this.count = 4, this.size = 30});
+
+  final int count;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    const labels = ['JH', 'MK', 'SO', 'YU'];
+    const colors = [
+      Color(0xFFE9FF6B),
+      Color(0xFFFFC0AD),
+      Color(0xFF92D7FF),
+      Color(0xFFE1C5FF),
+    ];
+    return SizedBox(
+      width: size + (count - 1) * (size * .62),
+      height: size,
+      child: Stack(
+        children: List.generate(
+          count,
+          (index) => Positioned(
+            left: index * (size * .62),
+            child: UserAvatar(
+              initials: labels[index % labels.length],
+              size: size,
+              color: colors[index % colors.length],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SectionTitle extends StatelessWidget {
+  const SectionTitle({super.key, required this.title, this.trailing});
+
+  final String title;
+  final String? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+        ),
+        if (trailing != null)
+          Text(
+            trailing!,
+            style: const TextStyle(
+              color: AppColors.muted,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class Stat extends StatelessWidget {
+  const Stat({
+    super.key,
+    required this.value,
+    required this.label,
+    this.align = CrossAxisAlignment.start,
+  });
+
+  final String value;
+  final String label;
+  final CrossAxisAlignment align;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: align,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -.5,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.muted,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}

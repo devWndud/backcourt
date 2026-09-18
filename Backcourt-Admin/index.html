@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#090909" />
+    <title>빽코트 Admin</title>
+    <link rel="icon" href="./assets/icon.png" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="loading-view" class="center-view">
+      <div class="brand-loader" aria-label="불러오는 중">
+        <img src="./assets/icon.png" alt="" />
+        <span></span>
+      </div>
+    </div>
+
+    <main id="login-view" class="auth-view hidden">
+      <section class="auth-brand" aria-label="빽코트 관리자 소개">
+        <div class="auth-brand__glow"></div>
+        <div class="brand-lockup brand-lockup--large">
+          <img src="./assets/icon.png" alt="빽코트" />
+          <div>
+            <strong>빽코트</strong>
+            <span>OPERATIONS</span>
+          </div>
+        </div>
+        <div class="auth-copy">
+          <p class="eyebrow">BACK TO THE COURT</p>
+          <h1>좋은 코트 데이터는<br />여기서 시작됩니다.</h1>
+          <p>전국 코트 제보를 검토하고 가장 정확한 정보를 플레이어에게 전달하세요.</p>
+        </div>
+        <div class="court-lines" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <section class="auth-panel">
+        <div class="auth-card">
+          <p class="eyebrow">MEMBERS ONLY</p>
+          <h2>관리자 로그인</h2>
+          <p class="auth-description">등록된 운영자 계정만 접근할 수 있어요.</p>
+
+          <button id="google-login" class="button button--google" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.06H12v3.9h5.38a4.6 4.6 0 0 1-2 3.02v2.53h3.24c1.9-1.74 2.98-4.32 2.98-7.39Z"/>
+              <path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.62-2.38l-3.24-2.53c-.9.6-2.05.96-3.38.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.61A10 10 0 0 0 12 22Z"/>
+              <path fill="#FBBC05" d="M6.39 13.92A6.03 6.03 0 0 1 6.07 12c0-.67.11-1.32.32-1.92V7.47H3.04A10 10 0 0 0 2 12c0 1.61.38 3.14 1.04 4.53l3.35-2.61Z"/>
+              <path fill="#EA4335" d="M12 5.95c1.47 0 2.79.5 3.83 1.5l2.87-2.87A9.64 9.64 0 0 0 12 2a10 10 0 0 0-8.96 5.47l3.35 2.61C7.18 7.71 9.39 5.95 12 5.95Z"/>
+            </svg>
+            Google로 계속하기
+          </button>
+
+          <div class="divider"><span>또는</span></div>
+
+          <form id="email-login-form" class="login-form">
+            <label>
+              <span>이메일</span>
+              <input id="email" type="email" autocomplete="username" placeholder="admin@backcourt.kr" required />
+            </label>
+            <label>
+              <span>비밀번호</span>
+              <input id="password" type="password" autocomplete="current-password" placeholder="8자 이상 입력" minlength="6" required />
+            </label>
+            <p id="login-error" class="form-error" role="alert"></p>
+            <button class="button button--primary" type="submit">로그인</button>
+          </form>
+          <p class="security-note">
+            <span aria-hidden="true">●</span> Firebase 보안 규칙으로 관리자 권한을 다시 확인합니다.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <main id="denied-view" class="center-view hidden">
+      <section class="denied-card">
+        <div class="denied-icon">!</div>
+        <p class="eyebrow">ACCESS DENIED</p>
+        <h2>운영자 권한이 없어요</h2>
+        <p><strong id="denied-email"></strong> 계정은 빽코트 관리자에 등록되지 않았습니다.</p>
+        <button id="denied-logout" class="button button--secondary" type="button">다른 계정으로 로그인</button>
+      </section>
+    </main>
+
+    <main id="dashboard-view" class="dashboard hidden">
+      <aside class="sidebar">
+        <div class="brand-lockup">
+          <img src="./assets/icon.png" alt="" />
+          <div>
+            <strong>빽코트</strong>
+            <span>ADMIN</span>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="관리자 메뉴">
+          <p class="nav__label">OPERATIONS</p>
+          <button id="nav-court" class="nav__item nav__item--active" type="button">
+            <span class="nav__icon">⌁</span>
+            코트 제보
+            <span id="nav-pending-count" class="nav__badge">0</span>
+          </button>
+          <button id="nav-content" class="nav__item" type="button">
+            <span class="nav__icon">!</span>
+            콘텐츠 신고
+            <span id="nav-content-count" class="nav__badge">0</span>
+          </button>
+          <button class="nav__item" type="button" disabled title="다음 단계에서 추가">
+            <span class="nav__icon">⌖</span>
+            코트 데이터
+            <span class="soon">SOON</span>
+          </button>
+          <p class="nav__label nav__label--space">SYSTEM</p>
+          <button id="nav-release" class="nav__item" type="button">
+            <span class="nav__icon">↑</span>
+            앱 운영
+            <span id="release-nav-state" class="soon">LIVE</span>
+          </button>
+          <button class="nav__item" type="button" disabled>
+            <span class="nav__icon">◎</span>
+            작업 기록
+            <span class="soon">SOON</span>
+          </button>
+        </nav>
+
+        <div class="sidebar__footer">
+          <div class="operator-mini">
+            <div id="sidebar-avatar" class="avatar">BC</div>
+            <div>
+              <strong id="sidebar-name">운영자</strong>
+              <span id="sidebar-role">OPERATOR</span>
+            </div>
+          </div>
+          <button id="logout-button" class="icon-button" type="button" aria-label="로그아웃" title="로그아웃">↗</button>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p id="workspace-eyebrow" class="eyebrow">COURT OPERATIONS</p>
+            <h1 id="workspace-title">코트 제보</h1>
+          </div>
+          <div class="topbar__tools">
+            <label id="search-control" class="search">
+              <span aria-hidden="true">⌕</span>
+              <input id="search-input" type="search" placeholder="코트명, 제보자, 사유 검색" />
+              <kbd>⌘ K</kbd>
+            </label>
+            <span id="sync-indicator" class="sync-indicator"><i></i> 실시간 연결</span>
+          </div>
+        </header>
+
+        <div class="workspace__body">
+          <section id="reports-stats" class="stats" aria-label="제보 현황">
+            <article class="stat-card stat-card--accent">
+              <div class="stat-card__top"><span>처리 대기</span><i>NEW</i></div>
+              <strong id="stat-pending">0</strong>
+              <p>확인이 필요한 새로운 제보</p>
+            </article>
+            <article class="stat-card">
+              <div class="stat-card__top"><span>보류 중</span><i class="muted-dot"></i></div>
+              <strong id="stat-hold">0</strong>
+              <p>추가 확인이 필요한 제보</p>
+            </article>
+            <article class="stat-card">
+              <div class="stat-card__top"><span>처리 완료</span><i class="check">✓</i></div>
+              <strong id="stat-completed">0</strong>
+              <p>승인 및 반려된 누적 제보</p>
+            </article>
+            <article class="stat-card">
+              <div class="stat-card__top"><span>오늘 접수</span><i class="muted-dot"></i></div>
+              <strong id="stat-today">0</strong>
+              <p>오늘 새로 들어온 제보</p>
+            </article>
+          </section>
+
+          <section id="reports-workspace" class="reports-shell">
+            <div class="reports-list-panel">
+              <div class="list-header">
+                <div class="filters" role="tablist" aria-label="제보 상태 필터">
+                  <button class="filter active" data-filter="pending" type="button">대기 <span id="filter-pending">0</span></button>
+                  <button class="filter" data-filter="on_hold" type="button">보류 <span id="filter-hold">0</span></button>
+                  <button class="filter" data-filter="completed" type="button">완료 <span id="filter-completed">0</span></button>
+                  <button class="filter" data-filter="all" type="button">전체</button>
+                </div>
+                <span id="result-count" class="result-count">0건</span>
+              </div>
+              <div id="reports-list" class="reports-list" aria-live="polite"></div>
+            </div>
+
+            <aside id="report-detail" class="report-detail">
+              <div class="detail-empty">
+                <div class="detail-empty__icon">⌁</div>
+                <h2>제보를 선택해주세요</h2>
+                <p>왼쪽 목록에서 제보를 고르면<br />비교 정보와 처리 버튼이 나타납니다.</p>
+              </div>
+            </aside>
+          </section>
+
+          <section id="release-workspace" class="release-workspace hidden">
+            <form id="release-form" class="release-form">
+              <article class="release-hero">
+                <div>
+                  <p class="eyebrow">APP CONTROL</p>
+                  <h2>앱 열기 상태</h2>
+                  <p>저장하면 iOS와 Android에 바로 반영됩니다.</p>
+                </div>
+                <div class="release-state">
+                  <span id="release-state-dot"></span>
+                  <strong id="release-state-label">정상 운영</strong>
+                </div>
+              </article>
+
+              <div class="release-grid">
+                <article class="release-card release-card--maintenance">
+                  <div class="release-card__head">
+                    <div>
+                      <span class="release-card__index">01</span>
+                      <h3>점검 모드</h3>
+                    </div>
+                    <label class="switch" aria-label="점검 모드">
+                      <input id="release-maintenance" type="checkbox" />
+                      <span></span>
+                    </label>
+                  </div>
+                  <label class="release-field release-field--wide">
+                    <span>안내 문구</span>
+                    <textarea id="release-maintenance-message" maxlength="140" rows="3">조금 뒤에 다시 접속해주세요.</textarea>
+                  </label>
+                  <label class="release-field">
+                    <span>종료 예정 <em>선택</em></span>
+                    <input id="release-maintenance-ends" type="datetime-local" />
+                  </label>
+                </article>
+
+                <article class="release-card">
+                  <div class="release-card__head">
+                    <div>
+                      <span class="release-card__index">02</span>
+                      <h3>iOS</h3>
+                    </div>
+                    <span class="platform-chip">APP STORE</span>
+                  </div>
+                  <div class="release-version-row">
+                    <label class="release-field">
+                      <span>최소 버전</span>
+                      <input id="release-ios-min" type="text" inputmode="decimal" placeholder="1.0.0" />
+                    </label>
+                    <label class="release-field">
+                      <span>최신 버전</span>
+                      <input id="release-ios-latest" type="text" inputmode="decimal" placeholder="1.0.0" />
+                    </label>
+                  </div>
+                  <label class="release-field release-field--wide">
+                    <span>스토어 주소</span>
+                    <input id="release-ios-url" type="url" placeholder="https://apps.apple.com/app/id..." />
+                  </label>
+                </article>
+
+                <article class="release-card">
+                  <div class="release-card__head">
+                    <div>
+                      <span class="release-card__index">03</span>
+                      <h3>Android</h3>
+                    </div>
+                    <span class="platform-chip">PLAY STORE</span>
+                  </div>
+                  <div class="release-version-row">
+                    <label class="release-field">
+                      <span>최소 버전</span>
+                      <input id="release-android-min" type="text" inputmode="decimal" placeholder="1.0.0" />
+                    </label>
+                    <label class="release-field">
+                      <span>최신 버전</span>
+                      <input id="release-android-latest" type="text" inputmode="decimal" placeholder="1.0.0" />
+                    </label>
+                  </div>
+                  <label class="release-field release-field--wide">
+                    <span>스토어 주소</span>
+                    <input id="release-android-url" type="url" placeholder="https://play.google.com/store/apps/details?id=..." />
+                  </label>
+                </article>
+
+                <article class="release-card release-card--message">
+                  <div class="release-card__head">
+                    <div>
+                      <span class="release-card__index">04</span>
+                      <h3>업데이트 문구</h3>
+                    </div>
+                  </div>
+                  <label class="release-field release-field--wide">
+                    <textarea id="release-update-message" maxlength="140" rows="3">최신 버전으로 업데이트해주세요.</textarea>
+                  </label>
+                </article>
+              </div>
+
+              <footer class="release-actions">
+                <span id="release-updated">아직 저장된 설정 없음</span>
+                <button id="release-save" class="button button--primary" type="submit">설정 저장</button>
+              </footer>
+            </form>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="decision-dialog" class="decision-dialog">
+      <form id="decision-form" method="dialog">
+        <div class="dialog-head">
+          <div>
+            <p id="dialog-eyebrow" class="eyebrow">REVIEW REPORT</p>
+            <h2 id="dialog-title">제보 처리</h2>
+          </div>
+          <button id="dialog-close" class="icon-button" type="button" aria-label="닫기">×</button>
+        </div>
+        <p id="dialog-description" class="dialog-description"></p>
+        <label class="note-field">
+          <span>처리 메모 <em>선택</em></span>
+          <textarea id="resolution-note" maxlength="200" rows="4" placeholder="판단 근거나 확인 내용을 기록해주세요."></textarea>
+          <small><span id="note-count">0</span>/200</small>
+        </label>
+        <div class="dialog-actions">
+          <button id="dialog-cancel" class="button button--secondary" type="button">취소</button>
+          <button id="dialog-submit" class="button button--primary" type="submit">확인</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>

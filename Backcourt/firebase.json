@@ -1,0 +1,38 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "buildConfigurations": {
+          ".": {
+            "projectId": "backcourt-41720",
+            "appId": "1:652579912887:android:a3aadde5cd7b6a71f22132",
+            "fileOutput": "android/app/google-services.json"
+          }
+        }
+      },
+      "ios": {
+        "buildConfigurations": {
+          "Debug": {
+            "projectId": "backcourt-41720",
+            "appId": "1:652579912887:ios:c4fedd33fafe1144f22132",
+            "uploadDebugSymbols": false,
+            "fileOutput": "ios/Runner/GoogleService-Info.plist"
+          }
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "backcourt-41720",
+          "configurations": {
+            "android": "1:652579912887:android:a3aadde5cd7b6a71f22132",
+            "ios": "1:652579912887:ios:c4fedd33fafe1144f22132"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

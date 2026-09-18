@@ -1,0 +1,27 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function validUpload() {
+      return request.resource.size <= 100 * 1024 * 1024
+        && request.resource.contentType.matches('(image|video)/.*');
+    }
+
+    function validProfilePhoto() {
+      return request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /users/{uid}/{category}/{documentId}/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+        && request.auth.uid == uid
+        && ((category in ['reviews', 'posts'] && validUpload())
+          || (category == 'profile' && validProfilePhoto()));
+      allow delete: if signedIn() && request.auth.uid == uid;
+    }
+  }
+}

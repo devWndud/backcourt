@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#101214"/>
+  <path d="M725 250A322 322 0 1 0 725 774" fill="none" stroke="#FF633F" stroke-width="86" stroke-linecap="round"/>
+  <path d="M720 706L812 778L712 824Z" fill="#FF633F"/>
+  <text x="218" y="694" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="520" font-weight="900" letter-spacing="-38">B</text>
+</svg>

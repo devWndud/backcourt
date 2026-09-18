@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "652579912887",
+    "project_id": "backcourt-41720",
+    "storage_bucket": "backcourt-41720.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:652579912887:android:861d24d34a67920cf22132",
+        "android_client_info": {
+          "package_name": "com.backcourt.kr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "652579912887-3sgon4khd349v7bb05okltvo56rp507a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrdgfQCLhE1yzSkCVYLhiuN7EGSiKlmaU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "652579912887-3sgon4khd349v7bb05okltvo56rp507a.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "652579912887-d9iueeb8hrln27bl1cdhtdvci41c2iqr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "kr.backcourt.backcourt"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:652579912887:android:a3aadde5cd7b6a71f22132",
+        "android_client_info": {
+          "package_name": "kr.backcourt.backcourt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "652579912887-lsnb4adelispvo5mbbb1aio6454sljs9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "kr.backcourt.backcourt",
+            "certificate_hash": "e95cf210bce134bbf21ea6756fa4c533652bde2d"
+          }
+        },
+        {
+          "client_id": "652579912887-3sgon4khd349v7bb05okltvo56rp507a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrdgfQCLhE1yzSkCVYLhiuN7EGSiKlmaU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "652579912887-3sgon4khd349v7bb05okltvo56rp507a.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "652579912887-d9iueeb8hrln27bl1cdhtdvci41c2iqr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "kr.backcourt.backcourt"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

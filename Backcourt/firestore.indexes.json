@@ -1,0 +1,69 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "reviews",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "courtId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "uid", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "comments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "postId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "targetUid", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "monthly_play_stats",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "scopeKey", "order": "ASCENDING" },
+        { "fieldPath": "totalMinutes", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "weekly_play_stats",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "scopeKey", "order": "ASCENDING" },
+        { "fieldPath": "totalMinutes", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "court_play_stats",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "scopeKey", "order": "ASCENDING" },
+        { "fieldPath": "totalMinutes", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "live_court_statuses",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "courtId", "order": "ASCENDING" },
+        { "fieldPath": "expiresAt", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

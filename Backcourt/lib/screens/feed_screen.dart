@@ -1,0 +1,1438 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../backend/backcourt_repository.dart';
+import '../backend/models.dart';
+import '../theme/app_theme.dart';
+import '../widgets/branded_sheet.dart';
+import '../widgets/common.dart';
+
+class FeedScreen extends StatefulWidget {
+  const FeedScreen({
+    super.key,
+    this.repository,
+    this.activeCourt = const CourtSummary(
+      id: 'sample-0',
+      name: '한강 시민공원 농구장',
+      latitude: 37.5272,
+      longitude: 126.9347,
+    ),
+  });
+
+  final BackcourtRepository? repository;
+  final CourtSummary activeCourt;
+
+  @override
+  State<FeedScreen> createState() => _FeedScreenState();
+}
+
+class _FeedScreenState extends State<FeedScreen> {
+  int _selectedFeed = 0;
+  final Set<String> _demoLikes = {};
+  Position? _feedLocation;
+  bool _locatingNearby = false;
+
+  static final _demoPosts = <PostRecord>[
+    PostRecord(
+      id: 'demo-1',
+      uid: 'demo',
+      authorName: '농구하는준',
+      courtId: 'sample-0',
+      courtName: '한강 시민공원 농구장',
+      text: '오늘 한강 바람도 좋고 코트 상태도 최고 🏀',
+      media: const [],
+      likeUids: const ['a', 'b'],
+      createdAt: DateTime.now(),
+    ),
+  ];
+
+  Future<void> _openComposer() async {
+    final repository = widget.repository;
+    if (repository == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Firebase 연결 필요')));
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) =>
+          PostComposerSheet(repository: repository, court: widget.activeCourt),
+    );
+  }
+
+  Future<void> _toggleLike(PostRecord post) async {
+    final repository = widget.repository;
+    if (repository == null) {
+      setState(() {
+        if (!_demoLikes.add(post.id)) _demoLikes.remove(post.id);
+      });
+      return;
+    }
+    try {
+      await repository.togglePostLike(post);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is BackcourtException ? error.message : '좋아요 처리 실패',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _selectFeed(int value) async {
+    setState(() => _selectedFeed = value);
+    if (value != 1 || _feedLocation != null || _locatingNearby) return;
+    setState(() => _locatingNearby = true);
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw const BackcourtException('주변 피드는 위치 권한이 필요해요.');
+      }
+      final position = await Geolocator.getCurrentPosition();
+      if (mounted) setState(() => _feedLocation = position);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is BackcourtException ? error.message : '현재 위치를 확인하지 못했어요.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _locatingNearby = false);
+    }
+  }
+
+  List<PostRecord> _filterPosts(
+    List<PostRecord> posts,
+    Set<String> blockedUids,
+  ) {
+    final visible = posts
+        .where((post) => !blockedUids.contains(post.uid))
+        .toList(growable: false);
+    if (_selectedFeed == 0) return visible;
+    if (_selectedFeed == 2) {
+      return visible
+          .where((post) => post.courtId == widget.activeCourt.id)
+          .toList(growable: false);
+    }
+    final location = _feedLocation;
+    if (location == null) return const [];
+    return visible
+        .where((post) {
+          final latitude = post.latitude;
+          final longitude = post.longitude;
+          if (latitude == null || longitude == null) return false;
+          return Geolocator.distanceBetween(
+                location.latitude,
+                location.longitude,
+                latitude,
+                longitude,
+              ) <=
+              5000;
+        })
+        .toList(growable: false);
+  }
+
+  Future<void> _openComments(PostRecord post) async {
+    final repository = widget.repository;
+    if (repository == null) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) =>
+          PostCommentsSheet(repository: repository, post: post),
+    );
+  }
+
+  Future<void> _openPostActions(PostRecord post) async {
+    final repository = widget.repository;
+    if (repository == null) return;
+    final action = await showModalBottomSheet<_PostAction>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _PostActionsSheet(
+        mine: post.uid == repository.currentUid,
+        authorName: post.authorName,
+      ),
+    );
+    if (action == null || !mounted) return;
+    try {
+      switch (action) {
+        case _PostAction.delete:
+          final confirmed = await _confirmDeletePost();
+          if (!confirmed) return;
+          await repository.deletePost(post);
+          _showMessage('게시물 삭제 완료');
+        case _PostAction.report:
+          final reason = await _pickReportReason();
+          if (reason == null) return;
+          await repository.reportPost(post, reason);
+          _showMessage('신고 접수 완료');
+        case _PostAction.block:
+          await repository.blockUser(
+            post.uid,
+            displayName: post.authorName,
+          );
+          _showMessage('${post.authorName} 차단 완료');
+      }
+    } catch (error) {
+      if (!mounted) return;
+      _showMessage(error is BackcourtException ? error.message : '처리 실패');
+    }
+  }
+
+  Future<bool> _confirmDeletePost() async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('게시물 삭제'),
+          content: const Text('삭제한 게시물은 다시 복구할 수 없어요.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('취소'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('삭제'),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+
+  Future<String?> _pickReportReason() => showModalBottomSheet<String>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (context) => const _ReportReasonSheet(),
+  );
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final repository = widget.repository;
+    return SafeArea(
+      bottom: false,
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            sliver: SliverList.list(
+              children: [
+                PageHeader(
+                  eyebrow: 'FEED',
+                  title: '피드',
+                  action: RoundIconButton(
+                    icon: Icons.add_a_photo_outlined,
+                    light: true,
+                    onTap: _openComposer,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                _FeedTabs(selected: _selectedFeed, onChanged: _selectFeed),
+                if (_selectedFeed != 0) ...[
+                  const SizedBox(height: 20),
+                  _ActiveCourtBanner(
+                    court: widget.activeCourt,
+                    nearby: _selectedFeed == 1,
+                    locating: _locatingNearby,
+                  ),
+                ],
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+          if (repository == null)
+            _PostSliver(
+              posts: _filterPosts(_demoPosts, const {}),
+              currentUid: null,
+              demoLikes: _demoLikes,
+              onLike: _toggleLike,
+              onComment: _openComments,
+              onMore: _openPostActions,
+            )
+          else
+            StreamBuilder<Set<String>>(
+              stream: repository.watchBlockedUserIds(),
+              builder: (context, blockedSnapshot) =>
+                  StreamBuilder<List<PostRecord>>(
+                    stream: repository.watchPosts(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return const SliverToBoxAdapter(
+                          child: _FeedMessage(label: '피드 불러오기 실패'),
+                        );
+                      }
+                      if (!snapshot.hasData) {
+                        return const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.all(40),
+                            child: Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      }
+                      return _PostSliver(
+                        posts: _filterPosts(
+                          snapshot.data!,
+                          blockedSnapshot.data ?? const {},
+                        ),
+                        currentUid: repository.currentUid,
+                        demoLikes: const {},
+                        onLike: _toggleLike,
+                        onComment: _openComments,
+                        onMore: _openPostActions,
+                      );
+                    },
+                  ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeedTabs extends StatelessWidget {
+  const _FeedTabs({required this.selected, required this.onChanged});
+
+  final int selected;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    const labels = ['최신', '내 주변', '코트'];
+    return Row(
+      children: List.generate(labels.length, (index) {
+        final active = selected == index;
+        return GestureDetector(
+          onTap: () => onChanged(index),
+          child: Padding(
+            padding: const EdgeInsets.only(right: 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  labels[index],
+                  style: TextStyle(
+                    color: active ? Colors.white : AppColors.muted,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: active ? 24 : 0,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+class _ActiveCourtBanner extends StatelessWidget {
+  const _ActiveCourtBanner({
+    required this.court,
+    required this.nearby,
+    required this.locating,
+  });
+
+  final CourtSummary court;
+  final bool nearby;
+  final bool locating;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Colors.white.withValues(alpha: .07)),
+    ),
+    child: Row(
+      children: [
+        CircleAvatar(
+          backgroundColor: AppColors.accent,
+          child: Icon(
+            nearby ? Icons.near_me_rounded : Icons.sports_basketball_rounded,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                nearby ? '내 주변' : '현재 선택 코트',
+                style: TextStyle(color: AppColors.muted, fontSize: 11),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                nearby
+                    ? locating
+                          ? '위치 확인 중'
+                          : '반경 5km'
+                    : court.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _PostSliver extends StatelessWidget {
+  const _PostSliver({
+    required this.posts,
+    required this.currentUid,
+    required this.demoLikes,
+    required this.onLike,
+    required this.onComment,
+    required this.onMore,
+  });
+
+  final List<PostRecord> posts;
+  final String? currentUid;
+  final Set<String> demoLikes;
+  final ValueChanged<PostRecord> onLike;
+  final ValueChanged<PostRecord> onComment;
+  final ValueChanged<PostRecord> onMore;
+
+  @override
+  Widget build(BuildContext context) {
+    if (posts.isEmpty) {
+      return const SliverToBoxAdapter(child: _FeedMessage(label: '게시물 없음'));
+    }
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+      sliver: SliverList.separated(
+        itemCount: posts.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 16),
+        itemBuilder: (context, index) {
+          final post = posts[index];
+          final liked = currentUid == null
+              ? demoLikes.contains(post.id)
+              : post.likeUids.contains(currentUid);
+          return _PostCard(
+            post: post,
+            liked: liked,
+            likeCount:
+                post.likeUids.length + (currentUid == null && liked ? 1 : 0),
+            onLike: () => onLike(post),
+            onComment: () => onComment(post),
+            onMore: () => onMore(post),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _FeedMessage extends StatelessWidget {
+  const _FeedMessage({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 30, 20, 120),
+    child: Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Text(label, style: const TextStyle(color: AppColors.muted)),
+    ),
+  );
+}
+
+class _PostCard extends StatelessWidget {
+  const _PostCard({
+    required this.post,
+    required this.liked,
+    required this.likeCount,
+    required this.onLike,
+    required this.onComment,
+    required this.onMore,
+  });
+
+  final PostRecord post;
+  final bool liked;
+  final int likeCount;
+  final VoidCallback onLike;
+  final VoidCallback onComment;
+  final VoidCallback onMore;
+
+  String get _timeLabel {
+    final difference = DateTime.now().difference(post.createdAt);
+    if (difference.inMinutes < 1) return '방금';
+    if (difference.inHours < 1) return '${difference.inMinutes}분';
+    if (difference.inDays < 1) return '${difference.inHours}시간';
+    return '${difference.inDays}일';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: Row(
+              children: [
+                UserAvatar(
+                  initials: post.authorName.characters.take(2).toString(),
+                  size: 36,
+                  photoUrl: post.authorPhotoUrl,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        post.authorName,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      Text(
+                        '${post.courtName} · $_timeLabel',
+                        style: const TextStyle(
+                          color: AppColors.muted,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  key: ValueKey('post-menu-${post.id}'),
+                  onPressed: onMore,
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(
+                    Icons.more_horiz_rounded,
+                    color: AppColors.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (post.media.isNotEmpty)
+            AspectRatio(
+              aspectRatio: 1.1,
+              child: _PostMedia(media: post.media.first),
+            )
+          else
+            const AspectRatio(
+              aspectRatio: 1.8,
+              child: ColoredBox(
+                color: AppColors.surfaceHigh,
+                child: Center(
+                  child: Icon(
+                    Icons.sports_basketball_rounded,
+                    size: 52,
+                    color: AppColors.accent,
+                  ),
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 13, 15, 17),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: onLike,
+                      child: Icon(
+                        liked
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        color: liked ? AppColors.accent : Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 7),
+                    Text('$likeCount'),
+                    const SizedBox(width: 20),
+                    GestureDetector(
+                      key: ValueKey('post-comments-${post.id}'),
+                      onTap: onComment,
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            size: 21,
+                          ),
+                          if (post.commentCount > 0) ...[
+                            const SizedBox(width: 7),
+                            Text('${post.commentCount}'),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (post.text.isNotEmpty) ...[
+                  const SizedBox(height: 11),
+                  Text(
+                    post.text,
+                    style: const TextStyle(fontSize: 12, height: 1.45),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PostMedia extends StatelessWidget {
+  const _PostMedia({required this.media});
+
+  final MediaItem media;
+
+  @override
+  Widget build(BuildContext context) {
+    if (media.type == 'video') {
+      return const ColoredBox(
+        color: Color(0xFF262626),
+        child: Center(child: Icon(Icons.play_circle_fill_rounded, size: 58)),
+      );
+    }
+    return Image.network(
+      media.url,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => const ColoredBox(
+        color: AppColors.surfaceHigh,
+        child: Center(child: Icon(Icons.broken_image_outlined)),
+      ),
+    );
+  }
+}
+
+enum _PostAction { delete, report, block }
+
+class _PostActionsSheet extends StatelessWidget {
+  const _PostActionsSheet({required this.mine, required this.authorName});
+
+  final bool mine;
+  final String authorName;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: backcourtSheetDecoration(),
+    child: SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 11, 22, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            BackcourtSheetHeader(
+              eyebrow: mine ? 'MY POST' : 'POST',
+              title: mine ? '게시물 관리' : authorName,
+              onClose: () => Navigator.pop(context),
+            ),
+            const SizedBox(height: 16),
+            if (mine)
+              _PostActionRow(
+                icon: Icons.delete_outline_rounded,
+                label: '게시물 삭제',
+                danger: true,
+                onTap: () => Navigator.pop(context, _PostAction.delete),
+              )
+            else ...[
+              _PostActionRow(
+                icon: Icons.flag_outlined,
+                label: '게시물 신고',
+                onTap: () => Navigator.pop(context, _PostAction.report),
+              ),
+              const SizedBox(height: 8),
+              _PostActionRow(
+                icon: Icons.block_rounded,
+                label: '사용자 차단',
+                danger: true,
+                onTap: () => Navigator.pop(context, _PostAction.block),
+              ),
+            ],
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _PostActionRow extends StatelessWidget {
+  const _PostActionRow({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.danger = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool danger;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: AppColors.surfaceHigh,
+    borderRadius: BorderRadius.circular(17),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(17),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: danger ? AppColors.accent : Colors.white,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                color: danger ? AppColors.accent : Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const Spacer(),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _ReportReasonSheet extends StatelessWidget {
+  const _ReportReasonSheet();
+
+  static const _reasons = ['스팸 · 광고', '욕설 · 괴롭힘', '위험 · 불법 내용', '기타 부적절한 내용'];
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: backcourtSheetDecoration(),
+    child: SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 11, 22, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            BackcourtSheetHeader(
+              eyebrow: 'REPORT',
+              title: '신고 사유',
+              onClose: () => Navigator.pop(context),
+            ),
+            const SizedBox(height: 16),
+            for (var index = 0; index < _reasons.length; index++) ...[
+              _PostActionRow(
+                icon: Icons.flag_outlined,
+                label: _reasons[index],
+                onTap: () => Navigator.pop(context, _reasons[index]),
+              ),
+              if (index != _reasons.length - 1) const SizedBox(height: 8),
+            ],
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class PostCommentsSheet extends StatefulWidget {
+  const PostCommentsSheet({
+    super.key,
+    required this.repository,
+    required this.post,
+  });
+
+  final BackcourtRepository repository;
+  final PostRecord post;
+
+  @override
+  State<PostCommentsSheet> createState() => _PostCommentsSheetState();
+}
+
+class _PostCommentsSheetState extends State<PostCommentsSheet> {
+  final _controller = TextEditingController();
+  bool _sending = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    if (_sending || _controller.text.trim().isEmpty) return;
+    setState(() => _sending = true);
+    try {
+      await widget.repository.createComment(
+        post: widget.post,
+        text: _controller.text,
+      );
+      _controller.clear();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is BackcourtException ? error.message : '댓글 등록 실패',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  Future<void> _delete(CommentRecord comment) async {
+    try {
+      await widget.repository.deleteComment(comment);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is BackcourtException ? error.message : '댓글 삭제 실패',
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => DraggableScrollableSheet(
+    initialChildSize: .82,
+    minChildSize: .58,
+    maxChildSize: .96,
+    expand: false,
+    builder: (context, scrollController) => AnimatedPadding(
+      duration: const Duration(milliseconds: 180),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: DecoratedBox(
+        decoration: backcourtSheetDecoration(),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 11, 22, 0),
+                child: BackcourtSheetHeader(
+                  eyebrow: widget.post.courtName,
+                  title: '댓글',
+                  onClose: () => Navigator.pop(context),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: StreamBuilder<Set<String>>(
+                  stream: widget.repository.watchBlockedUserIds(),
+                  builder: (context, blockedSnapshot) =>
+                      StreamBuilder<List<CommentRecord>>(
+                        stream: widget.repository.watchComments(widget.post.id),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            );
+                          }
+                          final blocked = blockedSnapshot.data ?? const {};
+                          final comments = snapshot.data!
+                              .where((comment) => !blocked.contains(comment.uid))
+                              .toList(growable: false);
+                          if (comments.isEmpty) {
+                            return const Center(
+                              child: Text(
+                                '댓글 없음',
+                                style: TextStyle(
+                                  color: AppColors.muted,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            );
+                          }
+                          return ListView.separated(
+                            controller: scrollController,
+                            padding: const EdgeInsets.fromLTRB(22, 8, 22, 22),
+                            itemCount: comments.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 14),
+                            itemBuilder: (context, index) {
+                              final comment = comments[index];
+                              return _CommentTile(
+                                comment: comment,
+                                mine:
+                                    comment.uid == widget.repository.currentUid,
+                                onDelete: () => _delete(comment),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.fromLTRB(
+                  18,
+                  10,
+                  18,
+                  MediaQuery.paddingOf(context).bottom + 10,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  border: Border(
+                    top: BorderSide(color: Colors.white.withValues(alpha: .06)),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        key: const ValueKey('comment-field'),
+                        controller: _controller,
+                        maxLength: 500,
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => _send(),
+                        decoration: const InputDecoration(
+                          hintText: '댓글',
+                          counterText: '',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 9),
+                    IconButton.filled(
+                      key: const ValueKey('submit-comment'),
+                      onPressed: _sending ? null : _send,
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        foregroundColor: Colors.black,
+                      ),
+                      icon: _sending
+                          ? const SizedBox.square(
+                              dimension: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.black,
+                              ),
+                            )
+                          : const Icon(Icons.arrow_upward_rounded),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _CommentTile extends StatelessWidget {
+  const _CommentTile({
+    required this.comment,
+    required this.mine,
+    required this.onDelete,
+  });
+
+  final CommentRecord comment;
+  final bool mine;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      UserAvatar(
+        initials: comment.authorName.characters.take(2).toString(),
+        size: 34,
+        photoUrl: comment.authorPhotoUrl,
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              comment.authorName,
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              comment.text,
+              style: const TextStyle(
+                color: AppColors.soft,
+                fontSize: 12,
+                height: 1.45,
+              ),
+            ),
+          ],
+        ),
+      ),
+      if (mine)
+        IconButton(
+          onPressed: onDelete,
+          visualDensity: VisualDensity.compact,
+          icon: const Icon(
+            Icons.close_rounded,
+            color: AppColors.muted,
+            size: 17,
+          ),
+        ),
+    ],
+  );
+}
+
+class PostComposerSheet extends StatefulWidget {
+  const PostComposerSheet({
+    super.key,
+    required this.repository,
+    required this.court,
+  });
+
+  final BackcourtRepository repository;
+  final CourtSummary court;
+
+  @override
+  State<PostComposerSheet> createState() => _PostComposerSheetState();
+}
+
+class _PostComposerSheetState extends State<PostComposerSheet> {
+  final _textController = TextEditingController();
+  final _picker = ImagePicker();
+  final List<XFile> _images = [];
+  XFile? _video;
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImages() async {
+    final files = await _picker.pickMultiImage(
+      imageQuality: 88,
+      maxWidth: 2160,
+      maxHeight: 2160,
+      limit: 6,
+    );
+    if (!mounted) return;
+    setState(() {
+      _images
+        ..clear()
+        ..addAll(files);
+    });
+  }
+
+  Future<void> _pickVideo() async {
+    final video = await _picker.pickVideo(
+      source: ImageSource.gallery,
+      maxDuration: const Duration(seconds: 30),
+    );
+    if (video != null && mounted) setState(() => _video = video);
+  }
+
+  Future<void> _submit() async {
+    setState(() => _saving = true);
+    try {
+      await widget.repository.createPost(
+        court: widget.court,
+        text: _textController.text,
+        images: _images,
+        video: _video,
+      );
+      if (mounted) Navigator.pop(context);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is BackcourtException ? error.message : '게시물 등록 실패',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => DraggableScrollableSheet(
+    initialChildSize: .88,
+    minChildSize: .62,
+    maxChildSize: .96,
+    expand: false,
+    builder: (context, controller) => AnimatedPadding(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: DecoratedBox(
+        decoration: backcourtSheetDecoration(),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 11, 22, 0),
+                child: BackcourtSheetHeader(
+                  eyebrow: 'NEW POST',
+                  title: '새 게시물',
+                  onClose: () => Navigator.pop(context),
+                ),
+              ),
+              const SizedBox(height: 19),
+              Expanded(
+                child: ListView(
+                  controller: controller,
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
+                  children: [
+                    BackcourtContextCard(
+                      title: widget.court.name,
+                      caption: '선택 코트',
+                      icon: Icons.location_on_rounded,
+                      badge: 'PUBLIC',
+                    ),
+                    const SizedBox(height: 23),
+                    const BackcourtSectionLabel(
+                      title: '내용',
+                      trailing: '글 또는 미디어',
+                    ),
+                    const SizedBox(height: 10),
+                    _PostTextField(controller: _textController),
+                    const SizedBox(height: 23),
+                    const BackcourtSectionLabel(
+                      title: '미디어',
+                      trailing: '사진 6 · 영상 1',
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: BackcourtMediaAction(
+                            icon: Icons.add_photo_alternate_rounded,
+                            title: '사진 ${_images.length}/6',
+                            caption: _images.isEmpty
+                                ? '갤러리에서 선택'
+                                : '선택 완료 · 다시 고르기',
+                            active: _images.isNotEmpty,
+                            onTap: _pickImages,
+                          ),
+                        ),
+                        const SizedBox(width: 9),
+                        Expanded(
+                          child: BackcourtMediaAction(
+                            icon: Icons.video_library_rounded,
+                            title: _video == null ? '영상' : '영상 선택됨',
+                            caption: _video == null ? '최대 30초' : '다시 고르기',
+                            active: _video != null,
+                            onTap: _pickVideo,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_images.isNotEmpty || _video != null) ...[
+                      const SizedBox(height: 12),
+                      _PostMediaPreview(
+                        images: _images,
+                        video: _video,
+                        onRemoveImage: (image) =>
+                            setState(() => _images.remove(image)),
+                        onRemoveVideo: () => setState(() => _video = null),
+                      ),
+                    ],
+                    const SizedBox(height: 22),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: .035),
+                        borderRadius: BorderRadius.circular(17),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: .055),
+                        ),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.public_rounded,
+                            color: AppColors.accent,
+                            size: 19,
+                          ),
+                          SizedBox(width: 11),
+                          Expanded(
+                            child: Text(
+                              '전체 공개',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.lock_open_rounded,
+                            color: AppColors.muted,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.shield_outlined,
+                          color: AppColors.muted,
+                          size: 11,
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          '사진 10MB · 영상 100MB · 커뮤니티 가이드 적용',
+                          style: TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.fromLTRB(
+                  22,
+                  13,
+                  22,
+                  MediaQuery.paddingOf(context).bottom + 13,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  border: Border(
+                    top: BorderSide(color: Colors.white.withValues(alpha: .06)),
+                  ),
+                ),
+                child: BackcourtPrimaryAction(
+                  label: '게시하기',
+                  loading: _saving,
+                  icon: Icons.arrow_upward_rounded,
+                  onPressed: _submit,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _PostTextField extends StatelessWidget {
+  const _PostTextField({required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceHigh,
+        borderRadius: BorderRadius.circular(19),
+        border: Border.all(color: Colors.white.withValues(alpha: .06)),
+      ),
+      child: Stack(
+        children: [
+          TextField(
+            controller: controller,
+            minLines: 7,
+            maxLines: 10,
+            maxLength: 1500,
+            autofocus: false,
+            style: const TextStyle(fontSize: 13, height: 1.55),
+            decoration: const InputDecoration(
+              hintText: '내용 입력',
+              hintStyle: TextStyle(
+                color: AppColors.muted,
+                fontSize: 12,
+                height: 1.55,
+              ),
+              filled: false,
+              counterText: '',
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: EdgeInsets.fromLTRB(16, 16, 16, 32),
+            ),
+          ),
+          Positioned(
+            right: 14,
+            bottom: 11,
+            child: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, _) => Text(
+                '${value.text.length}/1500',
+                style: const TextStyle(color: AppColors.muted, fontSize: 11),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PostMediaPreview extends StatelessWidget {
+  const _PostMediaPreview({
+    required this.images,
+    required this.video,
+    required this.onRemoveImage,
+    required this.onRemoveVideo,
+  });
+
+  final List<XFile> images;
+  final XFile? video;
+  final ValueChanged<XFile> onRemoveImage;
+  final VoidCallback onRemoveVideo;
+
+  @override
+  Widget build(BuildContext context) {
+    final itemCount = images.length + (video == null ? 0 : 1);
+    return SizedBox(
+      height: 92,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: itemCount,
+        separatorBuilder: (_, _) => const SizedBox(width: 9),
+        itemBuilder: (context, index) {
+          final isVideo = index >= images.length;
+          final image = isVideo ? null : images[index];
+          return Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: isVideo
+                    ? Container(
+                        width: 92,
+                        height: 92,
+                        color: const Color(0xFF262626),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.play_circle_fill_rounded,
+                              color: AppColors.accent,
+                              size: 29,
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              'VIDEO',
+                              style: TextStyle(
+                                color: AppColors.muted,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : Image.file(
+                        File(image!.path),
+                        width: 92,
+                        height: 92,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => const ColoredBox(
+                          color: AppColors.surfaceHigh,
+                          child: SizedBox.square(
+                            dimension: 92,
+                            child: Icon(
+                              Icons.image_not_supported_outlined,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+              Positioned(
+                top: 5,
+                right: 5,
+                child: GestureDetector(
+                  onTap: isVideo ? onRemoveVideo : () => onRemoveImage(image!),
+                  child: Container(
+                    width: 23,
+                    height: 23,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: .74),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}

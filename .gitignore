@@ -1,0 +1,5 @@
+# Local project backups
+Backcourt_backup_*.tar.gz
+
+# Local Firebase CLI binary (download separately)
+Backcourt/tool/firebase

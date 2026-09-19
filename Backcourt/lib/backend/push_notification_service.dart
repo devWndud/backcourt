@@ -16,17 +16,23 @@ class PushNotificationService {
   PushNotificationService({
     required this.repository,
     required this.onOpen,
+    String? apiBaseUrl,
     FirebaseMessaging? messaging,
     FlutterLocalNotificationsPlugin? localNotifications,
     http.Client? httpClient,
-  }) : _messaging = messaging ?? FirebaseMessaging.instance,
+  }) : _apiBaseUrl = apiBaseUrl ?? defaultApiBaseUrl,
+       _messaging = messaging ?? FirebaseMessaging.instance,
        _localNotifications =
            localNotifications ?? FlutterLocalNotificationsPlugin(),
        _httpClient = httpClient ?? http.Client();
 
-  static const apiBaseUrl = String.fromEnvironment('BACKCOURT_API_URL');
+  static const defaultApiBaseUrl = String.fromEnvironment(
+    'BACKCOURT_API_URL',
+    defaultValue: 'https://backcourt.kro.kr',
+  );
   static const _channelId = 'backcourt_activity';
 
+  final String _apiBaseUrl;
   final BackcourtRepository repository;
   final PushOpenHandler onOpen;
   final FirebaseMessaging _messaging;
@@ -38,7 +44,7 @@ class PushNotificationService {
   StreamSubscription<RemoteMessage>? _openedSubscription;
   bool _started = false;
 
-  bool get isConfigured => apiBaseUrl.trim().isNotEmpty;
+  bool get isConfigured => _apiBaseUrl.trim().isNotEmpty;
 
   Future<void> start() async {
     if (_started || !isConfigured) return;
@@ -67,6 +73,7 @@ class PushNotificationService {
         _handleOpenedMessage,
       );
 
+      await _waitForApplePushToken();
       final token = await _getTokenWithRetry();
       if (token != null) unawaited(_registerWithRetry(token));
 
@@ -74,6 +81,19 @@ class PushNotificationService {
       if (initialMessage != null) _handleOpenedMessage(initialMessage);
     } catch (error) {
       debugPrint('Push initialization failed: $error');
+    }
+  }
+
+  Future<void> _waitForApplePushToken() async {
+    if (!Platform.isIOS) return;
+    for (var attempt = 0; attempt < 10; attempt++) {
+      try {
+        final token = await _messaging.getAPNSToken();
+        if (token != null && token.isNotEmpty) return;
+      } catch (error) {
+        if (attempt == 9) debugPrint('APNs token unavailable: $error');
+      }
+      await Future<void>.delayed(const Duration(seconds: 1));
     }
   }
 
@@ -107,9 +127,7 @@ class PushNotificationService {
         final payload = response.payload;
         if (payload == null || payload.isEmpty) return;
         try {
-          final data = Map<String, dynamic>.from(
-            jsonDecode(payload) as Map,
-          );
+          final data = Map<String, dynamic>.from(jsonDecode(payload) as Map);
           _open(data);
         } catch (error) {
           debugPrint('Push payload parse failed: $error');
@@ -156,8 +174,14 @@ class PushNotificationService {
             'platform': Platform.isIOS ? 'ios' : 'android',
           }),
         );
-        if (response.statusCode >= 200 && response.statusCode < 300) return;
-        if (response.statusCode == 401) return;
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          debugPrint('Push token registered');
+          return;
+        }
+        if (response.statusCode == 401 && attempt < 2) {
+          await FirebaseAuth.instance.currentUser?.getIdToken(true);
+          continue;
+        }
         throw HttpException('Push API ${response.statusCode}');
       } catch (error) {
         if (attempt == 2) {
@@ -182,9 +206,8 @@ class PushNotificationService {
     };
   }
 
-  Uri _endpoint(String path) => Uri.parse(
-    '${apiBaseUrl.trim().replaceFirst(RegExp(r'/$'), '')}$path',
-  );
+  Uri _endpoint(String path) =>
+      Uri.parse('${_apiBaseUrl.trim().replaceFirst(RegExp(r'/$'), '')}$path');
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     if (!Platform.isAndroid || message.notification == null) return;

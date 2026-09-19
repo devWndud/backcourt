@@ -29,11 +29,12 @@ curl http://127.0.0.1:8000/health
 
 ## 앱 빌드
 
-HTTPS 도메인을 앱에 컴파일 타임 환경값으로 전달합니다.
+일반 빌드는 운영 API `https://backcourt.kro.kr`을 기본으로 사용합니다. 개발·스테이징
+서버를 쓸 때만 컴파일 타임 환경값으로 덮어씁니다.
 
 ```sh
 flutter run \
-  --dart-define=BACKCOURT_API_URL=https://backcourt.example.com
+  --dart-define=BACKCOURT_API_URL=https://staging.example.com
 ```
 
 로그인한 기기의 FCM 토큰은 `POST /api/push/devices`에 Firebase ID 토큰과 함께
@@ -43,3 +44,5 @@ flutter run \
 
 앱 로그인 후 API 문서에서 Firebase ID 토큰을 Bearer 인증으로 넣고
 `POST /api/push/test`를 호출하면 자기 기기로 테스트 푸시를 보낼 수 있습니다.
+Android는 알림 권한을 허용해야 하며, iOS 실기기 수신에는 Firebase Cloud
+Messaging에 Apple APNs 인증 키가 등록되어 있어야 합니다.

@@ -9,10 +9,9 @@ WORKDIR /app
 COPY Backcourt-Server/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY Backcourt-Server/app ./app
-COPY Backcourt-Admin ./admin
-
 RUN useradd --create-home --uid 10001 backcourt
+COPY --chown=backcourt:backcourt Backcourt-Server/app ./app
+COPY --chown=backcourt:backcourt Backcourt-Admin ./admin
 USER backcourt
 
 EXPOSE 8000

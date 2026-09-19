@@ -5,11 +5,19 @@ import 'package:backcourt/app.dart';
 import 'package:backcourt/backend/app_release_config.dart';
 import 'package:backcourt/backend/backcourt_repository.dart';
 import 'package:backcourt/backend/models.dart';
+import 'package:backcourt/backend/push_notification_service.dart';
 import 'package:backcourt/screens/operator_reports_screen.dart';
 import 'package:backcourt/theme/app_theme.dart';
 import 'package:backcourt/widgets/court_ranking_card.dart';
 
 void main() {
+  test('일반 빌드는 운영 푸시 API를 사용한다', () {
+    expect(
+      PushNotificationService.defaultApiBaseUrl,
+      'https://backcourt.kro.kr',
+    );
+  });
+
   test('앱 버전을 숫자 기준으로 비교한다', () {
     expect(isVersionLower('1.0.9', '1.0.10'), isTrue);
     expect(isVersionLower('1.2.0+18', '1.2.0'), isFalse);

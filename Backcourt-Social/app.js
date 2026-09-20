@@ -10,6 +10,7 @@ const C = {
 
 const sources = {
   icon: "./assets/app-icon.png",
+  markLight: "./assets/brand-mark-on-light.png",
   ball: "./assets/ball.png",
   map: "./assets/map.png",
   live: "./assets/live.png",
@@ -99,8 +100,12 @@ function label(ctx, text, x, y, color = C.orange) {
 }
 
 function brand(ctx, dark = false) {
-  roundedFill(ctx, 58, 52, 58, 58, 8, C.ink);
-  ctx.drawImage(images.icon, 58, 52, 58, 58);
+  if (dark) {
+    roundedFill(ctx, 58, 52, 58, 58, 8, C.ink);
+    ctx.drawImage(images.icon, 58, 52, 58, 58);
+  } else {
+    ctx.drawImage(images.markLight, 48, 42, 78, 78);
+  }
   ctx.fillStyle = dark ? C.white : C.ink;
   ctx.font = font(900, 29);
   ctx.fillText("빽코트", 132, 91);

@@ -7,8 +7,10 @@
 - `brand-mark-on-dark.png`: 어두운 배경용 투명 PNG
 - `brand-mark-light-square-original.png`: 흰 배경의 검정 공 + 주황 화살표 원본
 - `brand-mark-on-light.png`: 밝은 배경용 투명 PNG
-- `brand-mark-circle-on-white-original.png`: 흰 배경 원형 배지 원본
-- `brand-mark-circle.png`: 웹 파비콘·배지용 투명 원형 PNG
+- `brand-mark-circle-on-white-original.png`: 첫 번째 흰 배경 원형 배지 원본
+- `brand-mark-circle-v1.png`: 첫 번째 투명 원형 배지
+- `brand-mark-circle-large-on-white-original.png`: 확대된 흰 배경 원형 배지 원본
+- `brand-mark-circle-v2.png`: 확대된 투명 원형 배지 원본
+- `brand-mark-circle.png`: 현재 웹 파비콘·배지에 사용하는 원형 PNG
 - `main.png`: 흰색 농구공 원본
 - `onlyBall.png`: 흰색 농구공 투명 PNG
-

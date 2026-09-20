@@ -611,6 +611,20 @@ class BackcourtRepository {
         .map((snapshot) => snapshot.size);
   }
 
+  Stream<int> watchMyMonthlyCourtCheckinCount(String courtId) {
+    final month = _monthKey(DateTime.now());
+    return _firestore
+        .collection('checkins')
+        .where('uid', isEqualTo: currentUid)
+        .where('monthKey', isEqualTo: month)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .where((document) => document.data()['courtId'] == courtId)
+              .length,
+        );
+  }
+
   Stream<ActivePlaySession?> watchActivePlaySession() => _firestore
       .collection('active_play_sessions')
       .doc(currentUid)

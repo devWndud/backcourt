@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../backend/backcourt_repository.dart';
@@ -34,6 +35,7 @@ class _CheckinScreenState extends State<CheckinScreen>
   bool _checkedIn = false;
   bool _checking = false;
   double? _distanceMeters;
+  int _stampPulse = 0;
   StreamSubscription<CheckinRecord?>? _checkinSubscription;
 
   @override
@@ -84,7 +86,9 @@ class _CheckinScreenState extends State<CheckinScreen>
       setState(() {
         _checkedIn = true;
         _distanceMeters = 42;
+        _stampPulse += 1;
       });
+      HapticFeedback.mediumImpact();
       return;
     }
     setState(() => _checking = true);
@@ -118,7 +122,13 @@ class _CheckinScreenState extends State<CheckinScreen>
         actualLongitude: position.longitude,
         distanceMeters: distance,
       );
-      if (mounted) setState(() => _distanceMeters = distance);
+      if (mounted) {
+        setState(() {
+          _distanceMeters = distance;
+          _stampPulse += 1;
+        });
+      }
+      HapticFeedback.mediumImpact();
       _show('출석 완료');
     } on TimeoutException {
       _show('현재 위치를 확인하지 못했어요. 다시 시도해주세요.');
@@ -325,6 +335,13 @@ class _CheckinScreenState extends State<CheckinScreen>
                   ),
                 ),
                 const SizedBox(height: 28),
+                _CourtPassCard(
+                  repository: widget.repository,
+                  activeCourt: widget.activeCourt,
+                  checkedIn: _checkedIn,
+                  stampPulse: _stampPulse,
+                ),
+                const SizedBox(height: 28),
                 _CourtRankingSummaryCard(
                   repository: widget.repository,
                   activeCourt: widget.activeCourt,
@@ -341,6 +358,346 @@ class _CheckinScreenState extends State<CheckinScreen>
       ),
     );
   }
+}
+
+class _CourtPassCard extends StatelessWidget {
+  const _CourtPassCard({
+    required this.repository,
+    required this.activeCourt,
+    required this.checkedIn,
+    required this.stampPulse,
+  });
+
+  final BackcourtRepository? repository;
+  final CourtSummary activeCourt;
+  final bool checkedIn;
+  final int stampPulse;
+
+  @override
+  Widget build(BuildContext context) {
+    final repository = this.repository;
+    if (repository == null) {
+      return _CourtPassSurface(
+        court: activeCourt,
+        count: checkedIn ? 5 : 4,
+        stampPulse: stampPulse,
+      );
+    }
+    return StreamBuilder<int>(
+      stream: repository.watchMyMonthlyCourtCheckinCount(activeCourt.id),
+      builder: (context, snapshot) => _CourtPassSurface(
+        court: activeCourt,
+        count: snapshot.data ?? 0,
+        stampPulse: stampPulse,
+        loading: snapshot.connectionState == ConnectionState.waiting,
+      ),
+    );
+  }
+}
+
+class _CourtPassSurface extends StatelessWidget {
+  const _CourtPassSurface({
+    required this.court,
+    required this.count,
+    required this.stampPulse,
+    this.loading = false,
+  });
+
+  final CourtSummary court;
+  final int count;
+  final int stampPulse;
+  final bool loading;
+
+  String get _status {
+    if (count >= 12) return '이번 달 완성';
+    if (count >= 10) return '홈코트';
+    if (count >= 5) return '자주 가는 코트';
+    return '이번 달';
+  }
+
+  String get _next {
+    if (count >= 12) return '다음 달에 새로 시작';
+    if (count >= 10) return '완성까지 ${12 - count}회';
+    if (count >= 5) return '홈코트까지 ${10 - count}회';
+    return '자주 가는 코트까지 ${5 - count}회';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final visibleCount = count.clamp(0, 12);
+    final month = DateTime.now().month;
+    return Container(
+      key: const ValueKey('court-pass-card'),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF241815), Color(0xFF151311), Color(0xFF111111)],
+        ),
+        border: Border.all(color: AppColors.accent.withValues(alpha: .22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.accent,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.grid_view_rounded,
+                  color: Colors.black,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'COURT PASS',
+                      style: TextStyle(
+                        color: AppColors.accent,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      court.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: loading ? '-' : '$visibleCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 25,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                    const TextSpan(
+                      text: '/12',
+                      style: TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            height: 154,
+            width: double.infinity,
+            child: TweenAnimationBuilder<double>(
+              duration: const Duration(milliseconds: 650),
+              curve: Curves.easeOutCubic,
+              tween: Tween(end: visibleCount.toDouble()),
+              builder: (context, progress, _) => Stack(
+                children: [
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _CourtPassPainter(progress: progress),
+                    ),
+                  ),
+                  if (stampPulse > 0)
+                    Positioned(
+                      right: 17,
+                      bottom: 14,
+                      child: TweenAnimationBuilder<double>(
+                        key: ValueKey(stampPulse),
+                        duration: const Duration(milliseconds: 520),
+                        curve: Curves.elasticOut,
+                        tween: Tween(begin: 0, end: 1),
+                        builder: (context, value, child) => Transform.rotate(
+                          angle: (1 - value) * -.22,
+                          child: Transform.scale(scale: value, child: child),
+                        ),
+                        child: Container(
+                          width: 54,
+                          height: 54,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(
+                              0xFF1B1210,
+                            ).withValues(alpha: .9),
+                            border: Border.all(
+                              color: AppColors.accent,
+                              width: 2.5,
+                            ),
+                          ),
+                          child: Text(
+                            '${DateTime.now().day}',
+                            style: const TextStyle(
+                              color: AppColors.accent,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: .13),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  _status,
+                  style: const TextStyle(
+                    color: AppColors.accent,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _next,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$month월 · ${loading ? '-' : count}회',
+                style: const TextStyle(
+                  color: AppColors.soft,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CourtPassPainter extends CustomPainter {
+  const _CourtPassPainter({required this.progress});
+
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bounds = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      const Radius.circular(20),
+    );
+    canvas.drawRRect(bounds, Paint()..color = const Color(0xFF101010));
+    canvas.save();
+    canvas.clipRRect(bounds);
+
+    const gap = 2.0;
+    final cellWidth = (size.width - gap * 3) / 4;
+    final cellHeight = (size.height - gap * 2) / 3;
+    for (var index = 0; index < 12; index++) {
+      final row = index ~/ 4;
+      final column = index % 4;
+      final rect = Rect.fromLTWH(
+        column * (cellWidth + gap),
+        row * (cellHeight + gap),
+        cellWidth,
+        cellHeight,
+      );
+      final amount = (progress - index).clamp(0.0, 1.0);
+      canvas.drawRect(
+        rect,
+        Paint()
+          ..color = Color.lerp(
+            Colors.white.withValues(alpha: .025),
+            AppColors.accent.withValues(alpha: .29),
+            amount,
+          )!,
+      );
+    }
+
+    final line = Paint()
+      ..color = Colors.white.withValues(alpha: .42)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6;
+    final strong = Paint()
+      ..color = Colors.white.withValues(alpha: .62)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8;
+    final court = Rect.fromLTWH(1, 1, size.width - 2, size.height - 2);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(court, const Radius.circular(19)),
+      strong,
+    );
+    final centerX = size.width / 2;
+    final paintWidth = size.width * .27;
+    final paintRect = Rect.fromLTWH(
+      centerX - paintWidth / 2,
+      1,
+      paintWidth,
+      size.height * .55,
+    );
+    canvas.drawRect(paintRect, line);
+    canvas.drawCircle(
+      Offset(centerX, paintRect.bottom),
+      size.height * .18,
+      line,
+    );
+    canvas.drawCircle(Offset(centerX, 13), 3.2, strong);
+    canvas.drawLine(Offset(centerX - 13, 20), Offset(centerX + 13, 20), strong);
+    final arcRect = Rect.fromCenter(
+      center: Offset(centerX, 13),
+      width: size.width * .86,
+      height: size.height * 1.5,
+    );
+    canvas.drawArc(arcRect, .16, math.pi - .32, false, line);
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _CourtPassPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 class _CourtRankingSummaryCard extends StatefulWidget {

@@ -126,10 +126,14 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('nav-2')));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('출석'), findsWidgets);
+    expect(find.byKey(const ValueKey('court-pass-card')), findsOneWidget);
+    expect(find.text('자주 가는 코트까지 1회'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('check-in-button')));
     await tester.pump();
     expect(find.text('출석 완료'), findsOneWidget);
+    expect(find.text('자주 가는 코트'), findsOneWidget);
+    expect(find.text('홈코트까지 5회'), findsOneWidget);
     final now = DateTime.now();
     expect(find.text('${now.month}.${now.day} 출석 완료'), findsOneWidget);
   });

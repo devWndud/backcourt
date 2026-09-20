@@ -286,6 +286,13 @@ class _AppShellState extends State<AppShell> {
     latitude: 37.5665,
     longitude: 126.978,
   );
+  static const _previewCourt = CourtSummary(
+    id: 'sample-0',
+    name: '한강 시민공원 농구장',
+    latitude: 37.5272,
+    longitude: 126.9347,
+    facts: ['야외', '무료'],
+  );
 
   int _currentIndex = 0;
   PushNotificationService? _pushNotifications;
@@ -294,7 +301,9 @@ class _AppShellState extends State<AppShell> {
   @override
   void initState() {
     super.initState();
-    _activeCourt = widget.initialCourt ?? _unselectedCourt;
+    _activeCourt =
+        widget.initialCourt ??
+        (widget.repository == null ? _previewCourt : _unselectedCourt);
     _configurePushNotifications();
   }
 
@@ -351,6 +360,10 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final needsCourt =
+        _activeCourt.id == _unselectedCourt.id &&
+        _currentIndex >= 1 &&
+        _currentIndex <= 3;
     final screens = <Widget>[
       MapScreen(
         useRealMap: widget.useRealMap,
@@ -373,10 +386,99 @@ class _AppShellState extends State<AppShell> {
     ];
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(index: _currentIndex, children: screens),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: IndexedStack(index: _currentIndex, children: screens),
+          ),
+          if (needsCourt)
+            Positioned.fill(
+              child: _CourtSelectionRequired(
+                onTap: () => setState(() => _currentIndex = 0),
+              ),
+            ),
+        ],
+      ),
       bottomNavigationBar: _BottomNav(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
+      ),
+    );
+  }
+}
+
+class _CourtSelectionRequired extends StatelessWidget {
+  const _CourtSelectionRequired({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AppColors.background,
+      child: SafeArea(
+        bottom: false,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(28, 28, 28, 110),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                key: const ValueKey('select-court-prompt'),
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(28),
+                child: Ink(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(24, 34, 24, 27),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(
+                      color: AppColors.accent.withValues(alpha: .24),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 58,
+                        height: 58,
+                        decoration: const BoxDecoration(
+                          color: AppColors.accent,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.place_rounded,
+                          color: Colors.black,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      const Text(
+                        '코트를 선택해 주세요',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 21,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -.7,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '코트 탭으로 이동',
+                        style: TextStyle(
+                          color: AppColors.accent,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -252,6 +252,37 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('코트 미선택 안내를 누르면 코트 탭으로 이동한다', (tester) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: const AppShell(
+          useRealMap: false,
+          initialCourt: CourtSummary(
+            id: 'sample-unselected',
+            name: '코트를 선택해 주세요',
+            latitude: 37.5665,
+            longitude: 126.978,
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('nav-2')));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(find.byKey(const ValueKey('select-court-prompt')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('select-court-prompt')));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(find.byKey(const ValueKey('court-search-field')), findsOneWidget);
+    expect(find.byKey(const ValueKey('select-court-prompt')), findsNothing);
+  });
+
   testWidgets('지금 코트 신호를 만들고 합류 상태를 바꿀 수 있다', (tester) async {
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1;

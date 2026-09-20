@@ -13,12 +13,6 @@ const sources = {
   icon: "./assets/app-icon.png",
   markLight: "./assets/brand-mark-on-light.png",
   ball: "./assets/ball.png",
-  map: "./assets/map.png",
-  live: "./assets/live.png",
-  meetup: "./assets/meetup.png",
-  checkin: "./assets/checkin.png",
-  feed: "./assets/feed.png",
-  profile: "./assets/profile.png",
 };
 
 const images = {};
@@ -166,6 +160,177 @@ function heroIcon(ctx, x, y, size, angle = -3) {
   ctx.restore();
 }
 
+function mapArtwork(ctx, x, y, width, height) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, width, height);
+  ctx.clip();
+  ctx.fillStyle = C.ink;
+  ctx.fillRect(x, y, width, height);
+
+  ctx.strokeStyle = "#262626";
+  ctx.lineWidth = 3;
+  const roads = [
+    [-80, 120, 680, 560], [40, -40, 610, 410], [-120, 430, 720, 690],
+    [90, 860, 650, 180], [240, -70, 120, 1040], [500, -40, 260, 1030],
+    [-50, 740, 700, 470], [0, 260, 680, 70], [120, 980, 580, 610],
+  ];
+  roads.forEach(([x1, y1, x2, y2]) => {
+    ctx.beginPath();
+    ctx.moveTo(x + x1, y + y1);
+    ctx.lineTo(x + x2, y + y2);
+    ctx.stroke();
+  });
+
+  ctx.strokeStyle = "#171717";
+  ctx.lineWidth = 1;
+  for (let row = 0; row < 10; row += 1) {
+    ctx.strokeRect(x + 34 + (row % 2) * 24, y + 70 + row * 86, width - 90, 48);
+  }
+
+  const markers = [[.37, .38, 11], [.45, .46, 11], [.43, .48, 11], [.49, .54, 11], [.72, .73, 11]];
+  markers.forEach(([px, py, radius]) => {
+    ctx.fillStyle = "rgba(255,97,45,.20)";
+    ctx.beginPath();
+    ctx.arc(x + width * px, y + height * py, radius * 2.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = C.orange;
+    ctx.strokeStyle = C.white;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(x + width * px, y + height * py, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  });
+
+  ctx.fillStyle = C.orange;
+  ctx.fillRect(x + 42, y + height - 105, 220, 58);
+  ctx.fillStyle = C.white;
+  ctx.font = font(900, 19);
+  ctx.fillText("30,577 COURTS", x + 68, y + height - 69);
+  ctx.restore();
+}
+
+function liveCard(ctx, x, y, width, height, type) {
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,.18)";
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 18;
+  ctx.shadowOffsetY = 22;
+  roundedFill(ctx, x, y, width, height, 42, C.ink);
+  ctx.shadowColor = "transparent";
+  ctx.fillStyle = C.orange;
+  ctx.font = font(900, 20);
+  trackedText(ctx, type === "live" ? "LIVE" : "MEETUP", x + 38, y + 58, 3);
+  ctx.fillStyle = C.white;
+
+  if (type === "live") {
+    ctx.font = font(900, 148);
+    ctx.fillText("05", x + 34, y + 213);
+    ctx.font = font(900, 27);
+    ctx.fillText("PLAYING", x + 42, y + 260);
+    ctx.fillStyle = C.orange;
+    ctx.fillRect(x + 34, y + 315, width - 68, 176);
+    ctx.fillStyle = C.ink;
+    ctx.font = font(900, 24);
+    ctx.fillText("지금 코트", x + 62, y + 365);
+    ctx.font = font(900, 48);
+    ctx.fillText("영등포덩크", x + 61, y + 428);
+  } else {
+    ctx.font = font(900, 104);
+    ctx.fillText("19:30", x + 36, y + 190);
+    ctx.fillStyle = C.orange;
+    ctx.font = font(900, 25);
+    ctx.fillText("오늘", x + 42, y + 252);
+    ctx.fillStyle = C.white;
+    ctx.font = font(900, 38);
+    ctx.fillText("4 / 6", x + 42, y + 318);
+    ctx.strokeStyle = C.orange;
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(x + 42, y + 376);
+    ctx.lineTo(x + width - 42, y + 376);
+    ctx.stroke();
+    ctx.fillStyle = C.muted;
+    ctx.font = font(800, 22);
+    ctx.fillText("한강 시민공원", x + 42, y + 432);
+  }
+  ctx.restore();
+}
+
+function radarArtwork(ctx, centerX, centerY) {
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,.20)";
+  ctx.lineWidth = 3;
+  [72, 116, 160, 204].forEach((radius) => {
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+  ctx.fillStyle = C.white;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 66, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = C.ink;
+  ctx.beginPath();
+  ctx.moveTo(centerX + 28, centerY - 34);
+  ctx.lineTo(centerX + 5, centerY + 33);
+  ctx.lineTo(centerX - 13, centerY + 8);
+  ctx.lineTo(centerX - 40, centerY - 5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function feedArtwork(ctx, x, y, width, height) {
+  ctx.fillStyle = C.ink;
+  ctx.fillRect(x, y, width, height);
+  const blocks = [
+    [24, 24, width - 48, 150], [24, 194, width * .45, 220],
+    [width * .51, 194, width * .43, 220], [24, 434, width - 48, 190],
+  ];
+  blocks.forEach(([bx, by, bw, bh], index) => {
+    ctx.fillStyle = index === 2 ? C.orange : "#1d1d1d";
+    ctx.fillRect(x + bx, y + by, bw, bh);
+    ctx.strokeStyle = index === 2 ? C.ink : "#3a3a3a";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x + bx + bw * .5, y + by + bh * .5, Math.min(bw, bh) * .28, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+}
+
+function profileArtwork(ctx, x, y, width, height) {
+  ctx.fillStyle = C.ink;
+  ctx.fillRect(x, y, width, height);
+  ctx.drawImage(images.icon, x + 38, y + 42, 116, 116);
+  ctx.fillStyle = C.white;
+  ctx.font = font(900, 36);
+  ctx.fillText("BACKCOURT", x + 180, y + 90);
+  ctx.fillStyle = C.orange;
+  ctx.font = font(900, 19);
+  ctx.fillText("@BACKCOURT", x + 182, y + 126);
+  ctx.fillStyle = C.white;
+  ctx.font = font(900, 54);
+  ctx.fillText("24", x + 42, y + 252);
+  ctx.fillText("18", x + 172, y + 252);
+  ctx.fillText("07", x + 302, y + 252);
+  ctx.fillStyle = C.muted;
+  ctx.font = font(800, 18);
+  ctx.fillText("POST", x + 45, y + 286);
+  ctx.fillText("CHECK-IN", x + 166, y + 286);
+  ctx.fillText("LIVE", x + 312, y + 286);
+  ctx.fillStyle = C.paper;
+  ctx.fillRect(x + 38, y + 346, width - 76, 190);
+  ctx.fillStyle = C.ink;
+  ctx.font = font(900, 19);
+  trackedText(ctx, "COURT RECORD", x + 62, y + 390, 2);
+  ctx.font = font(900, 54);
+  ctx.fillText("LV. 07", x + 61, y + 466);
+  ctx.fillStyle = C.orange;
+  ctx.fillRect(x + 60, y + 495, width - 120, 10);
+}
+
 function courtLines(ctx, color, alpha = .22) {
   ctx.save();
   ctx.strokeStyle = color;
@@ -214,13 +379,7 @@ function slide2(ctx) {
   ctx.filter = "brightness(0)";
   ctx.drawImage(images.ball, -268, 616, 660, 660);
   ctx.restore();
-  phone(ctx, images.map, 570, 158, 440, 952, 2.5, .40);
-  ctx.fillStyle = C.orange;
-  ctx.fillRect(524, 729, 78, 78);
-  ctx.fillStyle = C.white;
-  ctx.beginPath();
-  ctx.arc(563, 768, 12, 0, Math.PI * 2);
-  ctx.fill();
+  mapArtwork(ctx, 536, 152, 544, 928);
   footerTag(ctx, "FIND A COURT");
 }
 
@@ -238,8 +397,8 @@ function slide3(ctx) {
   ctx.fillStyle = C.white;
   ctx.font = font(900, 24);
   ctx.fillText("LIVE   /   약속", 773, 261);
-  phone(ctx, images.live, 70, 414, 408, 884, -4, .23);
-  phone(ctx, images.meetup, 604, 372, 408, 884, 4, .24);
+  liveCard(ctx, 70, 414, 408, 650, "live");
+  liveCard(ctx, 604, 372, 408, 650, "meetup");
 }
 
 function slide4(ctx) {
@@ -262,7 +421,19 @@ function slide4(ctx) {
   ctx.fillText("01", 86, 706);
   ctx.font = font(900, 24);
   ctx.fillText("COURT RANK", 245, 691);
-  phone(ctx, images.checkin, 578, 130, 436, 944, 2, .41);
+  radarArtwork(ctx, 790, 410);
+  ctx.fillStyle = C.white;
+  ctx.font = font(900, 22);
+  ctx.textAlign = "center";
+  ctx.fillText("GPS 출석", 790, 684);
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#1c1c1c";
+  ctx.fillRect(560, 748, 460, 232);
+  ctx.fillStyle = C.orange;
+  [0, 1, 2].forEach((index) => ctx.fillRect(598 + index * 116, 915 - index * 46, 76, 34 + index * 46));
+  ctx.fillStyle = C.white;
+  ctx.font = font(900, 20);
+  trackedText(ctx, "COURT RANKING", 598, 800, 2.5);
   footerTag(ctx, "LEAVE YOUR MARK", C.white);
 }
 
@@ -278,8 +449,8 @@ function slide5(ctx) {
   ctx.fillText("피드", 60, 316);
   ctx.fillStyle = C.orange;
   ctx.fillText("프로필", 60, 414);
-  phone(ctx, images.feed, 64, 484, 398, 862, -4, .14);
-  phone(ctx, images.profile, 618, 430, 398, 862, 4, .14);
+  feedArtwork(ctx, 54, 474, 420, 642);
+  profileArtwork(ctx, 606, 422, 474, 658);
   roundedFill(ctx, 390, 889, 300, 74, 37, C.orange);
   ctx.fillStyle = C.ink;
   ctx.font = font(900, 23);

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /adminnnn/
+Disallow: /api/
+Disallow: /health
+
+Sitemap: https://backcourt.kro.kr/sitemap.xml

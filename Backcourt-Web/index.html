@@ -11,7 +11,7 @@
     <meta property="og:url" content="https://backcourt.kro.kr" />
     <title>빽코트 | 일상에서, 다시 코트로.</title>
     <link rel="icon" href="./assets/icon.png" />
-    <link rel="stylesheet" href="./styles.css?v=7" />
+    <link rel="stylesheet" href="./styles.css?v=8" />
   </head>
   <body>
     <main class="poster">
@@ -31,14 +31,14 @@
           <p class="subcopy">코트를 찾고, 바로 뛰자.</p>
 
           <div class="store-buttons" aria-label="앱 다운로드">
-            <a class="store-button" href="https://play.google.com/store/apps/details?id=kr.backcourt.backcourt" target="_blank" rel="noopener noreferrer">
+            <button class="store-button" type="button" data-store="Google Play">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.7 2.4 14 12 3.7 21.6a2.6 2.6 0 0 1-.7-1.8V4.2c0-.7.3-1.3.7-1.8Zm11.6 10.8 2.7 2.5L6.2 22.2l9.1-9Zm3.9-3.6c.6.3 1 .9 1 1.5s-.4 1.2-1 1.5l-2 1.1-2.9-2.7 2.9-2.7 2 1.3ZM6.2 1.8 18 8.3l-2.7 2.5-9.1-9Z"/></svg>
               <span><small>GET IT ON</small>Google Play</span>
-            </a>
-            <a class="store-button" href="https://apps.apple.com/kr/search?term=%EB%B9%BD%EC%BD%94%ED%8A%B8" target="_blank" rel="noopener noreferrer">
+            </button>
+            <button class="store-button" type="button" data-store="App Store">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.8 12.8c0-2.6 2.1-3.8 2.2-3.9a4.7 4.7 0 0 0-3.7-2c-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.3-.8a4.9 4.9 0 0 0-4.1 2.5c-1.8 3-.5 7.5 1.2 10 .8 1.2 1.8 2.5 3.1 2.4 1.2-.1 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4a10.7 10.7 0 0 0 1.4-2.9 4.4 4.4 0 0 1-2.3-3.8ZM14.3 5.3A4.5 4.5 0 0 0 15.4 2a4.6 4.6 0 0 0-3 1.6 4.2 4.2 0 0 0-1.1 3.2 3.8 3.8 0 0 0 3-1.5Z"/></svg>
               <span><small>Download on the</small>App Store</span>
-            </a>
+            </button>
           </div>
         </div>
 
@@ -53,5 +53,7 @@
         <div class="court-markings" aria-hidden="true"><i></i><b></b></div>
       </section>
     </main>
+    <div id="store-toast" class="store-toast" role="status" aria-live="polite"></div>
+    <script src="./app.js?v=1"></script>
   </body>
 </html>

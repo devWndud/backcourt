@@ -18,7 +18,7 @@ h1 span { display: inline-block; margin-top: .1em; color: var(--orange); white-s
 .rule { width: 48px; height: 7px; margin: 40px 0 25px; background: var(--ink); }
 .subcopy { margin: 0; font-size: 18px; font-weight: 750; }
 .store-buttons { margin-top: 42px; display: flex; gap: 9px; }
-.store-button { min-width: 176px; height: 58px; padding: 0 17px; display: flex; align-items: center; gap: 11px; color: #fff; background: #050505; border: 1px solid #050505; border-radius: 4px; text-align: left; transition: transform .15s ease; }
+.store-button { min-width: 176px; height: 58px; padding: 0 17px; display: flex; align-items: center; gap: 11px; appearance: none; color: #fff; background: #050505; border: 1px solid #050505; border-radius: 4px; font: inherit; text-align: left; cursor: pointer; transition: transform .15s ease; }
 .store-button:hover { transform: translateY(-2px); }
 .store-button svg { width: 25px; height: 25px; flex: 0 0 auto; fill: currentColor; }
 .store-button span { font-size: 16px; font-weight: 850; line-height: 1; letter-spacing: -.03em; }
@@ -34,6 +34,8 @@ footer { font-size: 9px; font-weight: 900; letter-spacing: .15em; }
 .court-markings i, .court-markings b { position: absolute; z-index: 1; display: block; border: 2px solid rgba(0,0,0,.16); border-radius: 50%; }
 .court-markings i { width: 430px; height: 430px; left: -220px; bottom: -150px; }
 .court-markings b { width: 230px; height: 230px; right: -110px; bottom: 44px; }
+.store-toast { position: fixed; z-index: 20; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); max-width: calc(100% - 36px); padding: 13px 18px; color: #fff; background: #090909; border: 2px solid var(--orange); font-size: 14px; font-weight: 850; white-space: nowrap; opacity: 0; pointer-events: none; transform: translate(-50%, 16px); transition: opacity .18s ease, transform .18s ease; }
+.store-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 @media (max-width: 900px) {
   .poster { display: block; overflow: visible; }
   .copy-panel { min-height: 82svh; padding: 22px 20px 20px; }

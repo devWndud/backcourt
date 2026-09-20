@@ -1,0 +1,45 @@
+:root {
+  color-scheme: dark;
+  --page: #111111;
+  --panel: #191919;
+  --line: #303030;
+  --paper: #f1efe8;
+  --orange: #ff5d3b;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; color: #f5f5f5; background: var(--page); font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif; }
+button { font: inherit; }
+.studio-header { position: sticky; top: 0; z-index: 10; min-height: 94px; padding: 20px clamp(20px, 4vw, 58px); display: flex; align-items: center; justify-content: space-between; gap: 20px; background: rgba(17, 17, 17, .92); border-bottom: 1px solid var(--line); backdrop-filter: blur(18px); }
+.studio-header p { margin: 0 0 5px; color: var(--orange); font-size: 11px; font-weight: 900; letter-spacing: .2em; }
+.studio-header h1 { margin: 0; font-size: clamp(22px, 3vw, 34px); letter-spacing: -.055em; }
+.header-actions { display: flex; align-items: center; gap: 12px; }
+.header-actions span { color: #858585; font-size: 12px; font-weight: 800; }
+.header-actions button, .download { color: #050505; background: var(--paper); border: 0; border-radius: 999px; font-weight: 900; cursor: pointer; }
+.header-actions button { padding: 12px 18px; }
+.board { width: min(1240px, 100%); margin: 0 auto; padding: 42px clamp(18px, 4vw, 48px) 70px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 52px 32px; }
+.creative { min-width: 0; }
+.creative-meta { min-height: 30px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.creative-meta b { color: var(--orange); font-size: 13px; }
+.creative-meta span { color: #8c8c8c; font-size: 12px; font-weight: 800; }
+.canvas-shell { width: 100%; overflow: hidden; background: #080808; border: 1px solid #292929; box-shadow: 0 20px 50px rgba(0, 0, 0, .28); }
+canvas { width: 100%; height: auto; display: block; aspect-ratio: 1; }
+.download { margin-top: 12px; padding: 10px 16px; color: #c8c8c8; background: #242424; font-size: 12px; transition: .15s ease; }
+.download:hover, .header-actions button:hover { color: #fff; background: var(--orange); transform: translateY(-1px); }
+footer { padding: 0 20px 42px; color: #5d5d5d; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-align: center; }
+
+body.export-mode { width: 1080px; height: 1080px; overflow: hidden; background: #000; }
+.export-mode .studio-header, .export-mode footer { display: none; }
+.export-mode .board { width: 1080px; height: 1080px; margin: 0; padding: 0; display: block; }
+.export-mode .creative { display: none; }
+.export-mode .creative.is-export { display: block; width: 1080px; height: 1080px; }
+.export-mode .creative-meta, .export-mode .download { display: none; }
+.export-mode .canvas-shell { width: 1080px; height: 1080px; border: 0; box-shadow: none; }
+.export-mode canvas { width: 1080px; height: 1080px; }
+
+@media (max-width: 760px) {
+  .studio-header { min-height: 82px; }
+  .header-actions span { display: none; }
+  .header-actions button { padding: 10px 14px; font-size: 12px; }
+  .board { grid-template-columns: 1fr; padding-top: 28px; gap: 42px; }
+}

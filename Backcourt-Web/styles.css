@@ -45,7 +45,7 @@ footer { font-size: 9px; font-weight: 900; letter-spacing: .15em; }
 @media (max-width: 560px) {
   body { min-width: 320px; background: var(--paper); }
   .poster { position: relative; height: 100svh; min-height: 0; overflow: hidden; background: var(--paper); }
-  .copy-panel { position: relative; z-index: 2; height: 100svh; min-height: 0; padding: 18px 18px 16px; background: transparent; }
+  .copy-panel { position: relative; z-index: 2; height: 100dvh; min-height: 100svh; padding: calc(18px + env(safe-area-inset-top)) 18px calc(14px + env(safe-area-inset-bottom)); background: transparent; }
   .edition { display: none; }
   .brand img { width: 34px; height: 34px; }
   .brand strong { font-size: 18px; }
@@ -55,16 +55,16 @@ footer { font-size: 9px; font-weight: 900; letter-spacing: .15em; }
   h1 span { white-space: normal; }
   .rule { width: 42px; height: 6px; margin: 24px 0 18px; }
   .subcopy { font-size: 16px; }
-  .store-buttons { margin-top: clamp(26px, 4svh, 34px); flex-direction: column; gap: 8px; }
-  .store-button { width: 100%; height: 57px; justify-content: center; }
+  .store-buttons { margin-top: clamp(24px, 3.5svh, 31px); flex-direction: column; gap: 7px; }
+  .store-button { width: 100%; height: 55px; justify-content: center; }
   .store-button span { width: 112px; }
   footer { position: relative; z-index: 4; padding-top: 14px; border-top: 2px solid var(--ink); }
   footer span:last-child { display: none; }
-  .visual-panel { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; width: 100%; height: clamp(165px, 25svh, 225px); min-height: 0; border-top: 7px solid var(--ink); border-left: 0; }
+  .visual-panel { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; width: 100%; height: clamp(138px, 19svh, 178px); min-height: 0; border-top: 7px solid var(--ink); border-left: 0; }
   .visual-word { display: none; }
   .visual-meta { top: 17px; right: 17px; }
-  .mark-wrap { left: auto; right: -32px; top: auto; bottom: -52px; width: 190px; transform: rotate(-5deg); box-shadow: 13px 13px 0 rgba(0,0,0,.13); }
-  .visual-caption { left: 18px; bottom: 49px; }
+  .mark-wrap { left: auto; right: -28px; top: auto; bottom: -44px; width: 160px; transform: rotate(-5deg); box-shadow: 11px 11px 0 rgba(0,0,0,.13); }
+  .visual-caption { left: 18px; bottom: 38px; }
   .court-markings i { width: 280px; height: 280px; left: -150px; bottom: -160px; }
   .court-markings b { width: 150px; height: 150px; right: 55px; bottom: -80px; }
 }

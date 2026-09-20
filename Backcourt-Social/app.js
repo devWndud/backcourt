@@ -18,7 +18,7 @@ const sources = {
 const images = {};
 const exportSlide = Number(new URLSearchParams(window.location.search).get("export"));
 
-if (exportSlide >= 1 && exportSlide <= 5) {
+if (exportSlide === 1) {
   document.body.classList.add("export-mode");
   document.querySelectorAll(".creative")[exportSlide - 1].classList.add("is-export");
 }
@@ -348,11 +348,23 @@ function courtLines(ctx, color, alpha = .22) {
 function slide1(ctx) {
   ctx.fillStyle = C.orange;
   ctx.fillRect(0, 0, SIZE, SIZE);
-  giantType(ctx, ["BACK", "COURT"], 222, 64, 286, 244, C.ink, .12);
+  giantType(ctx, ["BACK", "COURT"], 108, 68, 244, 218, C.ink, .12);
   platformMeta(ctx);
-  heroIcon(ctx, 226, 332, 628);
+  ctx.fillStyle = C.ink;
+  ctx.font = font(900, 24);
+  ctx.fillText("농구할 땐", 62, 694);
+  ctx.font = font(900, 76);
+  ctx.fillText("빽코트", 58, 782);
+  ctx.fillRect(62, 828, 58, 7);
+  ctx.font = font(900, 18);
+  trackedText(ctx, "GOOGLE PLAY / APP STORE", 62, 886, 2.2);
+  ctx.fillStyle = C.ink;
+  ctx.fillRect(58, 916, 304, 72);
+  ctx.fillStyle = C.orange;
+  ctx.font = font(900, 25);
+  ctx.fillText("출시 예정", 156, 962);
+  heroIcon(ctx, 624, 606, 386, -3);
   courtLines(ctx, C.ink, .18);
-  footerTag(ctx, "FIND YOUR COURT");
 }
 
 function slide2(ctx) {
@@ -459,7 +471,7 @@ function slide5(ctx) {
   ctx.textAlign = "left";
 }
 
-const renderers = [slide1, slide2, slide3, slide4, slide5];
+const renderers = [slide1];
 
 function renderAll() {
   renderers.forEach((render, index) => {
@@ -486,9 +498,7 @@ document.addEventListener("click", (event) => {
 });
 
 document.querySelector("#download-all").addEventListener("click", () => {
-  for (let number = 1; number <= 5; number += 1) {
-    setTimeout(() => downloadSlide(number), (number - 1) * 180);
-  }
+  downloadSlide(1);
 });
 
 Promise.all(Object.entries(sources).map(async ([key, src]) => {

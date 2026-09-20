@@ -2,7 +2,8 @@ const SIZE = 1080;
 const C = {
   ink: "#070707",
   panel: "#151515",
-  orange: "#ff5d3b",
+  orange: "#ff612d",
+  orangeDeep: "#db4d24",
   paper: "#f1efe8",
   white: "#ffffff",
   muted: "#929292",
@@ -95,174 +96,196 @@ function phone(ctx, image, x, y, width, height, angle = 0, anchorY = .5) {
 
 function label(ctx, text, x, y, color = C.orange) {
   ctx.fillStyle = color;
-  ctx.font = font(900, 25);
+  ctx.font = font(900, 24);
   ctx.fillText(text, x, y);
 }
 
-function brand(ctx, dark = false) {
-  if (dark) {
-    roundedFill(ctx, 58, 52, 58, 58, 8, C.ink);
-    ctx.drawImage(images.icon, 58, 52, 58, 58);
-  } else {
-    ctx.drawImage(images.markLight, 48, 42, 78, 78);
+function trackedText(ctx, text, x, y, tracking = 5) {
+  let cursor = x;
+  for (const character of text) {
+    ctx.fillText(character, cursor, y);
+    cursor += ctx.measureText(character).width + tracking;
   }
+}
+
+function brand(ctx, mode = "light") {
+  const dark = mode === "dark";
+  const compact = mode === "compact";
+  const size = compact ? 54 : 66;
+  const x = compact ? 54 : 58;
+  const y = compact ? 50 : 48;
+  ctx.drawImage(dark ? images.icon : images.markLight, x, y, size, size);
   ctx.fillStyle = dark ? C.white : C.ink;
-  ctx.font = font(900, 29);
-  ctx.fillText("빽코트", 132, 91);
+  ctx.font = font(900, compact ? 25 : 28);
+  ctx.fillText("빽코트", x + size + 15, y + size * .67);
+}
+
+function slideMeta(ctx, index, color = C.ink) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.font = font(900, 17);
+  trackedText(ctx, `${String(index).padStart(2, "0")} / 05`, 913, 73, 2.5);
+  ctx.restore();
+}
+
+function platformMeta(ctx, color = C.ink) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.font = font(900, 17);
+  trackedText(ctx, "IOS / ANDROID", 818, 72, 3);
+  ctx.restore();
+}
+
+function giantType(ctx, lines, x, y, size, lineHeight, color, alpha = 1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.font = `950 ${size}px Arial, "Apple SD Gothic Neo", sans-serif`;
+  ctx.textBaseline = "top";
+  lines.forEach((line, index) => ctx.fillText(line, x, y + index * lineHeight));
+  ctx.restore();
+}
+
+function footerTag(ctx, text, color = C.ink) {
+  ctx.fillStyle = color;
+  ctx.fillRect(54, 998, 72, 6);
+  ctx.font = font(900, 19);
+  trackedText(ctx, text, 150, 1007, 3);
+}
+
+function heroIcon(ctx, x, y, size, angle = -3) {
+  ctx.save();
+  ctx.translate(x + size / 2, y + size / 2);
+  ctx.rotate(angle * Math.PI / 180);
+  ctx.translate(-size / 2, -size / 2);
+  ctx.shadowColor = "rgba(0,0,0,.18)";
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 26;
+  ctx.shadowOffsetY = 30;
+  ctx.drawImage(images.icon, 0, 0, size, size);
+  ctx.restore();
 }
 
 function courtLines(ctx, color, alpha = .22) {
   ctx.save();
   ctx.strokeStyle = color;
   ctx.globalAlpha = alpha;
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(0, 1080, 340, Math.PI * 1.5, Math.PI * 2);
+  ctx.arc(0, 1080, 370, Math.PI * 1.5, Math.PI * 2);
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(1080, 1080, 210, Math.PI, Math.PI * 1.5);
+  ctx.arc(1080, 1080, 228, Math.PI, Math.PI * 1.5);
   ctx.stroke();
   ctx.restore();
 }
 
 function slide1(ctx) {
-  ctx.fillStyle = C.paper;
+  ctx.fillStyle = C.orange;
   ctx.fillRect(0, 0, SIZE, SIZE);
-  brand(ctx, false);
-  label(ctx, "BACKCOURT", 72, 252);
-  ctx.fillStyle = C.ink;
-  ctx.font = font(900, 110);
-  ctx.fillText("일상에서", 70, 380);
-  ctx.fillStyle = C.orange;
-  ctx.fillText("다시, 코트로.", 70, 508);
-  ctx.fillStyle = C.ink;
-  ctx.fillRect(72, 575, 68, 10);
-  ctx.font = font(800, 30);
-  ctx.fillText("코트 · LIVE · 약속 · 출석", 72, 646);
-
-  ctx.save();
-  ctx.globalAlpha = .065;
-  ctx.filter = "brightness(0)";
-  ctx.drawImage(images.ball, 724, 92, 330, 330);
-  ctx.restore();
-
-  ctx.fillStyle = C.orange;
-  ctx.fillRect(0, 760, SIZE, 320);
+  giantType(ctx, ["BACK", "COURT"], 222, 64, 286, 244, C.ink, .12);
+  platformMeta(ctx);
+  heroIcon(ctx, 226, 332, 628);
   courtLines(ctx, C.ink, .18);
-  ctx.save();
-  ctx.translate(758, 770);
-  ctx.rotate(-4 * Math.PI / 180);
-  ctx.shadowColor = "rgba(0,0,0,.22)";
-  ctx.shadowBlur = 24;
-  ctx.shadowOffsetY = 18;
-  ctx.drawImage(images.icon, 0, 0, 258, 258);
-  ctx.restore();
-  ctx.fillStyle = C.ink;
-  ctx.font = font(900, 22);
-  ctx.fillText("FIND YOUR COURT", 72, 932);
-  ctx.font = font(900, 18);
-  ctx.fillText("IOS / ANDROID", 72, 976);
+  footerTag(ctx, "FIND YOUR COURT");
 }
 
 function slide2(ctx) {
-  ctx.fillStyle = C.ink;
+  ctx.fillStyle = C.paper;
   ctx.fillRect(0, 0, SIZE, SIZE);
-  brand(ctx, true);
-  label(ctx, "COURT MAP", 72, 216);
-  ctx.fillStyle = C.white;
-  ctx.font = font(900, 92);
-  ctx.fillText("전국 농구", 70, 328);
-  ctx.fillText("코트 지도", 70, 432);
-  roundedFill(ctx, 70, 493, 360, 72, 36, C.orange);
-  ctx.fillStyle = C.white;
-  ctx.font = font(900, 28);
-  ctx.fillText("전국 코트 30,577곳", 100, 540);
-  ctx.fillStyle = C.muted;
-  ctx.font = font(700, 25);
-  ctx.fillText("야외  /  무료  /  조명", 72, 622);
-
-  ctx.save();
-  ctx.globalAlpha = .055;
-  ctx.drawImage(images.ball, -145, 700, 470, 470);
-  ctx.restore();
-  phone(ctx, images.map, 612, 116, 390, 846, 2, .42);
+  giantType(ctx, ["COURT", "MAP"], -24, -72, 282, 238, C.ink, .045);
+  brand(ctx, "compact");
+  slideMeta(ctx, 2);
+  label(ctx, "COURT MAP", 62, 236);
+  ctx.fillStyle = C.ink;
+  ctx.font = font(900, 99);
+  ctx.fillText("코트 찾기", 58, 342);
   ctx.fillStyle = C.orange;
+  ctx.font = font(900, 76);
+  ctx.fillText("30,577", 59, 444);
+  ctx.fillStyle = C.ink;
+  ctx.font = font(900, 26);
+  trackedText(ctx, "COURTS", 64, 488, 3);
+  ctx.fillRect(62, 542, 58, 8);
+  ctx.font = font(800, 24);
+  ctx.fillText("야외  ·  무료  ·  조명", 62, 606);
+  ctx.save();
+  ctx.globalAlpha = .045;
+  ctx.filter = "brightness(0)";
+  ctx.drawImage(images.ball, -268, 616, 660, 660);
+  ctx.restore();
+  phone(ctx, images.map, 570, 158, 440, 952, 2.5, .40);
+  ctx.fillStyle = C.orange;
+  ctx.fillRect(524, 729, 78, 78);
+  ctx.fillStyle = C.white;
   ctx.beginPath();
-  ctx.arc(585, 798, 18, 0, Math.PI * 2);
+  ctx.arc(563, 768, 12, 0, Math.PI * 2);
   ctx.fill();
+  footerTag(ctx, "FIND A COURT");
 }
 
 function slide3(ctx) {
   ctx.fillStyle = C.orange;
   ctx.fillRect(0, 0, SIZE, SIZE);
-  brand(ctx, false);
-  label(ctx, "PLAY TOGETHER", 72, 200, C.ink);
+  giantType(ctx, ["LIVE", "GAME"], 92, -70, 310, 248, C.ink, .12);
+  brand(ctx, "compact");
+  slideMeta(ctx, 3);
+  label(ctx, "LIVE / MEETUP", 62, 216, C.ink);
   ctx.fillStyle = C.ink;
-  ctx.font = font(900, 92);
-  ctx.fillText("실시간 LIVE", 70, 306);
-  ctx.fillText("농구 약속", 70, 408);
-
-  roundedFill(ctx, 728, 196, 282, 74, 37, C.ink);
+  ctx.font = font(900, 86);
+  ctx.fillText("지금 코트", 60, 316);
+  roundedFill(ctx, 732, 218, 274, 68, 34, C.ink);
   ctx.fillStyle = C.white;
-  ctx.font = font(900, 25);
-  ctx.fillText("LIVE  /  약속", 774, 244);
-
-  phone(ctx, images.live, 112, 470, 390, 846, -4, .24);
-  phone(ctx, images.meetup, 574, 402, 390, 846, 4, .25);
+  ctx.font = font(900, 24);
+  ctx.fillText("LIVE   /   약속", 773, 261);
+  phone(ctx, images.live, 70, 414, 408, 884, -4, .23);
+  phone(ctx, images.meetup, 604, 372, 408, 884, 4, .24);
 }
 
 function slide4(ctx) {
-  ctx.fillStyle = C.paper;
-  ctx.fillRect(0, 0, SIZE, SIZE);
-  brand(ctx, false);
-  label(ctx, "COURT CHECK-IN", 70, 214);
   ctx.fillStyle = C.ink;
-  ctx.font = font(900, 86);
-  ctx.fillText("GPS 출석", 68, 320);
-  ctx.fillStyle = C.orange;
-  ctx.fillText("코트 랭킹", 68, 418);
-  ctx.fillStyle = "#55524e";
-  ctx.font = font(800, 26);
-  ctx.fillText("GPS 출석 · 플레이 시간 · 월간 랭킹", 72, 480);
-
-  roundedFill(ctx, 66, 596, 440, 284, 38, C.ink);
-  label(ctx, "COURT RANKING", 100, 652);
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  giantType(ctx, ["CHECK", "IN"], -34, -84, 278, 232, C.orange, .14);
+  brand(ctx, "dark");
+  slideMeta(ctx, 4, C.white);
+  label(ctx, "GPS CHECK-IN", 62, 226);
   ctx.fillStyle = C.white;
-  ctx.font = font(900, 52);
-  ctx.fillText("이번 달 1위", 98, 724);
+  ctx.font = font(900, 94);
+  ctx.fillText("출석", 60, 336);
   ctx.fillStyle = C.orange;
-  ctx.font = font(900, 72);
-  ctx.fillText("COURT #1", 98, 817);
-
-  ctx.save();
-  ctx.globalAlpha = .06;
-  ctx.filter = "brightness(0)";
-  ctx.drawImage(images.ball, -110, 742, 420, 420);
-  ctx.restore();
-  phone(ctx, images.checkin, 620, 124, 390, 846, 2, .42);
+  ctx.fillText("랭킹", 60, 442);
+  roundedFill(ctx, 58, 532, 400, 264, 0, C.orange);
+  ctx.fillStyle = C.ink;
+  ctx.font = font(900, 20);
+  trackedText(ctx, "THIS MONTH", 91, 582, 2.5);
+  ctx.font = font(900, 118);
+  ctx.fillText("01", 86, 706);
+  ctx.font = font(900, 24);
+  ctx.fillText("COURT RANK", 245, 691);
+  phone(ctx, images.checkin, 578, 130, 436, 944, 2, .41);
+  footerTag(ctx, "LEAVE YOUR MARK", C.white);
 }
 
 function slide5(ctx) {
-  ctx.fillStyle = C.ink;
+  ctx.fillStyle = C.paper;
   ctx.fillRect(0, 0, SIZE, SIZE);
-  brand(ctx, true);
-  label(ctx, "COURT STORIES", 70, 205);
-  ctx.fillStyle = C.white;
-  ctx.font = font(900, 86);
-  ctx.fillText("코트 리뷰", 68, 308);
+  giantType(ctx, ["YOUR", "COURT"], 116, -76, 274, 232, C.ink, .045);
+  brand(ctx, "compact");
+  slideMeta(ctx, 5);
+  label(ctx, "FEED / PROFILE", 62, 214);
+  ctx.fillStyle = C.ink;
+  ctx.font = font(900, 84);
+  ctx.fillText("피드", 60, 316);
   ctx.fillStyle = C.orange;
-  ctx.fillText("농구 피드", 68, 408);
-  ctx.fillStyle = C.muted;
-  ctx.font = font(800, 26);
-  ctx.fillText("피드 · 프로필 · 나의 기록", 72, 468);
-
-  phone(ctx, images.feed, 82, 548, 380, 824, -4, .15);
-  phone(ctx, images.profile, 602, 474, 380, 824, 4, .14);
-
-  ctx.save();
-  ctx.globalAlpha = .06;
-  ctx.drawImage(images.ball, 420, 28, 600, 600);
-  ctx.restore();
+  ctx.fillText("프로필", 60, 414);
+  phone(ctx, images.feed, 64, 484, 398, 862, -4, .14);
+  phone(ctx, images.profile, 618, 430, 398, 862, 4, .14);
+  roundedFill(ctx, 390, 889, 300, 74, 37, C.orange);
+  ctx.fillStyle = C.ink;
+  ctx.font = font(900, 23);
+  ctx.textAlign = "center";
+  ctx.fillText("일상에서, 다시 코트로.", 540, 935);
+  ctx.textAlign = "left";
 }
 
 const renderers = [slide1, slide2, slide3, slide4, slide5];

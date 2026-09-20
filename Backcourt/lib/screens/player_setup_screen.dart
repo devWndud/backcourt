@@ -355,7 +355,6 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          const Positioned.fill(child: _SetupBackdrop()),
           SafeArea(
             bottom: false,
             child: Column(
@@ -1238,37 +1237,6 @@ class _SetupAction extends StatelessWidget {
                   ],
                 ),
         ),
-      ),
-    );
-  }
-}
-
-class _SetupBackdrop extends StatelessWidget {
-  const _SetupBackdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Stack(
-        children: [
-          Positioned(
-            top: -180,
-            right: -150,
-            child: Container(
-              width: 390,
-              height: 390,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.accent.withValues(alpha: .13),
-                    AppColors.accent.withValues(alpha: 0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

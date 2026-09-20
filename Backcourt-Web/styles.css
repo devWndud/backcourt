@@ -37,6 +37,15 @@ footer { font-size: 9px; font-weight: 900; letter-spacing: .15em; }
 .court-markings i, .court-markings b { position: absolute; z-index: 1; display: block; border: 2px solid rgba(0,0,0,.16); border-radius: 50%; }
 .court-markings i { width: 430px; height: 430px; left: -220px; bottom: -150px; }
 .court-markings b { width: 230px; height: 230px; right: -110px; bottom: 44px; }
+.about { padding: clamp(78px, 10vw, 150px) clamp(24px, 6vw, 96px); display: grid; grid-template-columns: minmax(300px, .8fr) minmax(0, 1.6fr); gap: clamp(50px, 8vw, 140px); color: var(--paper); background: var(--ink); border-top: 1px solid #242424; }
+.about__head > p { margin: 0 0 26px; color: var(--orange); font-size: 11px; font-weight: 950; letter-spacing: .16em; }
+.about h2 { margin: 0; font-size: clamp(50px, 6vw, 96px); line-height: .92; font-weight: 950; letter-spacing: -.075em; }
+.about h2 span { color: var(--orange); }
+.about__items { border-top: 1px solid #424242; }
+.about article { padding: 30px 0 32px; display: grid; grid-template-columns: 46px minmax(150px, .72fr) minmax(220px, 1.28fr); gap: 20px; align-items: baseline; border-bottom: 1px solid #424242; }
+.about article > span { color: var(--orange); font-size: 11px; font-weight: 950; letter-spacing: .1em; }
+.about h3 { margin: 0; font-size: clamp(20px, 2vw, 30px); font-weight: 900; letter-spacing: -.055em; }
+.about article p { margin: 0; max-width: 530px; color: #aaa8a1; font-size: 16px; line-height: 1.75; font-weight: 650; letter-spacing: -.025em; }
 .store-toast { position: fixed; z-index: 20; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); max-width: calc(100% - 36px); padding: 13px 18px; color: #fff; background: #090909; border: 2px solid var(--orange); font-size: 14px; font-weight: 850; white-space: nowrap; opacity: 0; pointer-events: none; transform: translate(-50%, 16px); transition: opacity .18s ease, transform .18s ease; }
 .store-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 @media (max-width: 900px) {
@@ -46,6 +55,7 @@ footer { font-size: 9px; font-weight: 900; letter-spacing: .15em; }
   h1 { font-size: clamp(60px, 12.5vw, 86px); }
   .visual-panel { min-height: 62svh; border-top: 8px solid var(--ink); border-left: 0; }
   .mark-wrap { width: min(320px, 60%); }
+  .about { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
   body { min-width: 320px; background: var(--paper); }
@@ -74,6 +84,13 @@ footer { font-size: 9px; font-weight: 900; letter-spacing: .15em; }
   .visual-caption { left: 18px; bottom: 38px; }
   .court-markings i { width: 280px; height: 280px; left: -150px; bottom: -160px; }
   .court-markings b { width: 150px; height: 150px; right: 55px; bottom: -80px; }
+  .about { padding: 68px 20px 76px; gap: 48px; }
+  .about__head > p { margin-bottom: 20px; font-size: 9px; }
+  .about h2 { font-size: clamp(48px, 14vw, 62px); }
+  .about article { padding: 24px 0 26px; grid-template-columns: 34px 1fr; gap: 8px 10px; }
+  .about article > span { grid-row: 1 / span 2; }
+  .about h3 { font-size: 22px; }
+  .about article p { grid-column: 2; font-size: 15px; line-height: 1.65; }
 }
 @media (max-height: 730px) and (min-width: 901px) {
   .hero-copy { padding-top: 25px; padding-bottom: 25px; }

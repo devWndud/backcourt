@@ -22,7 +22,7 @@ a { color: inherit; text-decoration: none; }
 .left-copy h2 { margin:0; font-size:12.7cqh; line-height:.93; font-weight:950; letter-spacing:-.09em; }
 .left-copy i { width:7.6cqh; height:.82cqh; margin:3.5cqh 0 2.5cqh; display:block; background:var(--ink); }
 .left-copy span { color:rgba(117,38,14,.82); font-size:2.05cqh; font-weight:950; letter-spacing:.11em; }
-.hero-icon { position:absolute; z-index:3; left:84.5cqh; top:24cqh; width:56cqh; height:56cqh; object-fit:contain; transform:rotate(-3deg); filter:drop-shadow(2cqh 2.2cqh 0 rgba(117,38,14,.2)); }
+.hero-icon { position:absolute; z-index:3; left:88.5cqh; top:31.5cqh; width:48cqh; height:48cqh; object-fit:contain; filter:drop-shadow(1.15cqh 1.35cqh 0 rgba(117,38,14,.22)); }
 .right-copy { position:absolute; z-index:3; left:158.25cqh; top:34.5cqh; transform:scale(1.5); transform-origin:top left; }
 .right-copy > p { margin:0 0 1.25cqh; color:rgba(117,38,14,.92); font-size:3.2cqh; font-weight:900; }
 .right-copy > h2 { margin:0; font-size:11.25cqh; line-height:.84; font-weight:950; letter-spacing:-.09em; }

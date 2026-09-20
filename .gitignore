@@ -1,5 +1,8 @@
 # Local project backups
 Backcourt_backup_*.tar.gz
 
+# macOS metadata
+.DS_Store
+
 # Local Firebase CLI binary (download separately)
 Backcourt/tool/firebase

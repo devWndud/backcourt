@@ -33,6 +33,25 @@ class CourtSummary {
   };
 }
 
+CourtSummary? courtSummaryFromProfileData(Object? value) {
+  if (value is! Map) return null;
+  final id = value['id'];
+  final name = value['name'];
+  final location = value['location'];
+  if (id is! String || name is! String || location is! GeoPoint) return null;
+  final rawFacts = value['facts'];
+  return CourtSummary(
+    id: id,
+    name: name,
+    latitude: location.latitude,
+    longitude: location.longitude,
+    address: value['address'] as String?,
+    facts: rawFacts is List
+        ? rawFacts.whereType<String>().toList(growable: false)
+        : const [],
+  );
+}
+
 class AppUserProfile {
   const AppUserProfile({
     required this.uid,
@@ -48,6 +67,10 @@ class AppUserProfile {
     this.meetupCount = 0,
     this.liveCourtCount = 0,
     this.role = 'user',
+    this.onboardingComplete = true,
+    this.homeCourt,
+    this.position,
+    this.playStyles = const [],
   });
 
   factory AppUserProfile.fromDocument(
@@ -70,6 +93,15 @@ class AppUserProfile {
       meetupCount: (data['meetupCount'] as num?)?.toInt() ?? 0,
       liveCourtCount: (data['liveCourtCount'] as num?)?.toInt() ?? 0,
       role: data['role'] as String? ?? 'user',
+      onboardingComplete:
+          data['onboardingComplete'] as bool? ?? data['birthYear'] != null,
+      homeCourt: courtSummaryFromProfileData(data['homeCourt']),
+      position: data['position'] as String?,
+      playStyles:
+          (data['playStyles'] as List?)?.whereType<String>().toList(
+            growable: false,
+          ) ??
+          const [],
     );
   }
 
@@ -86,6 +118,10 @@ class AppUserProfile {
   final int meetupCount;
   final int liveCourtCount;
   final String role;
+  final bool onboardingComplete;
+  final CourtSummary? homeCourt;
+  final String? position;
+  final List<String> playStyles;
 
   bool get isComplete => birthYear != null;
   bool get isOperator => role == 'admin' || role == 'operator';

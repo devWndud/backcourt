@@ -51,6 +51,7 @@ class BackcourtRepository {
           'postCount': 0,
           'meetupCount': 0,
           'liveCourtCount': 0,
+          'onboardingComplete': false,
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
         });
@@ -64,6 +65,9 @@ class BackcourtRepository {
           if (savedName.length < 2 || savedName.length > 24)
             'displayName': _defaultDisplayName(user),
           if (!hasCustomPhoto) 'photoUrl': user.photoURL,
+          if (!data.containsKey('onboardingComplete') &&
+              data['birthYear'] != null)
+            'onboardingComplete': true,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       }
@@ -123,6 +127,45 @@ class BackcourtRepository {
       'displayName': cleanName,
       'birthYear': birthYear,
       'guardianConsentAt': age < 19 ? FieldValue.serverTimestamp() : null,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> completePlayerSetup({
+    required CourtSummary homeCourt,
+    required String position,
+    required List<String> playStyles,
+  }) async {
+    _requireSavedCourt(homeCourt);
+    const allowedPositions = {'guard', 'forward', 'center'};
+    const allowedStyles = {
+      'shooting',
+      'drive',
+      'passing',
+      'defense',
+      'rebound',
+    };
+    final cleanStyles = playStyles.toSet().toList(growable: false);
+    if (!allowedPositions.contains(position)) {
+      throw const BackcourtException('포지션을 선택해주세요.');
+    }
+    if (cleanStyles.isEmpty ||
+        cleanStyles.length > 3 ||
+        cleanStyles.any((style) => !allowedStyles.contains(style))) {
+      throw const BackcourtException('플레이 스타일을 1~3개 선택해주세요.');
+    }
+    await _currentUserRef.set({
+      'homeCourt': {
+        'id': homeCourt.id,
+        'name': homeCourt.name,
+        'location': GeoPoint(homeCourt.latitude, homeCourt.longitude),
+        'address': homeCourt.address,
+        'facts': homeCourt.facts,
+      },
+      'position': position,
+      'playStyles': cleanStyles,
+      'onboardingComplete': true,
+      'onboardingCompletedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }

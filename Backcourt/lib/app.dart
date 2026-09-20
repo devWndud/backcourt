@@ -14,6 +14,7 @@ import 'screens/checkin_screen.dart';
 import 'screens/feed_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/map_screen.dart';
+import 'screens/player_setup_screen.dart';
 import 'screens/play_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/profile_setup_screen.dart';
@@ -49,12 +50,13 @@ class BackcourtApp extends StatelessWidget {
             )
           : _AuthGate(
               firebaseReadyOverride: firebaseReadyOverride,
-              appBuilder: (authService, repository) => AppShell(
+              appBuilder: (authService, repository, profile) => AppShell(
                 useRealMap: useRealMap,
                 userLocationLoader: userLocationLoader,
                 onMapControllerReady: onMapControllerReady,
                 onSignOut: authService.signOut,
                 repository: repository,
+                initialCourt: profile.homeCourt,
               ),
             ),
     );
@@ -64,7 +66,11 @@ class BackcourtApp extends StatelessWidget {
 class _AuthGate extends StatefulWidget {
   const _AuthGate({required this.appBuilder, this.firebaseReadyOverride});
 
-  final Widget Function(AuthService authService, BackcourtRepository repository)
+  final Widget Function(
+    AuthService authService,
+    BackcourtRepository repository,
+    AppUserProfile profile,
+  )
   appBuilder;
   final bool? firebaseReadyOverride;
 
@@ -121,7 +127,8 @@ class _AuthGateState extends State<_AuthGate> {
               return _UserBootstrap(
                 user: authSnapshot.data!,
                 repository: repository,
-                appBuilder: () => widget.appBuilder(authService, repository),
+                appBuilder: (profile) =>
+                    widget.appBuilder(authService, repository, profile),
               );
             },
           ),
@@ -140,7 +147,7 @@ class _UserBootstrap extends StatefulWidget {
 
   final User user;
   final BackcourtRepository repository;
-  final Widget Function() appBuilder;
+  final Widget Function(AppUserProfile profile) appBuilder;
 
   @override
   State<_UserBootstrap> createState() => _UserBootstrapState();
@@ -191,7 +198,13 @@ class _UserBootstrapState extends State<_UserBootstrap> {
                 profile: profile,
               );
             }
-            return widget.appBuilder();
+            if (!profile.onboardingComplete) {
+              return PlayerSetupScreen(
+                repository: widget.repository,
+                profile: profile,
+              );
+            }
+            return widget.appBuilder(profile);
           },
         );
       },
@@ -252,6 +265,7 @@ class AppShell extends StatefulWidget {
     this.onMapControllerReady,
     this.onSignOut,
     this.repository,
+    this.initialCourt,
   });
 
   final bool useRealMap;
@@ -259,25 +273,28 @@ class AppShell extends StatefulWidget {
   final MapControllerReady? onMapControllerReady;
   final Future<void> Function()? onSignOut;
   final BackcourtRepository? repository;
+  final CourtSummary? initialCourt;
 
   @override
   State<AppShell> createState() => _AppShellState();
 }
 
 class _AppShellState extends State<AppShell> {
+  static const _unselectedCourt = CourtSummary(
+    id: 'sample-unselected',
+    name: '코트를 선택해 주세요',
+    latitude: 37.5665,
+    longitude: 126.978,
+  );
+
   int _currentIndex = 0;
   PushNotificationService? _pushNotifications;
-  CourtSummary _activeCourt = const CourtSummary(
-    id: 'sample-0',
-    name: '한강 시민공원 농구장',
-    latitude: 37.5272,
-    longitude: 126.9347,
-    facts: ['야외', '무료'],
-  );
+  late CourtSummary _activeCourt;
 
   @override
   void initState() {
     super.initState();
+    _activeCourt = widget.initialCourt ?? _unselectedCourt;
     _configurePushNotifications();
   }
 
@@ -288,6 +305,10 @@ class _AppShellState extends State<AppShell> {
       _pushNotifications?.dispose();
       _pushNotifications = null;
       _configurePushNotifications();
+    }
+    if (oldWidget.initialCourt?.id != widget.initialCourt?.id &&
+        widget.initialCourt != null) {
+      _activeCourt = widget.initialCourt!;
     }
   }
 
@@ -337,6 +358,7 @@ class _AppShellState extends State<AppShell> {
         userLocationLoader: widget.userLocationLoader,
         onMapControllerReady: widget.onMapControllerReady,
         repository: widget.repository,
+        initialCourt: widget.initialCourt,
         onCourtSelected: (court) => setState(() => _activeCourt = court),
       ),
       PlayScreen(repository: widget.repository, activeCourt: _activeCourt),

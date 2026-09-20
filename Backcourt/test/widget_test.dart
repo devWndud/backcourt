@@ -7,6 +7,7 @@ import 'package:backcourt/backend/backcourt_repository.dart';
 import 'package:backcourt/backend/models.dart';
 import 'package:backcourt/backend/push_notification_service.dart';
 import 'package:backcourt/screens/operator_reports_screen.dart';
+import 'package:backcourt/screens/player_setup_screen.dart';
 import 'package:backcourt/theme/app_theme.dart';
 import 'package:backcourt/widgets/court_ranking_card.dart';
 
@@ -193,6 +194,62 @@ void main() {
     await tester.pumpAndSettle();
     expect(requestedPeriods.last, CourtRankingPeriod.week);
     expect(find.text('이번 주 월요일부터 오늘까지'), findsOneWidget);
+  });
+
+  testWidgets('가입 온보딩에서 홈코트와 플레이 스타일을 고른다', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    CourtSummary? savedCourt;
+    String? savedPosition;
+    List<String>? savedStyles;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: PlayerSetupScreen(
+          courtsOverride: const [
+            CourtSummary(
+              id: 'osm_node_3975396530',
+              name: '잠실2동 농구장',
+              latitude: 37.5129735,
+              longitude: 127.0806893,
+              address: '잠실2동',
+            ),
+          ],
+          saveOverride: (court, position, styles) async {
+            savedCourt = court;
+            savedPosition = position;
+            savedStyles = styles;
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.enterText(
+      find.byKey(const ValueKey('setup-court-search')),
+      '잠실2동',
+    );
+    await tester.pump();
+    await tester.tap(find.text('잠실2동 농구장').first);
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('setup-continue')));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byKey(const ValueKey('setup-play-step')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('setup-position-guard')));
+    await tester.tap(find.byKey(const ValueKey('setup-style-shooting')));
+    await tester.tap(find.byKey(const ValueKey('setup-style-defense')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('setup-continue')));
+    await tester.pump();
+
+    expect(savedCourt?.id, 'osm_node_3975396530');
+    expect(savedPosition, 'guard');
+    expect(savedStyles, ['shooting', 'defense']);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('지금 코트 신호를 만들고 합류 상태를 바꿀 수 있다', (tester) async {

@@ -30,6 +30,7 @@ class MapScreen extends StatefulWidget {
     this.userLocationLoader,
     this.onMapControllerReady,
     this.repository,
+    this.initialCourt,
     this.onCourtSelected,
   });
 
@@ -38,6 +39,7 @@ class MapScreen extends StatefulWidget {
   final UserLocationLoader? userLocationLoader;
   final MapControllerReady? onMapControllerReady;
   final BackcourtRepository? repository;
+  final CourtSummary? initialCourt;
   final ValueChanged<CourtSummary>? onCourtSelected;
 
   @override
@@ -55,6 +57,17 @@ class _MapScreenState extends State<MapScreen> {
     zoom: _initialZoom,
   );
   static const _styleUrl = 'https://tiles.openfreemap.org/styles/dark';
+
+  LatLng get _initialTarget => initialCourtPosition(widget.initialCourt);
+
+  CameraPosition get _startingCamera => CameraPosition(
+    target: _initialTarget,
+    zoom: widget.initialCourt == null ? _initialCamera.zoom : 15.2,
+  );
+
+  static LatLng initialCourtPosition(CourtSummary? court) => court == null
+      ? _initialCamera.target
+      : LatLng(court.latitude, court.longitude);
 
   int? _selectedCourt;
   bool _mapReady = false;
@@ -109,6 +122,15 @@ class _MapScreenState extends State<MapScreen> {
     if (oldWidget.repository != widget.repository) {
       _subscribeToCourtNames();
       _subscribeToLiveCourts();
+    }
+    if (oldWidget.initialCourt?.id != widget.initialCourt?.id &&
+        widget.initialCourt != null) {
+      unawaited(
+        _mapController?.animateCamera(
+              CameraUpdate.newLatLngZoom(_initialTarget, 15.2),
+            ) ??
+            Future<void>.value(),
+      );
     }
   }
 
@@ -206,7 +228,7 @@ class _MapScreenState extends State<MapScreen> {
 
     await controller.addFill(
       FillOptions(
-        geometry: [_circlePolygon(_initialCamera.target, 100)],
+        geometry: [_circlePolygon(_initialTarget, 100)],
         fillColor: '#FF633F',
         fillOpacity: .12,
         fillOutlineColor: '#FF633F',
@@ -228,7 +250,10 @@ class _MapScreenState extends State<MapScreen> {
       }
     }
 
-    await _refreshCourtMarkers(_initialCamera.zoom, force: true);
+    await _refreshCourtMarkers(
+      _mapController?.cameraPosition?.zoom ?? _startingCamera.zoom,
+      force: true,
+    );
     final currentLocation = _currentLocation;
     if (currentLocation != null) {
       await _renderUserLocation(currentLocation);
@@ -1020,7 +1045,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   String _distanceTo(LatLng destination) {
-    final origin = _currentLocation ?? _initialCamera.target;
+    final origin = _currentLocation ?? _initialTarget;
     final meters = Geolocator.distanceBetween(
       origin.latitude,
       origin.longitude,
@@ -1086,7 +1111,7 @@ class _MapScreenState extends State<MapScreen> {
       children: [
         if (widget.useRealMap)
           MapLibreMap(
-            initialCameraPosition: _initialCamera,
+            initialCameraPosition: _startingCamera,
             styleString: _styleUrl,
             minMaxZoomPreference: const MinMaxZoomPreference(6, 19),
             trackCameraPosition: true,

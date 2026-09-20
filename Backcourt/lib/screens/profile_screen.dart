@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../widgets/branded_sheet.dart';
 import '../widgets/common.dart';
 import 'feed_screen.dart';
+import 'player_setup_screen.dart';
 import 'profile_edit_sheet.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -16,10 +17,10 @@ class ProfileScreen extends StatelessWidget {
     this.beforeDeleteAccount,
     this.repository,
     this.activeCourt = const CourtSummary(
-      id: 'sample-0',
-      name: '한강 시민공원 농구장',
-      latitude: 37.5272,
-      longitude: 126.9347,
+      id: 'sample-unselected',
+      name: '코트를 선택해 주세요',
+      latitude: 37.5665,
+      longitude: 126.978,
     ),
   });
 
@@ -280,6 +281,22 @@ class _SettingsSheet extends StatelessWidget {
     );
   }
 
+  Future<void> _editPlayerSetup(BuildContext context) async {
+    final backend = repository;
+    final currentProfile = profile;
+    if (backend == null || currentProfile == null) return;
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => PlayerSetupScreen(
+          repository: backend,
+          profile: currentProfile,
+          editing: true,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
@@ -322,6 +339,16 @@ class _SettingsSheet extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
+                    if (repository != null && profile != null) ...[
+                      _SettingsRow(
+                        icon: Icons.sports_basketball_rounded,
+                        title: '내 플레이',
+                        subtitle: '홈코트 · 포지션 · 스타일',
+                        value: '수정',
+                        onTap: () => _editPlayerSetup(context),
+                      ),
+                      _SettingsDivider(),
+                    ],
                     _SettingsRow(
                       icon: Icons.location_on_rounded,
                       title: '앱 권한',
@@ -711,6 +738,10 @@ class _ProfileIntro extends StatelessWidget {
     final displayName = profile?.displayName ?? '빽코트 플레이어';
     final username = profile?.username;
     final bio = profile?.bio.trim() ?? '';
+    final playLabels = [
+      if (profile?.position case final position?) _positionLabel(position),
+      ...?profile?.playStyles.map(_playStyleLabel),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -782,6 +813,27 @@ class _ProfileIntro extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
+        if (playLabels.isNotEmpty) ...[
+          const SizedBox(height: 11),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: .09),
+              borderRadius: BorderRadius.circular(99),
+              border: Border.all(
+                color: AppColors.accent.withValues(alpha: .18),
+              ),
+            ),
+            child: Text(
+              playLabels.join(' · '),
+              style: const TextStyle(
+                color: AppColors.accent,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         Row(
           children: [
@@ -808,6 +860,22 @@ class _ProfileIntro extends StatelessWidget {
       ],
     );
   }
+
+  String _positionLabel(String value) => switch (value) {
+    'guard' => '가드',
+    'forward' => '포워드',
+    'center' => '센터',
+    _ => value,
+  };
+
+  String _playStyleLabel(String value) => switch (value) {
+    'shooting' => '슛',
+    'drive' => '돌파',
+    'passing' => '패스',
+    'defense' => '수비',
+    'rebound' => '리바운드',
+    _ => value,
+  };
 }
 
 class _ProfileAvatar extends StatelessWidget {

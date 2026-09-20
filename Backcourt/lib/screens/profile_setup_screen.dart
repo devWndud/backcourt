@@ -260,7 +260,7 @@ class _ProfileHeader extends StatelessWidget {
             border: Border.all(color: Colors.white.withValues(alpha: .08)),
           ),
           child: const Text(
-            'PROFILE  ·  01',
+            'SETUP  ·  01/03',
             style: TextStyle(
               color: AppColors.soft,
               fontSize: 11,
@@ -649,7 +649,7 @@ class _BottomAction extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '빽코트 시작하기',
+                          '다음',
                           style: TextStyle(
                             color: enabled ? Colors.black : AppColors.muted,
                             fontSize: 15,

@@ -124,7 +124,7 @@ function slide1(ctx) {
   ctx.fillStyle = C.paper;
   ctx.fillRect(0, 0, SIZE, SIZE);
   brand(ctx, false);
-  label(ctx, "농구할 땐", 72, 252);
+  label(ctx, "BACKCOURT", 72, 252);
   ctx.fillStyle = C.ink;
   ctx.font = font(900, 110);
   ctx.fillText("일상에서", 70, 380);
@@ -133,7 +133,7 @@ function slide1(ctx) {
   ctx.fillStyle = C.ink;
   ctx.fillRect(72, 575, 68, 10);
   ctx.font = font(800, 30);
-  ctx.fillText("코트 찾기 · LIVE · 약속 · 기록", 72, 646);
+  ctx.fillText("코트 · LIVE · 약속 · 출석", 72, 646);
 
   ctx.save();
   ctx.globalAlpha = .065;
@@ -163,19 +163,18 @@ function slide2(ctx) {
   ctx.fillStyle = C.ink;
   ctx.fillRect(0, 0, SIZE, SIZE);
   brand(ctx, true);
-  label(ctx, "COURT MAP", 72, 216);
+  label(ctx, "코트 찾기", 72, 216);
   ctx.fillStyle = C.white;
   ctx.font = font(900, 92);
-  ctx.fillText("내 주변 코트", 70, 328);
-  ctx.fillText("한눈에", 70, 432);
+  ctx.fillText("근처에", 70, 328);
+  ctx.fillText("코트 있나?", 70, 432);
   roundedFill(ctx, 70, 493, 360, 72, 36, C.orange);
   ctx.fillStyle = C.white;
   ctx.font = font(900, 28);
-  ctx.fillText("전국 30,577개 코트", 100, 540);
+  ctx.fillText("전국 코트 30,577곳", 100, 540);
   ctx.fillStyle = C.muted;
   ctx.font = font(700, 25);
-  ctx.fillText("야외 · 무료 · 조명", 72, 622);
-  ctx.fillText("조건대로 바로 찾기", 72, 661);
+  ctx.fillText("야외  /  무료  /  조명", 72, 622);
 
   ctx.save();
   ctx.globalAlpha = .055;
@@ -192,11 +191,11 @@ function slide3(ctx) {
   ctx.fillStyle = C.orange;
   ctx.fillRect(0, 0, SIZE, SIZE);
   brand(ctx, false);
-  label(ctx, "PLAY TOGETHER", 72, 200, C.ink);
+  label(ctx, "LIVE / 약속", 72, 200, C.ink);
   ctx.fillStyle = C.ink;
   ctx.font = font(900, 92);
-  ctx.fillText("지금 뛰고", 70, 306);
-  ctx.fillText("약속 잡고", 70, 408);
+  ctx.fillText("오늘 같이", 70, 306);
+  ctx.fillText("뛸 사람?", 70, 408);
 
   roundedFill(ctx, 728, 196, 282, 74, 37, C.ink);
   ctx.fillStyle = C.white;
@@ -211,12 +210,12 @@ function slide4(ctx) {
   ctx.fillStyle = C.paper;
   ctx.fillRect(0, 0, SIZE, SIZE);
   brand(ctx, false);
-  label(ctx, "COURT CHECK-IN", 70, 214);
+  label(ctx, "출석 / 랭킹", 70, 214);
   ctx.fillStyle = C.ink;
   ctx.font = font(900, 86);
-  ctx.fillText("뛴 만큼", 68, 320);
+  ctx.fillText("코트 도착.", 68, 320);
   ctx.fillStyle = C.orange;
-  ctx.fillText("기록된다.", 68, 418);
+  ctx.fillText("출석 완료.", 68, 418);
   ctx.fillStyle = "#55524e";
   ctx.font = font(800, 26);
   ctx.fillText("GPS 출석 · 플레이 시간 · 월간 랭킹", 72, 480);
@@ -245,12 +244,12 @@ function slide5(ctx) {
   ctx.fillStyle = C.ink;
   ctx.fillRect(0, 0, SIZE, SIZE);
   brand(ctx, true);
-  label(ctx, "COURT STORIES", 70, 205);
+  label(ctx, "피드 / 프로필", 70, 205);
   ctx.fillStyle = C.white;
   ctx.font = font(900, 86);
-  ctx.fillText("농구할 땐,", 68, 308);
+  ctx.fillText("오늘 코트", 68, 308);
   ctx.fillStyle = C.orange;
-  ctx.fillText("빽코트.", 68, 408);
+  ctx.fillText("어땠음?", 68, 408);
   ctx.fillStyle = C.muted;
   ctx.font = font(800, 26);
   ctx.fillText("피드 · 프로필 · 나의 기록", 72, 468);

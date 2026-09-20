@@ -11,8 +11,7 @@ header, footer { display: flex; align-items: center; justify-content: space-betw
 .brand img { width: 37px; height: 37px; }
 .brand strong { font-size: 20px; font-weight: 950; letter-spacing: -.075em; }
 .edition { font-size: 10px; font-weight: 900; letter-spacing: .13em; }
-.ghost-ball { position: absolute; top: 105px; right: 6%; width: clamp(125px, 12vw, 190px); color: var(--ink); opacity: .07; transform: rotate(-13deg); pointer-events: none; }
-.ghost-ball circle, .ghost-ball path { fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+.ghost-ball { position: absolute; top: 105px; right: 6%; width: clamp(125px, 12vw, 190px); opacity: .07; transform: rotate(-13deg); filter: brightness(0); pointer-events: none; }
 .hero-copy { width: min(760px, 100%); margin: auto 0; padding: 62px 3vw 62px 5vw; }
 .kicker { margin: 0 0 15px; color: var(--orange); font-size: 15px; font-weight: 950; }
 h1 { margin: 0; font-size: clamp(70px, 7.1vw, 116px); line-height: .96; font-weight: 950; letter-spacing: -.075em; }

@@ -126,17 +126,37 @@ function platformMeta(ctx, color = C.ink) {
   ctx.save();
   ctx.fillStyle = color;
   ctx.font = font(900, 17);
-  trackedText(ctx, "IOS / ANDROID", 818, 72, 3);
+  trackedText(ctx, "IOS / ANDROID", 856, 46, 3);
   ctx.restore();
 }
 
-function giantType(ctx, lines, x, y, size, lineHeight, color, alpha = 1) {
+function giantType(ctx, lines, x, y, size, lineHeight, color, alpha = 1, align = "left") {
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.fillStyle = color;
   ctx.font = `950 ${size}px Arial, "Apple SD Gothic Neo", sans-serif`;
   ctx.textBaseline = "top";
+  ctx.textAlign = align;
   lines.forEach((line, index) => ctx.fillText(line, x, y + index * lineHeight));
+  ctx.restore();
+}
+
+function storeMarks(ctx, x, y) {
+  ctx.save();
+  ctx.fillStyle = C.white;
+  const play = new Path2D("M3.7 2.4 14 12 3.7 21.6A2.6 2.6 0 0 1 3 19.8V4.2c0-.7.3-1.3.7-1.8Zm11.6 10.8 2.7 2.5L6.2 22.2l9.1-9Zm3.9-3.6c.6.3 1 .9 1 1.5s-.4 1.2-1 1.5l-2 1.1-2.9-2.7 2.9-2.7 2 1.3ZM6.2 1.8 18 8.3l-2.7 2.5-9.1-9Z");
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(1.65, 1.65);
+  ctx.fill(play);
+  ctx.restore();
+
+  const apple = new Path2D("M16.8 12.8c0-2.6 2.1-3.8 2.2-3.9a4.7 4.7 0 0 0-3.7-2c-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.3-.8A4.9 4.9 0 0 0 4 9.5c-1.8 3-.5 7.5 1.2 10 .8 1.2 1.8 2.5 3.1 2.4 1.2-.1 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4a10.7 10.7 0 0 0 1.4-2.9 4.4 4.4 0 0 1-2.3-3.8ZM14.3 5.3A4.5 4.5 0 0 0 15.4 2a4.6 4.6 0 0 0-3 1.6 4.2 4.2 0 0 0-1.1 3.2 3.8 3.8 0 0 0 3-1.5Z");
+  ctx.save();
+  ctx.translate(x + 56, y);
+  ctx.scale(1.65, 1.65);
+  ctx.fill(apple);
+  ctx.restore();
   ctx.restore();
 }
 
@@ -348,7 +368,7 @@ function courtLines(ctx, color, alpha = .22) {
 function slide1(ctx) {
   ctx.fillStyle = C.orange;
   ctx.fillRect(0, 0, SIZE, SIZE);
-  giantType(ctx, ["BACK", "COURT"], 108, 68, 244, 218, C.ink, .12);
+  giantType(ctx, ["BACK", "COURT"], 1136, 68, 244, 218, C.ink, .12, "right");
   platformMeta(ctx);
   ctx.fillStyle = C.ink;
   ctx.font = font(900, 24);
@@ -356,13 +376,14 @@ function slide1(ctx) {
   ctx.font = font(900, 76);
   ctx.fillText("빽코트", 58, 782);
   ctx.fillRect(62, 828, 58, 7);
-  ctx.font = font(900, 18);
-  trackedText(ctx, "GOOGLE PLAY / APP STORE", 62, 886, 2.2);
   ctx.fillStyle = C.ink;
-  ctx.fillRect(58, 916, 304, 72);
+  ctx.fillRect(58, 890, 354, 88);
+  storeMarks(ctx, 86, 914);
+  ctx.fillStyle = "rgba(255,255,255,.28)";
+  ctx.fillRect(188, 912, 2, 42);
   ctx.fillStyle = C.orange;
   ctx.font = font(900, 25);
-  ctx.fillText("출시 예정", 156, 962);
+  ctx.fillText("출시 예정", 226, 947);
   heroIcon(ctx, 624, 606, 386, -3);
   courtLines(ctx, C.ink, .18);
 }

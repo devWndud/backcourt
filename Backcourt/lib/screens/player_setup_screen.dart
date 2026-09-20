@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import '../backend/backcourt_repository.dart';
 import '../backend/models.dart';
 import '../theme/app_theme.dart';
+import 'map_screen.dart';
 
 typedef PlayerSetupSaver =
     Future<void> Function(
@@ -15,6 +16,9 @@ typedef PlayerSetupSaver =
       String position,
       List<String> playStyles,
     );
+
+typedef PlayerSetupMapPicker =
+    Future<CourtSummary?> Function(CourtSummary? selectedCourt);
 
 class PlayerSetupScreen extends StatefulWidget {
   const PlayerSetupScreen({
@@ -24,6 +28,7 @@ class PlayerSetupScreen extends StatefulWidget {
     this.editing = false,
     this.saveOverride,
     this.courtsOverride,
+    this.mapPickerOverride,
   }) : assert(repository != null || saveOverride != null);
 
   final BackcourtRepository? repository;
@@ -31,6 +36,7 @@ class PlayerSetupScreen extends StatefulWidget {
   final bool editing;
   final PlayerSetupSaver? saveOverride;
   final List<CourtSummary>? courtsOverride;
+  final PlayerSetupMapPicker? mapPickerOverride;
 
   @override
   State<PlayerSetupScreen> createState() => _PlayerSetupScreenState();
@@ -250,6 +256,34 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
     setState(() => _selectedCourt = _resolvedCourt(option));
   }
 
+  Future<void> _openCourtMap() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final override = widget.mapPickerOverride;
+    final CourtSummary? selected;
+    if (override != null) {
+      selected = await override(_selectedCourt);
+    } else {
+      if (!mounted) return;
+      selected = await Navigator.of(context).push<CourtSummary>(
+        MaterialPageRoute(
+          builder: (pickerContext) => Scaffold(
+            backgroundColor: AppColors.background,
+            body: MapScreen(
+              repository: widget.repository,
+              initialCourt: _selectedCourt,
+              pickerMode: true,
+              onPickerClose: () => Navigator.pop(pickerContext),
+              onCourtSelected: (court) => Navigator.pop(pickerContext, court),
+            ),
+          ),
+        ),
+      );
+    }
+    if (!mounted || selected == null) return;
+    HapticFeedback.selectionClick();
+    setState(() => _selectedCourt = selected);
+  }
+
   void _toggleStyle(String value) {
     HapticFeedback.selectionClick();
     setState(() {
@@ -446,6 +480,8 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                       : const Icon(Icons.my_location_rounded),
                 ),
               ),
+              const SizedBox(width: 9),
+              _SetupMapButton(onTap: _openCourtMap),
             ],
           ),
         ),
@@ -658,6 +694,44 @@ class _Choice {
   final String value;
   final String label;
   final IconData icon;
+}
+
+class _SetupMapButton extends StatelessWidget {
+  const _SetupMapButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surfaceHigh,
+      borderRadius: BorderRadius.circular(17),
+      child: InkWell(
+        key: const ValueKey('setup-court-map'),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(17),
+        child: const SizedBox(
+          width: 72,
+          height: 56,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.map_outlined, color: AppColors.accent, size: 20),
+              SizedBox(height: 2),
+              Text(
+                '지도',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _SetupHeader extends StatelessWidget {

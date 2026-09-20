@@ -7,6 +7,7 @@ import 'package:backcourt/backend/backcourt_repository.dart';
 import 'package:backcourt/backend/models.dart';
 import 'package:backcourt/backend/push_notification_service.dart';
 import 'package:backcourt/screens/operator_reports_screen.dart';
+import 'package:backcourt/screens/map_screen.dart';
 import 'package:backcourt/screens/player_setup_screen.dart';
 import 'package:backcourt/theme/app_theme.dart';
 import 'package:backcourt/widgets/court_ranking_card.dart';
@@ -196,7 +197,7 @@ void main() {
     expect(find.text('이번 주 월요일부터 오늘까지'), findsOneWidget);
   });
 
-  testWidgets('가입 온보딩에서 홈코트와 플레이 스타일을 고른다', (tester) async {
+  testWidgets('가입 온보딩에서 지도로 홈코트와 플레이 스타일을 고른다', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -218,6 +219,13 @@ void main() {
               address: '잠실2동',
             ),
           ],
+          mapPickerOverride: (_) async => const CourtSummary(
+            id: 'osm_node_3975396530',
+            name: '잠실2동 농구장',
+            latitude: 37.5129735,
+            longitude: 127.0806893,
+            address: '잠실2동',
+          ),
           saveOverride: (court, position, styles) async {
             savedCourt = court;
             savedPosition = position;
@@ -228,13 +236,10 @@ void main() {
     );
     await tester.pump();
 
-    await tester.enterText(
-      find.byKey(const ValueKey('setup-court-search')),
-      '잠실2동',
-    );
+    expect(find.byKey(const ValueKey('setup-court-map')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('setup-court-map')));
     await tester.pump();
-    await tester.tap(find.text('잠실2동 농구장').first);
-    await tester.pump();
+    expect(find.text('잠실2동 농구장'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('setup-continue')));
     await tester.pump(const Duration(milliseconds: 300));
 
@@ -250,6 +255,38 @@ void main() {
     expect(savedPosition, 'guard');
     expect(savedStyles, ['shooting', 'defense']);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('홈코트 지도에서 핀을 고르고 확정한다', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    CourtSummary? pickedCourt;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: Scaffold(
+          body: MapScreen(
+            useRealMap: false,
+            pickerMode: true,
+            onPickerClose: () {},
+            onCourtSelected: (court) => pickedCourt = court,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const ValueKey('map-picker-back')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('map-marker-한강')));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.byKey(const ValueKey('map-court-confirm')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('map-court-confirm')));
+    await tester.pump();
+    expect(pickedCourt?.id, 'sample-0');
+    expect(pickedCourt?.name, '한강 시민공원 농구장');
   });
 
   testWidgets('코트 미선택 안내를 누르면 코트 탭으로 이동한다', (tester) async {

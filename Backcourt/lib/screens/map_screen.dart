@@ -32,6 +32,8 @@ class MapScreen extends StatefulWidget {
     this.repository,
     this.initialCourt,
     this.onCourtSelected,
+    this.pickerMode = false,
+    this.onPickerClose,
   });
 
   final bool useRealMap;
@@ -41,6 +43,8 @@ class MapScreen extends StatefulWidget {
   final BackcourtRepository? repository;
   final CourtSummary? initialCourt;
   final ValueChanged<CourtSummary>? onCourtSelected;
+  final bool pickerMode;
+  final VoidCallback? onPickerClose;
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -869,15 +873,17 @@ class _MapScreenState extends State<MapScreen> {
       _selectedOsmCourt = null;
     });
     final sample = _courts[index];
-    widget.onCourtSelected?.call(
-      CourtSummary(
-        id: 'sample-$index',
-        name: sample.$1,
-        latitude: sample.$5.latitude,
-        longitude: sample.$5.longitude,
-        facts: const ['야외', '무료'],
-      ),
-    );
+    if (!widget.pickerMode) {
+      widget.onCourtSelected?.call(
+        CourtSummary(
+          id: 'sample-$index',
+          name: sample.$1,
+          latitude: sample.$5.latitude,
+          longitude: sample.$5.longitude,
+          facts: const ['야외', '무료'],
+        ),
+      );
+    }
     final controller = _mapController;
     final selectedCircle = _selectedCourtCircle;
     if (controller != null && selectedCircle != null) {
@@ -896,6 +902,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _notifyOsmCourtSelected(_OsmCourt court) {
+    if (widget.pickerMode) return;
     widget.onCourtSelected?.call(
       CourtSummary(
         id: court.featureId,
@@ -1105,6 +1112,8 @@ class _MapScreenState extends State<MapScreen> {
     final bottomNavClearance = sheetLayout.bottomClearance;
     final floatingControlsBottom = selectedCourt == null
         ? bottomNavClearance + 12
+        : widget.pickerMode
+        ? bottomNavClearance + 112
         : bottomNavClearance + sheetLayout.collapsedVisibleHeight + 12;
     return Stack(
       fit: StackFit.expand,
@@ -1199,9 +1208,33 @@ class _MapScreenState extends State<MapScreen> {
               children: [
                 Row(
                   children: [
-                    const NmLogo(),
+                    if (widget.pickerMode) ...[
+                      IconButton(
+                        key: const ValueKey('map-picker-back'),
+                        onPressed: widget.onPickerClose,
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.surface.withValues(
+                            alpha: .92,
+                          ),
+                          foregroundColor: Colors.white,
+                        ),
+                        icon: const Icon(Icons.arrow_back_rounded),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        '홈코트 선택',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -.6,
+                        ),
+                      ),
+                    ] else
+                      const NmLogo(),
                     const Spacer(),
-                    NotificationBell(repository: widget.repository),
+                    if (!widget.pickerMode)
+                      NotificationBell(repository: widget.repository),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -1260,7 +1293,9 @@ class _MapScreenState extends State<MapScreen> {
           ),
           Positioned(
             left: 18,
-            bottom: bottomNavClearance + 3,
+            bottom: widget.pickerMode && selectedCourt != null
+                ? bottomNavClearance + 106
+                : bottomNavClearance + 3,
             child: const _MapCredits(),
           ),
         ],
@@ -1273,7 +1308,18 @@ class _MapScreenState extends State<MapScreen> {
             onTap: _moveToMyLocation,
           ),
         ),
-        if (selectedCourt != null)
+        if (selectedCourt != null && widget.pickerMode)
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: bottomNavClearance + 10,
+            child: _MapCourtPickerCard(
+              court: selectedCourt,
+              onConfirm: () =>
+                  widget.onCourtSelected?.call(selectedCourt.toSummary()),
+            ),
+          ),
+        if (selectedCourt != null && !widget.pickerMode)
           Positioned.fill(
             bottom: 0,
             child: DraggableScrollableSheet(
@@ -1302,6 +1348,95 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _MapCourtPickerCard extends StatelessWidget {
+  const _MapCourtPickerCard({required this.court, required this.onConfirm});
+
+  final _CourtSheetData court;
+  final VoidCallback onConfirm;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(15, 13, 13, 13),
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: .97),
+        borderRadius: BorderRadius.circular(21),
+        border: Border.all(color: Colors.white.withValues(alpha: .09)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x66000000),
+            blurRadius: 24,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 43,
+            height: 43,
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: .13),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.sports_basketball_rounded,
+              color: AppColors.accent,
+              size: 21,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  court.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -.35,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  court.address ?? court.distance,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          FilledButton(
+            key: const ValueKey('map-court-confirm'),
+            onPressed: onConfirm,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accent,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(84, 46),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: const Text('선택'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1683,6 +1818,7 @@ class _MapMarker extends StatelessWidget {
       left: size.width * leftFactor - 29,
       top: size.height * topFactor,
       child: GestureDetector(
+        key: ValueKey('map-marker-$label'),
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),

@@ -553,7 +553,7 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
         ),
         const SizedBox(height: 11),
         const Text(
-          '어떻게 뛰어요?',
+          '포지션과 스타일',
           style: TextStyle(
             color: Colors.white,
             fontSize: 34,

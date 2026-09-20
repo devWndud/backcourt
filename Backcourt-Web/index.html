@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f1efe8" />
+    <meta name="application-name" content="빽코트" />
+    <meta name="apple-mobile-web-app-title" content="빽코트" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="description" content="주변 농구 코트 찾기부터 농구 약속, 길거리 농구 모임, 현장 LIVE와 출석 기록까지. 농구할 땐 빽코트." />
     <link rel="canonical" href="https://backcourt.kro.kr/" />
@@ -13,26 +15,41 @@
     <meta property="og:description" content="주변 농구 코트 찾기부터 농구 약속, 길거리 농구 모임, 현장 LIVE와 출석 기록까지." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://backcourt.kro.kr/" />
-    <meta property="og:image" content="https://backcourt.kro.kr/assets/icon.png?v=3" />
+    <meta property="og:image" content="https://backcourt.kro.kr/assets/icon.png" />
     <meta property="og:image:alt" content="빽코트 앱 아이콘" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="빽코트 | 농구 코트 찾기·농구 약속·농구 앱" />
     <meta name="twitter:description" content="일상에서, 다시 코트로. 농구할 땐 빽코트." />
-    <meta name="twitter:image" content="https://backcourt.kro.kr/assets/icon.png?v=3" />
+    <meta name="twitter:image" content="https://backcourt.kro.kr/assets/icon.png" />
     <title>빽코트 | 농구 코트 찾기·농구 약속·농구 앱</title>
-    <link rel="icon" type="image/png" href="./assets/icon.png?v=3" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="stylesheet" href="./styles.css?v=18" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@graph": [
           {
+            "@type": "Organization",
+            "@id": "https://backcourt.kro.kr/#organization",
+            "name": "빽코트",
+            "alternateName": "Backcourt",
+            "url": "https://backcourt.kro.kr/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://backcourt.kro.kr/icon-192.png",
+              "width": 192,
+              "height": 192
+            }
+          },
+          {
             "@type": "WebSite",
             "@id": "https://backcourt.kro.kr/#website",
             "url": "https://backcourt.kro.kr/",
             "name": "빽코트",
-            "alternateName": "Backcourt",
+            "alternateName": ["Backcourt", "backcourt.kro.kr"],
             "description": "주변 농구 코트 찾기부터 농구 약속, 길거리 농구 모임, 현장 LIVE와 출석 기록까지.",
+            "publisher": { "@id": "https://backcourt.kro.kr/#organization" },
             "inLanguage": "ko-KR"
           },
           {
@@ -75,7 +92,7 @@
           <div class="rule" aria-hidden="true"></div>
           <p class="subcopy">코트 찾기 · LIVE · 약속 · 기록</p>
 
-          <div class="store-buttons" aria-label="앱 다운로드">
+          <div class="store-buttons" aria-label="앱 다운로드" data-nosnippet>
             <button class="store-button" type="button" data-store="Google Play">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.7 2.4 14 12 3.7 21.6a2.6 2.6 0 0 1-.7-1.8V4.2c0-.7.3-1.3.7-1.8Zm11.6 10.8 2.7 2.5L6.2 22.2l9.1-9Zm3.9-3.6c.6.3 1 .9 1 1.5s-.4 1.2-1 1.5l-2 1.1-2.9-2.7 2.9-2.7 2 1.3ZM6.2 1.8 18 8.3l-2.7 2.5-9.1-9Z"/></svg>
               <span><small>GET IT ON</small>Google Play</span>
@@ -87,10 +104,10 @@
           </div>
         </div>
 
-        <footer><span>BACKCOURT</span><span>© 2026</span></footer>
+        <footer data-nosnippet><span>BACKCOURT</span><span>© 2026</span></footer>
       </section>
 
-      <section class="visual-panel" aria-label="빽코트">
+      <section class="visual-panel" aria-label="빽코트" data-nosnippet>
         <span class="visual-meta">IOS / ANDROID</span>
         <p class="visual-word" aria-hidden="true">BACK<br />COURT</p>
         <div class="mark-wrap"><img src="./assets/icon.png?v=3" alt="빽코트" /></div>

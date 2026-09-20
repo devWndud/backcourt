@@ -221,16 +221,13 @@ function slide4(ctx) {
   ctx.fillText("GPS 출석 · 플레이 시간 · 월간 랭킹", 72, 480);
 
   roundedFill(ctx, 66, 596, 440, 284, 38, C.ink);
-  label(ctx, "COURT KING", 100, 652);
+  label(ctx, "COURT RANKING", 100, 652);
   ctx.fillStyle = C.white;
   ctx.font = font(900, 52);
-  ctx.fillText("코트의 제왕", 98, 724);
+  ctx.fillText("이번 달 1위", 98, 724);
   ctx.fillStyle = C.orange;
   ctx.font = font(900, 72);
-  ctx.fillText("01", 98, 817);
-  ctx.fillStyle = C.muted;
-  ctx.font = font(800, 24);
-  ctx.fillText("이번 달 랭킹", 192, 811);
+  ctx.fillText("COURT #1", 98, 817);
 
   ctx.save();
   ctx.globalAlpha = .06;

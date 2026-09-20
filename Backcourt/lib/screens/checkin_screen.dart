@@ -325,7 +325,7 @@ class _CheckinScreenState extends State<CheckinScreen>
                   ),
                 ),
                 const SizedBox(height: 28),
-                _CourtKingCard(
+                _CourtRankingSummaryCard(
                   repository: widget.repository,
                   activeCourt: widget.activeCourt,
                   checkedIn: _checkedIn,
@@ -343,8 +343,8 @@ class _CheckinScreenState extends State<CheckinScreen>
   }
 }
 
-class _CourtKingCard extends StatefulWidget {
-  const _CourtKingCard({
+class _CourtRankingSummaryCard extends StatefulWidget {
+  const _CourtRankingSummaryCard({
     required this.repository,
     required this.activeCourt,
     required this.checkedIn,
@@ -355,10 +355,11 @@ class _CourtKingCard extends StatefulWidget {
   final bool checkedIn;
 
   @override
-  State<_CourtKingCard> createState() => _CourtKingCardState();
+  State<_CourtRankingSummaryCard> createState() =>
+      _CourtRankingSummaryCardState();
 }
 
-class _CourtKingCardState extends State<_CourtKingCard> {
+class _CourtRankingSummaryCardState extends State<_CourtRankingSummaryCard> {
   StreamSubscription<ActivePlaySession?>? _sessionSubscription;
   ActivePlaySession? _activeSession;
   Timer? _ticker;
@@ -372,7 +373,7 @@ class _CourtKingCardState extends State<_CourtKingCard> {
   }
 
   @override
-  void didUpdateWidget(covariant _CourtKingCard oldWidget) {
+  void didUpdateWidget(covariant _CourtRankingSummaryCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.repository != widget.repository) _bindSession();
   }
@@ -477,7 +478,7 @@ class _CourtKingCardState extends State<_CourtKingCard> {
           sessionCount: 8,
         ),
       ];
-      return _CourtKingSurface(
+      return _CourtRankingSummarySurface(
         stats: preview,
         activeCourt: widget.activeCourt,
         currentUid: 'preview',
@@ -492,7 +493,7 @@ class _CourtKingCardState extends State<_CourtKingCard> {
 
     return StreamBuilder<List<MonthlyPlayStat>>(
       stream: repository.watchMonthlyPlayRanking(widget.activeCourt),
-      builder: (context, snapshot) => _CourtKingSurface(
+      builder: (context, snapshot) => _CourtRankingSummarySurface(
         stats: snapshot.data ?? const [],
         activeCourt: widget.activeCourt,
         currentUid: repository.currentUid,
@@ -509,8 +510,8 @@ class _CourtKingCardState extends State<_CourtKingCard> {
   }
 }
 
-class _CourtKingSurface extends StatelessWidget {
-  const _CourtKingSurface({
+class _CourtRankingSummarySurface extends StatelessWidget {
+  const _CourtRankingSummarySurface({
     required this.stats,
     required this.activeCourt,
     required this.currentUid,
@@ -551,7 +552,7 @@ class _CourtKingSurface extends StatelessWidget {
     final month = DateTime.now().month;
 
     return Container(
-      key: const ValueKey('court-king-card'),
+      key: const ValueKey('court-ranking-summary-card'),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         gradient: const LinearGradient(
@@ -575,7 +576,7 @@ class _CourtKingSurface extends StatelessWidget {
             right: -18,
             top: -26,
             child: Icon(
-              Icons.emoji_events_rounded,
+              Icons.leaderboard_rounded,
               size: 132,
               color: AppColors.accent.withValues(alpha: .055),
             ),
@@ -595,7 +596,7 @@ class _CourtKingSurface extends StatelessWidget {
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: const Icon(
-                        Icons.emoji_events_rounded,
+                        Icons.leaderboard_rounded,
                         color: Colors.black,
                         size: 25,
                       ),
@@ -606,7 +607,7 @@ class _CourtKingSurface extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'COURT KING',
+                            'COURT RANKING',
                             style: TextStyle(
                               color: AppColors.accent,
                               fontSize: 11,
@@ -616,7 +617,7 @@ class _CourtKingSurface extends StatelessWidget {
                           ),
                           SizedBox(height: 3),
                           Text(
-                            '코트의 제왕',
+                            '코트 랭킹',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 20,
@@ -637,7 +638,7 @@ class _CourtKingSurface extends StatelessWidget {
                         borderRadius: BorderRadius.circular(99),
                       ),
                       child: Text(
-                        '$month월 시즌',
+                        '$month월',
                         style: const TextStyle(
                           color: AppColors.soft,
                           fontSize: 11,
@@ -692,7 +693,11 @@ class _CourtKingSurface extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        myRank == 0 ? '랭킹  -' : '랭킹  #$myRank',
+                        myRank == 0
+                            ? '이번 달  -'
+                            : myRank == 1
+                            ? 'COURT #1'
+                            : '이번 달  $myRank위',
                         style: const TextStyle(
                           color: AppColors.accent,
                           fontSize: 11,
@@ -768,7 +773,7 @@ class _CourtKingSurface extends StatelessWidget {
                 Row(
                   children: [
                     const Text(
-                      '이 코트 TOP 3',
+                      '이번 달 TOP 3',
                       style: TextStyle(
                         color: AppColors.soft,
                         fontSize: 11,
@@ -815,7 +820,7 @@ class _CourtKingSurface extends StatelessWidget {
                         index < math.min(3, stats.length);
                         index++
                       )
-                        _CourtKingRankRow(
+                        _CourtRankingSummaryRow(
                           rank: index + 1,
                           stat: stats[index],
                           me: stats[index].uid == currentUid,
@@ -876,8 +881,8 @@ class _CourtKingSurface extends StatelessWidget {
   }
 }
 
-class _CourtKingRankRow extends StatelessWidget {
-  const _CourtKingRankRow({
+class _CourtRankingSummaryRow extends StatelessWidget {
+  const _CourtRankingSummaryRow({
     required this.rank,
     required this.stat,
     required this.me,
@@ -903,7 +908,7 @@ class _CourtKingRankRow extends StatelessWidget {
           SizedBox(
             width: 26,
             child: Text(
-              '$rank',
+              rank == 1 ? '#1' : '$rank',
               style: TextStyle(
                 color: rank == 1 ? AppColors.accent : AppColors.muted,
                 fontSize: 11,

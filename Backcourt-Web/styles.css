@@ -29,8 +29,8 @@ footer { font-size: 9px; font-weight: 900; letter-spacing: .15em; }
 .visual-panel { position: relative; min-height: 100svh; overflow: hidden; background: var(--orange); border-left: 9px solid var(--ink); }
 .visual-meta { position: absolute; z-index: 3; top: 28px; right: 28px; font-size: 9px; font-weight: 950; letter-spacing: .13em; }
 .visual-word { position: absolute; z-index: 0; top: 52px; right: -19px; margin: 0; color: rgba(0,0,0,.12); font-size: clamp(100px, 12vw, 190px); line-height: .73; font-weight: 950; letter-spacing: -.11em; text-align: right; }
-.mark-wrap { position: absolute; z-index: 2; left: 50%; top: 50%; width: min(360px, 72%); aspect-ratio: 1; background: var(--ink); transform: translate(-50%, -48%) rotate(-3deg); box-shadow: 22px 22px 0 rgba(0,0,0,.13); }
-.mark-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.mark-wrap { position: absolute; z-index: 2; left: 50%; top: 50%; width: min(380px, 76%); aspect-ratio: 1; transform: translate(-50%, -48%) rotate(-3deg); }
+.mark-wrap img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(18px 20px 0 rgba(0,0,0,.13)); }
 .visual-caption { position: absolute; z-index: 3; left: 27px; bottom: 27px; padding-left: 52px; font-size: 10px; font-weight: 950; letter-spacing: .15em; }
 .visual-caption::before { content: ""; position: absolute; left: 0; top: 50%; width: 40px; height: 3px; background: var(--ink); }
 .court-markings i, .court-markings b { position: absolute; z-index: 1; display: block; border: 2px solid rgba(0,0,0,.16); border-radius: 50%; }
@@ -68,7 +68,8 @@ footer { font-size: 9px; font-weight: 900; letter-spacing: .15em; }
   .visual-panel { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; width: 100%; height: clamp(138px, 19svh, 178px); min-height: 0; border-top: 7px solid var(--ink); border-left: 0; }
   .visual-word { display: none; }
   .visual-meta { top: 17px; right: 17px; }
-  .mark-wrap { left: auto; right: -28px; top: auto; bottom: -44px; width: 160px; transform: rotate(-5deg); box-shadow: 11px 11px 0 rgba(0,0,0,.13); }
+  .mark-wrap { left: auto; right: -24px; top: auto; bottom: -42px; width: 164px; transform: rotate(-5deg); }
+  .mark-wrap img { filter: drop-shadow(10px 11px 0 rgba(0,0,0,.13)); }
   .visual-caption { left: 18px; bottom: 38px; }
   .court-markings i { width: 280px; height: 280px; left: -150px; bottom: -160px; }
   .court-markings b { width: 150px; height: 150px; right: 55px; bottom: -80px; }

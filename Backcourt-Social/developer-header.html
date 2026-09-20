@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>빽코트 개발자 계정 헤더</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; width: 100%; min-height: 100%; background: #111; }
+      body { display: grid; place-items: center; }
+
+      .canvas {
+        position: relative;
+        width: 4096px;
+        height: 2304px;
+        overflow: hidden;
+        background: #ff5d2f;
+        color: #0b0b0b;
+        font-family: "Apple SD Gothic Neo", "Noto Sans KR", Arial, sans-serif;
+      }
+
+      .back-word {
+        position: absolute;
+        top: 90px;
+        left: 156px;
+        margin: 0;
+        color: #dc4d27;
+        font-family: "Arial Black", Arial, sans-serif;
+        font-size: 550px;
+        font-weight: 900;
+        line-height: .82;
+        letter-spacing: -35px;
+        white-space: nowrap;
+      }
+
+      .copy {
+        position: absolute;
+        left: 250px;
+        top: 790px;
+        z-index: 3;
+      }
+
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 40px;
+        margin: 0 0 78px;
+        font-family: "Arial Black", Arial, sans-serif;
+        font-size: 48px;
+        font-weight: 900;
+        letter-spacing: 12px;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 104px;
+        height: 18px;
+        background: #0b0b0b;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 276px;
+        font-weight: 900;
+        line-height: .98;
+        letter-spacing: -18px;
+      }
+
+      .tagline {
+        margin: 78px 0 0;
+        font-size: 76px;
+        font-weight: 800;
+        letter-spacing: -3px;
+      }
+
+      .logo-wrap {
+        position: absolute;
+        z-index: 2;
+        width: 1240px;
+        height: 1240px;
+        right: 270px;
+        top: 620px;
+        border-radius: 50%;
+        background: #0b0b0b;
+        box-shadow: 72px 72px 0 rgba(164, 54, 25, .38);
+      }
+
+      .logo-wrap img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+      }
+
+      .meta {
+        position: absolute;
+        right: 260px;
+        top: 185px;
+        z-index: 4;
+        font-family: "Arial Black", Arial, sans-serif;
+        font-size: 48px;
+        font-weight: 900;
+        letter-spacing: 12px;
+      }
+
+      .court-line {
+        position: absolute;
+        border: 14px solid rgba(175, 57, 27, .48);
+        border-radius: 50%;
+      }
+
+      .court-line.left {
+        width: 1180px;
+        height: 1180px;
+        left: -580px;
+        bottom: -640px;
+      }
+
+      .court-line.right {
+        width: 1280px;
+        height: 1280px;
+        right: -640px;
+        bottom: -520px;
+      }
+
+      .baseline {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 152px;
+        height: 10px;
+        background: rgba(175, 57, 27, .42);
+      }
+
+      .foot {
+        position: absolute;
+        z-index: 3;
+        left: 250px;
+        right: 250px;
+        bottom: 66px;
+        display: flex;
+        justify-content: space-between;
+        font-family: "Arial Black", Arial, sans-serif;
+        font-size: 34px;
+        font-weight: 900;
+        letter-spacing: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="canvas" aria-label="빽코트 개발자 계정 헤더">
+      <p class="back-word" aria-hidden="true">BACKCOURT</p>
+      <span class="meta">BASKETBALL / KR</span>
+
+      <section class="copy">
+        <p class="eyebrow">BACK TO THE COURT</p>
+        <h1>농구할 땐,<br />빽코트.</h1>
+        <p class="tagline">일상에서, 다시 코트로.</p>
+      </section>
+
+      <div class="logo-wrap">
+        <img src="../Backcourt-img/app-icon-square-1024.png" alt="빽코트 로고" />
+      </div>
+
+      <i class="court-line left" aria-hidden="true"></i>
+      <i class="court-line right" aria-hidden="true"></i>
+      <i class="baseline" aria-hidden="true"></i>
+      <footer class="foot"><span>BACKCOURT</span><span>© 2026</span></footer>
+    </main>
+  </body>
+</html>

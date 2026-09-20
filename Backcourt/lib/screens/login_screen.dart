@@ -270,6 +270,7 @@ class _DirectAuthSheetState extends State<DirectAuthSheet> {
   _DirectAuthMode _mode = _DirectAuthMode.email;
   bool _createAccount = false;
   bool _loading = false;
+  bool _obscurePassword = true;
   String? _verificationId;
   String? _error;
 
@@ -342,17 +343,19 @@ class _DirectAuthSheetState extends State<DirectAuthSheet> {
   @override
   Widget build(BuildContext context) {
     final emailMode = _mode == _DirectAuthMode.email;
-    return Padding(
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: Material(
         color: AppColors.surface,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: SafeArea(
           top: false,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 22),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -366,54 +369,119 @@ class _DirectAuthSheetState extends State<DirectAuthSheet> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 22),
-                Text(
-                  '직접 로그인',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: 16),
-                SegmentedButton<_DirectAuthMode>(
-                  segments: const [
-                    ButtonSegment(
-                      value: _DirectAuthMode.email,
-                      label: Text('이메일'),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: AppColors.accent.withValues(alpha: .13),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: AppColors.accent,
+                        size: 21,
+                      ),
                     ),
-                    ButtonSegment(
-                      value: _DirectAuthMode.phone,
-                      label: Text('전화번호'),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        '계정으로 시작',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 23,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -.7,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.surfaceHigh,
+                        foregroundColor: AppColors.muted,
+                      ),
+                      icon: const Icon(Icons.close_rounded, size: 20),
                     ),
                   ],
-                  selected: {_mode},
-                  showSelectedIcon: false,
-                  onSelectionChanged: (value) => setState(() {
-                    _mode = value.first;
+                ),
+                const SizedBox(height: 20),
+                _DirectAuthModeSwitch(
+                  value: _mode,
+                  onChanged: (value) => setState(() {
+                    _mode = value;
                     _error = null;
                   }),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 18),
                 if (emailMode) ...[
                   TextField(
                     key: const ValueKey('auth-email-field'),
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(labelText: '이메일'),
+                    autofillHints: const [AutofillHints.email],
+                    decoration: const InputDecoration(
+                      hintText: '이메일 주소',
+                      prefixIcon: Icon(Icons.alternate_email_rounded, size: 20),
+                    ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   TextField(
                     key: const ValueKey('auth-password-field'),
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: _obscurePassword,
+                    textInputAction: TextInputAction.done,
+                    autofillHints: _createAccount
+                        ? const [AutofillHints.newPassword]
+                        : const [AutofillHints.password],
                     onSubmitted: (_) => _submitEmail(),
-                    decoration: const InputDecoration(labelText: '비밀번호'),
+                    decoration: InputDecoration(
+                      hintText: '비밀번호 6자 이상',
+                      prefixIcon: const Icon(
+                        Icons.lock_outline_rounded,
+                        size: 20,
+                      ),
+                      suffixIcon: IconButton(
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          size: 20,
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 6),
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('처음이라면 회원가입'),
-                    value: _createAccount,
-                    onChanged: (value) =>
-                        setState(() => _createAccount = value),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _createAccount ? '이미 계정이 있나요?' : '처음이신가요?',
+                        style: const TextStyle(
+                          color: AppColors.muted,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => setState(() {
+                          _createAccount = !_createAccount;
+                          _error = null;
+                        }),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 7),
+                          minimumSize: const Size(0, 40),
+                        ),
+                        child: Text(_createAccount ? '로그인' : '회원가입'),
+                      ),
+                    ],
                   ),
                 ] else ...[
                   TextField(
@@ -421,30 +489,49 @@ class _DirectAuthSheetState extends State<DirectAuthSheet> {
                     controller: _phoneController,
                     enabled: _verificationId == null,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(labelText: '전화번호'),
+                    textInputAction: TextInputAction.done,
+                    decoration: const InputDecoration(
+                      hintText: '휴대폰 번호',
+                      prefixIcon: Icon(Icons.phone_iphone_rounded, size: 20),
+                    ),
                   ),
                   if (_verificationId != null) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     TextField(
                       key: const ValueKey('auth-sms-field'),
                       controller: _smsController,
                       keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
                       onSubmitted: (_) => _submitPhone(),
-                      decoration: const InputDecoration(labelText: '인증번호 6자리'),
+                      decoration: const InputDecoration(
+                        hintText: '인증번호 6자리',
+                        prefixIcon: Icon(Icons.password_rounded, size: 20),
+                      ),
                     ),
                   ],
                 ],
                 if (_error != null) ...[
                   const SizedBox(height: 10),
-                  Text(
-                    _error!,
-                    style: const TextStyle(
-                      color: AppColors.accent,
-                      fontSize: 12,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 13,
+                      vertical: 11,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: .09),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Text(
+                      _error!,
+                      style: const TextStyle(
+                        color: AppColors.accentSoft,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 FilledButton(
                   key: const ValueKey('submit-direct-auth'),
                   onPressed: _loading
@@ -452,12 +539,23 @@ class _DirectAuthSheetState extends State<DirectAuthSheet> {
                       : emailMode
                       ? _submitEmail
                       : _submitPhone,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: AppColors.accent.withValues(
+                      alpha: .45,
+                    ),
+                    minimumSize: const Size.fromHeight(56),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(17),
+                    ),
+                  ),
                   child: Center(
                     child: _loading
                         ? const SizedBox.square(
                             dimension: 20,
                             child: CircularProgressIndicator(
-                              color: Colors.black,
+                              color: Colors.white,
                               strokeWidth: 2.2,
                             ),
                           )
@@ -474,6 +572,98 @@ class _DirectAuthSheetState extends State<DirectAuthSheet> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DirectAuthModeSwitch extends StatelessWidget {
+  const _DirectAuthModeSwitch({required this.value, required this.onChanged});
+
+  final _DirectAuthMode value;
+  final ValueChanged<_DirectAuthMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: Colors.white.withValues(alpha: .06)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) => Stack(
+          children: [
+            AnimatedAlign(
+              duration: const Duration(milliseconds: 240),
+              curve: Curves.easeOutCubic,
+              alignment: value == _DirectAuthMode.email
+                  ? Alignment.centerLeft
+                  : Alignment.centerRight,
+              child: Container(
+                width: constraints.maxWidth / 2,
+                decoration: BoxDecoration(
+                  color: AppColors.accent,
+                  borderRadius: BorderRadius.circular(13),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _DirectAuthModeButton(
+                    label: '이메일',
+                    selected: value == _DirectAuthMode.email,
+                    onTap: () => onChanged(_DirectAuthMode.email),
+                  ),
+                ),
+                Expanded(
+                  child: _DirectAuthModeButton(
+                    label: '전화번호',
+                    selected: value == _DirectAuthMode.phone,
+                    onTap: () => onChanged(_DirectAuthMode.phone),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DirectAuthModeButton extends StatelessWidget {
+  const _DirectAuthModeButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(13),
+        child: Center(
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 180),
+            style: TextStyle(
+              color: selected ? Colors.white : AppColors.muted,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+            ),
+            child: Text(label),
           ),
         ),
       ),

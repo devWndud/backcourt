@@ -22,7 +22,8 @@ docker compose up -d --build
 curl http://127.0.0.1:8000/health
 ```
 
-- 관리자 콘솔: `http://서버:8000/`
+- 홍보 사이트: `http://서버:8000/`
+- 관리자 콘솔: `http://서버:8000/adminnnn/`
 - API 문서: `http://서버:8000/api/docs`
 - 운영 시 Caddy 또는 Nginx로 HTTPS를 적용합니다.
 - Firestore 감시 중복 발송을 막기 위해 컨테이너와 Uvicorn worker는 각각 1개로 둡니다.

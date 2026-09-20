@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#080808" />
+    <meta
+      name="description"
+      content="코트를 찾고, 지금 뛰는 사람을 보고, 다시 코트로. 농구인을 위한 코트 앱 빽코트."
+    />
+    <meta property="og:title" content="빽코트 | 일상에서, 다시 코트로." />
+    <meta
+      property="og:description"
+      content="전국 농구 코트와 LIVE, 약속, 출석 기록을 한곳에서."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://backcourt.kro.kr" />
+    <title>빽코트 | 일상에서, 다시 코트로.</title>
+    <link rel="icon" href="./assets/icon.png" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="빽코트 홈">
+        <img src="./assets/icon.png" alt="" />
+        <strong>빽코트</strong>
+      </a>
+      <nav aria-label="주요 메뉴">
+        <a href="#features">기능</a>
+        <a href="#live">LIVE</a>
+        <a href="#record">기록</a>
+      </nav>
+      <span class="release-pill"><i></i> 출시 준비 중</span>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy reveal">
+          <p class="eyebrow">BACK TO THE COURT</p>
+          <h1>일상에서,<br /><span>다시 코트로.</span></h1>
+          <p class="hero-description">
+            오늘 어디서 뛸지, 누가 뛰고 있는지.<br />농구할 땐 빽코트.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#features">빽코트 둘러보기</a>
+            <span>iOS · Android</span>
+          </div>
+          <div class="hero-numbers" aria-label="빽코트 현황">
+            <div><strong>3,057</strong><span>전국 코트</span></div>
+            <div><strong>100m</strong><span>현장 인증</span></div>
+            <div><strong>LIVE</strong><span>실시간 코트</span></div>
+          </div>
+        </div>
+
+        <div class="hero-visual reveal reveal-delay" aria-label="빽코트 앱 미리보기">
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+          <div class="phone">
+            <div class="phone-top"><span></span></div>
+            <div class="app-screen">
+              <div class="map-grid"></div>
+              <div class="app-bar">
+                <div class="app-brand"><img src="./assets/icon.png" alt="" /><b>빽코트</b></div>
+                <span class="bell">♢</span>
+              </div>
+              <div class="search-bar"><span>⌕</span> 코트 이름, 주소 검색</div>
+              <div class="nearby">내 주변 5km</div>
+              <div class="court-pin pin-a"><i></i><span>3</span></div>
+              <div class="court-pin pin-b"><i></i></div>
+              <div class="court-pin pin-c"><i></i></div>
+              <div class="live-card">
+                <div><span>LIVE</span><b>여의도공원 농구장</b></div>
+                <strong>5명</strong>
+              </div>
+              <div class="app-tabs">
+                <span class="active">⌁<small>코트</small></span>
+                <span>◉<small>플레이</small></span>
+                <span class="checkin">➤<small>출석</small></span>
+                <span>▱<small>피드</small></span>
+                <span>♙<small>MY</small></span>
+              </div>
+            </div>
+          </div>
+          <div class="floating-tag tag-live"><i></i> 지금 5명</div>
+          <div class="floating-tag tag-court">코트 발견 <b>+</b></div>
+        </div>
+      </section>
+
+      <section class="ticker" aria-label="빽코트 기능 요약">
+        <div>
+          <span>COURT</span><i></i><span>LIVE</span><i></i><span>MEETUP</span><i></i>
+          <span>CHECK-IN</span><i></i><span>RANKING</span><i></i><span>COMMUNITY</span><i></i>
+          <span>COURT</span><i></i><span>LIVE</span><i></i><span>MEETUP</span>
+        </div>
+      </section>
+
+      <section id="features" class="feature-section section-shell">
+        <header class="section-title reveal">
+          <p class="eyebrow">ONE APP. EVERY COURT.</p>
+          <h2>코트에 필요한 건<br />다 여기.</h2>
+        </header>
+
+        <div class="feature-grid">
+          <article class="feature-card feature-card-main reveal">
+            <div class="feature-index">01</div>
+            <div class="feature-copy">
+              <span class="feature-label">COURT MAP</span>
+              <h3>전국 코트를<br />한눈에.</h3>
+              <p>코트 상태, 조명, 그물, 시간대별 혼잡도까지 직접 보고 남겨요.</p>
+            </div>
+            <div class="mini-map" aria-hidden="true">
+              <span class="road road-a"></span><span class="road road-b"></span>
+              <i class="dot dot-a"></i><i class="dot dot-b"></i><i class="dot dot-c"></i>
+              <div class="map-result"><b>반포한강공원 농구장</b><span>리뷰 28 · ★ 4.6</span></div>
+            </div>
+          </article>
+
+          <article id="live" class="feature-card feature-card-live reveal">
+            <div class="feature-index">02</div>
+            <span class="feature-label">COURT LIVE</span>
+            <h3>지금 코트,<br />지금 인원.</h3>
+            <p>헛걸음 전에 확인하고, 사람이 필요하면 바로 알리기.</p>
+            <div class="live-stack" aria-hidden="true">
+              <div><i></i><span><b>게임 중</b> 한강공원</span><strong>8</strong></div>
+              <div><i></i><span><b>인원 모집</b> 잠실 코트</span><strong>3</strong></div>
+              <div><i></i><span><b>슛 연습</b> 성수 코트</span><strong>2</strong></div>
+            </div>
+          </article>
+
+          <article class="feature-card feature-card-meetup reveal">
+            <div class="feature-index">03</div>
+            <span class="feature-label">MEETUP</span>
+            <h3>같이 뛸 사람을<br />바로.</h3>
+            <p>코트와 시간을 정하면 끝. 참가는 선착순.</p>
+            <div class="meetup-ticket" aria-hidden="true">
+              <span>오늘 7:30 PM</span>
+              <b>3 VS 3</b>
+              <div><i></i><i></i><i></i><em>+3</em></div>
+            </div>
+          </article>
+
+          <article id="record" class="feature-card feature-card-rank reveal">
+            <div class="feature-index">04</div>
+            <span class="feature-label">COURT KING</span>
+            <h3>뛴 만큼<br />기록으로.</h3>
+            <p>출석하고 플레이 시간을 쌓아 이번 달 코트의 제왕에 도전해요.</p>
+            <div class="rank-list" aria-hidden="true">
+              <div><span>1</span><i>BC</i><b>court.king</b><strong>18h 42m</strong></div>
+              <div><span>2</span><i>JM</i><b>jumper</b><strong>15h 10m</strong></div>
+              <div><span>3</span><i>SH</i><b>shootfirst</b><strong>12h 36m</strong></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="closing section-shell">
+        <div class="closing-mark reveal"><img src="./assets/icon.png" alt="" /></div>
+        <div class="closing-copy reveal">
+          <p class="eyebrow">SEE YOU ON THE COURT</p>
+          <h2>오늘도,<br />코트에서.</h2>
+          <p>빽코트는 지금 출시를 준비하고 있어요.</p>
+          <span class="release-pill release-pill-large"><i></i> iOS · Android 준비 중</span>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <a class="brand" href="#top"><img src="./assets/icon.png" alt="" /><strong>빽코트</strong></a>
+      <p>일상에서, 다시 코트로.</p>
+      <span>© 2026 BACKCOURT</span>
+    </footer>
+
+  </body>
+</html>

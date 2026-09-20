@@ -150,7 +150,14 @@ def test_push(
 
 if settings.admin_static_dir.is_dir():
     app.mount(
-        "/",
+        "/adminnnn",
         StaticFiles(directory=settings.admin_static_dir, html=True),
         name="admin-console",
+    )
+
+if settings.site_static_dir.is_dir():
+    app.mount(
+        "/",
+        StaticFiles(directory=settings.site_static_dir, html=True),
+        name="public-site",
     )

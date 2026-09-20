@@ -21,7 +21,10 @@ class AppTest(unittest.TestCase):
             event_dispatcher_type.return_value = MagicMock()
             with TestClient(module.app) as client:
                 self.assertEqual(client.get("/health").json()["status"], "ok")
-                admin = client.get("/")
+                site = client.get("/")
+                self.assertEqual(site.status_code, 200)
+                self.assertIn("일상에서", site.text)
+                admin = client.get("/adminnnn/")
                 self.assertEqual(admin.status_code, 200)
                 self.assertIn("빽코트 Admin", admin.text)
                 unauthorized = client.post(

@@ -9,6 +9,7 @@ from pathlib import Path
 class Settings:
     project_id: str
     admin_static_dir: Path
+    site_static_dir: Path
     allowed_origins: tuple[str, ...]
 
     @classmethod
@@ -25,6 +26,12 @@ class Settings:
                 os.getenv(
                     "ADMIN_STATIC_DIR",
                     str(workspace / "Backcourt-Admin"),
+                )
+            ),
+            site_static_dir=Path(
+                os.getenv(
+                    "SITE_STATIC_DIR",
+                    str(workspace / "Backcourt-Web"),
                 )
             ),
             allowed_origins=origins,

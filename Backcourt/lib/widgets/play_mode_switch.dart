@@ -15,12 +15,11 @@ class PlayModeSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const labels = ['LIVE', '약속'];
-    const icons = [Icons.sensors_rounded, Icons.calendar_month_rounded];
     return Container(
-      height: 46,
+      height: 42,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.white.withValues(alpha: .06)),
       ),
       child: LayoutBuilder(
@@ -39,7 +38,7 @@ class PlayModeSwitch extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: AppColors.accent,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
@@ -53,29 +52,17 @@ class PlayModeSwitch extends StatelessWidget {
                         child: InkWell(
                           key: ValueKey('play-mode-$index'),
                           onTap: () => onSelected(index),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 160),
-                                child: Icon(
-                                  icons[index],
-                                  key: ValueKey(selected),
-                                  size: 16,
-                                  color: selected
-                                      ? Colors.black
-                                      : AppColors.muted,
-                                ),
-                              ),
-                              const SizedBox(width: 7),
                               AnimatedDefaultTextStyle(
                                 duration: const Duration(milliseconds: 160),
                                 style: TextStyle(
                                   color: selected
                                       ? Colors.black
                                       : AppColors.muted,
-                                  fontSize: 12,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w900,
                                 ),
                                 child: Text(labels[index]),

@@ -95,7 +95,7 @@ class _MeetupsScreenState extends State<MeetupsScreen> {
       child: CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: EdgeInsets.fromLTRB(20, widget.embedded ? 12 : 20, 20, 0),
+            padding: EdgeInsets.fromLTRB(20, widget.embedded ? 10 : 20, 20, 0),
             sliver: SliverList.list(
               children: [
                 if (!widget.embedded) ...[
@@ -115,13 +115,20 @@ class _MeetupsScreenState extends State<MeetupsScreen> {
                   ),
                   const SizedBox(height: 18),
                 ],
-                _SelectedCourt(court: widget.activeCourt),
-                const SizedBox(height: 12),
+                if (!widget.embedded) ...[
+                  _SelectedCourt(court: widget.activeCourt),
+                  const SizedBox(height: 12),
+                ],
                 _SegmentedFilter(
                   selected: _filter,
                   onChanged: (value) => setState(() => _filter = value),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 23),
+                SectionTitle(
+                  title: '다가오는 약속',
+                  trailing: '${visibleGames.length}개',
+                ),
+                const SizedBox(height: 11),
                 if (visibleGames.isNotEmpty)
                   _NextGameCard(
                     game: visibleGames.first,
@@ -129,14 +136,7 @@ class _MeetupsScreenState extends State<MeetupsScreen> {
                   )
                 else
                   _EmptyMeetups(error: error),
-                if (visibleGames.length > 1) ...[
-                  const SizedBox(height: 28),
-                  SectionTitle(
-                    title: '예정된 약속',
-                    trailing: '${visibleGames.length - 1}개',
-                  ),
-                  const SizedBox(height: 14),
-                ],
+                if (visibleGames.length > 1) ...[const SizedBox(height: 10)],
               ],
             ),
           ),
@@ -182,14 +182,37 @@ class _EmptyMeetups extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(22),
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
     decoration: BoxDecoration(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Colors.white.withValues(alpha: .06)),
     ),
-    child: Text(
-      error ? '약속 불러오기 실패' : '약속 없음',
-      style: const TextStyle(color: AppColors.muted),
+    child: Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: const BoxDecoration(
+            color: AppColors.surfaceHigh,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.sports_basketball_outlined,
+            color: AppColors.muted,
+            size: 21,
+          ),
+        ),
+        const SizedBox(width: 13),
+        Text(
+          error ? '약속을 불러오지 못했어요' : '아직 잡힌 약속이 없어요',
+          style: const TextStyle(
+            color: AppColors.soft,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
     ),
   );
 }
@@ -446,39 +469,45 @@ class _SegmentedFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const labels = ['전체', '오늘', '이 코트'];
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        children: List.generate(labels.length, (index) {
-          final active = selected == index;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => onChanged(index),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                height: 38,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: active ? Colors.white : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  labels[index],
-                  style: TextStyle(
-                    color: active ? Colors.black : AppColors.muted,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+    return Row(
+      children: List.generate(labels.length, (index) {
+        final active = selected == index;
+        return Padding(
+          padding: EdgeInsets.only(right: index == labels.length - 1 ? 0 : 8),
+          child: SizedBox(
+            width: index == 2 ? 78 : 64,
+            child: Material(
+              color: active ? Colors.white : AppColors.surface,
+              borderRadius: BorderRadius.circular(99),
+              child: InkWell(
+                onTap: () => onChanged(index),
+                borderRadius: BorderRadius.circular(99),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(99),
+                    border: Border.all(
+                      color: active
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: .06),
+                    ),
+                  ),
+                  child: Text(
+                    labels[index],
+                    style: TextStyle(
+                      color: active ? Colors.black : AppColors.soft,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),
             ),
-          );
-        }),
-      ),
+          ),
+        );
+      }),
     );
   }
 }
@@ -493,90 +522,115 @@ class _NextGameCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final remaining = game.capacity - game.current;
     return Material(
-      color: AppColors.accent,
-      borderRadius: BorderRadius.circular(26),
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(22),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(26),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppColors.accent.withValues(alpha: .25)),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(
-                    Icons.calendar_month_rounded,
-                    color: Colors.white,
-                    size: 18,
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      color: AppColors.accent,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                  const SizedBox(width: 5),
+                  const SizedBox(width: 7),
                   const Text(
-                    'NEXT',
+                    '가장 빠른 약속',
                     style: TextStyle(
-                      fontSize: 11,
+                      color: AppColors.accent,
+                      fontSize: 12,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: 1,
                     ),
                   ),
                   const Spacer(),
-                  Text(
-                    remaining <= 0 ? '마감' : '$remaining자리',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: remaining <= 0
+                          ? AppColors.surfaceHigh
+                          : AppColors.accent.withValues(alpha: .13),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      remaining <= 0 ? '마감' : '$remaining자리 남음',
+                      style: TextStyle(
+                        color: remaining <= 0
+                            ? AppColors.muted
+                            : AppColors.accent,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 26),
+              const SizedBox(height: 18),
               Text(
                 game.time,
                 style: const TextStyle(
-                  fontSize: 34,
+                  color: Colors.white,
+                  fontSize: 29,
                   height: 1,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: -1.4,
+                  letterSpacing: -1,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 9),
               Text(
                 game.court,
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 7),
               Text(
                 '${game.type} · ${game.level}',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: .78),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
               Row(
                 children: [
-                  AvatarStack(count: game.current.clamp(1, 4), size: 32),
+                  const Icon(
+                    Icons.groups_2_outlined,
+                    color: AppColors.muted,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 7),
+                  Text(
+                    '${game.current}/${game.capacity}명 참가',
+                    style: const TextStyle(
+                      color: AppColors.soft,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 13,
-                      vertical: 9,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                    child: Text(
-                      '${game.current}/${game.capacity}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 20,
                   ),
                 ],
               ),
@@ -596,35 +650,49 @@ class _GameCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final remaining = game.capacity - game.current;
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           child: Row(
             children: [
               Container(
-                width: 62,
-                height: 66,
+                width: 58,
+                height: 60,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceHigh,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 alignment: Alignment.center,
-                child: Text(
-                  game.time.replaceAll(' ', '\n'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    height: 1.2,
-                    fontWeight: FontWeight.w900,
-                  ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      game.dayLabel,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      game.clockLabel,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 13),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -633,24 +701,28 @@ class _GameCard extends StatelessWidget {
                       game.court,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      '${game.type}  ·  ${game.level}',
                       style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 11,
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 9),
+                    const SizedBox(height: 6),
                     Text(
-                      game.distance.isEmpty
-                          ? '${game.current}/${game.capacity}명'
-                          : '${game.distance}  ·  ${game.current}/${game.capacity}명',
+                      '${game.type} · ${game.level}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      '${game.current}/${game.capacity}명 참가',
                       style: const TextStyle(
                         color: AppColors.soft,
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -658,7 +730,14 @@ class _GameCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
+              Text(
+                remaining <= 0 ? '마감' : '$remaining자리',
+                style: TextStyle(
+                  color: remaining <= 0 ? AppColors.muted : AppColors.accent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
             ],
           ),
         ),
@@ -985,6 +1064,29 @@ class _GameData {
   final String distance;
   final String level;
   final MeetupRecord? record;
+
+  String get dayLabel {
+    final startsAt = record?.startsAt;
+    if (startsAt == null) {
+      return time.contains(' ') ? time.split(' ').first : '오늘';
+    }
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(startsAt.year, startsAt.month, startsAt.day);
+    final days = target.difference(today).inDays;
+    if (days == 0) return '오늘';
+    if (days == 1) return '내일';
+    return '${startsAt.month}/${startsAt.day}';
+  }
+
+  String get clockLabel {
+    final startsAt = record?.startsAt;
+    if (startsAt != null) {
+      return '${startsAt.hour.toString().padLeft(2, '0')}:'
+          '${startsAt.minute.toString().padLeft(2, '0')}';
+    }
+    return time.contains(' ') ? time.split(' ').last : time;
+  }
 
   static String _formatMeetupTime(DateTime value) {
     final now = DateTime.now();

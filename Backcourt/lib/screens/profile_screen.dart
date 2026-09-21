@@ -35,21 +35,14 @@ class ProfileScreen extends StatelessWidget {
     if (backend != null) {
       return StreamBuilder<AppUserProfile?>(
         stream: backend.watchCurrentProfile(),
-        builder: (context, profileSnapshot) {
-          return StreamBuilder<List<FavoriteCourtRecord>>(
-            stream: backend.watchFavoriteCourts(),
-            builder: (context, favoriteSnapshot) =>
-                StreamBuilder<List<PostRecord>>(
-                  stream: backend.watchMyPosts(),
-                  builder: (context, postSnapshot) => _buildContent(
-                    context,
-                    profile: profileSnapshot.data,
-                    posts: postSnapshot.data,
-                    favorites: favoriteSnapshot.data,
-                  ),
-                ),
-          );
-        },
+        builder: (context, profileSnapshot) => StreamBuilder<List<PostRecord>>(
+          stream: backend.watchMyPosts(),
+          builder: (context, postSnapshot) => _buildContent(
+            context,
+            profile: profileSnapshot.data,
+            posts: postSnapshot.data,
+          ),
+        ),
       );
     }
     return _buildContent(context);
@@ -59,7 +52,6 @@ class ProfileScreen extends StatelessWidget {
     BuildContext context, {
     AppUserProfile? profile,
     List<PostRecord>? posts,
-    List<FavoriteCourtRecord>? favorites,
   }) {
     final backend = repository;
     return SafeArea(
@@ -70,57 +62,33 @@ class ProfileScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
             sliver: SliverList.list(
               children: [
-                PageHeader(
-                  eyebrow: 'PROFILE',
-                  title: 'MY',
-                  action: RoundIconButton(
-                    key: const ValueKey('profile-settings-button'),
-                    icon: Icons.settings_outlined,
-                    onTap: () => _showSettings(context, profile),
-                  ),
+                _ProfilePageHeader(
+                  onSettings: () => _showSettings(context, profile),
                 ),
-                const SizedBox(height: 23),
+                const SizedBox(height: 20),
                 _ProfileIntro(
                   profile: profile,
                   postCount: posts?.length ?? profile?.postCount ?? 0,
                   onEdit: backend == null || profile == null
                       ? null
                       : () => _showProfileEditor(context, profile),
+                ),
+                const SizedBox(height: 26),
+                SectionTitle(
+                  title: '기록',
+                  trailing:
+                      '${DateTime.now().year}.${DateTime.now().month.toString().padLeft(2, '0')}',
+                ),
+                const SizedBox(height: 15),
+                _MonthlyStats(profile: profile, repository: backend),
+                const SizedBox(height: 30),
+                _PostsHeader(
+                  count: posts?.length ?? profile?.postCount ?? 0,
                   onCreatePost: backend == null
                       ? null
                       : () => _showPostComposer(context),
                 ),
-                const SizedBox(height: 22),
-                _CourtPassport(profile: profile),
-                if (favorites?.isNotEmpty == true) ...[
-                  const SizedBox(height: 28),
-                  SectionTitle(
-                    title: '내 코트',
-                    trailing: '${favorites!.length}개',
-                  ),
-                  const SizedBox(height: 13),
-                  _FavoriteCourts(
-                    favorites: favorites,
-                    onRemove: backend == null
-                        ? null
-                        : (favorite) =>
-                              backend.toggleFavoriteCourt(favorite.court),
-                  ),
-                ],
-                const SizedBox(height: 28),
-                SectionTitle(
-                  title: '플레이 기록',
-                  trailing:
-                      '${DateTime.now().year}.${DateTime.now().month.toString().padLeft(2, '0')}',
-                ),
-                const SizedBox(height: 13),
-                _MonthlyStats(profile: profile, repository: backend),
-                const SizedBox(height: 28),
-                SectionTitle(
-                  title: '게시물',
-                  trailing: '${posts?.length ?? profile?.postCount ?? 0}개',
-                ),
-                const SizedBox(height: 13),
+                const SizedBox(height: 12),
               ],
             ),
           ),
@@ -145,15 +113,9 @@ class ProfileScreen extends StatelessWidget {
               ),
             )
           else
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
-              sliver: SliverToBoxAdapter(
-                child: _EmptyPosts(
-                  onCreatePost: backend == null
-                      ? null
-                      : () => _showPostComposer(context),
-                ),
-              ),
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 120),
+              sliver: SliverToBoxAdapter(child: _EmptyPosts()),
             ),
         ],
       ),
@@ -203,6 +165,71 @@ class ProfileScreen extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (context) =>
           PostComposerSheet(repository: backend, court: activeCourt),
+    );
+  }
+}
+
+class _ProfilePageHeader extends StatelessWidget {
+  const _ProfilePageHeader({required this.onSettings});
+
+  final VoidCallback onSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(
+          child: Text(
+            'MY',
+            style: TextStyle(
+              fontSize: 25,
+              height: 1,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -.8,
+            ),
+          ),
+        ),
+        IconButton(
+          key: const ValueKey('profile-settings-button'),
+          tooltip: '설정',
+          onPressed: onSettings,
+          visualDensity: VisualDensity.compact,
+          icon: const Icon(Icons.settings_outlined, size: 22),
+        ),
+      ],
+    );
+  }
+}
+
+class _PostsHeader extends StatelessWidget {
+  const _PostsHeader({required this.count, required this.onCreatePost});
+
+  final int count;
+  final VoidCallback? onCreatePost;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text('게시물', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(width: 8),
+        Text(
+          '$count',
+          style: const TextStyle(
+            color: AppColors.muted,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const Spacer(),
+        IconButton(
+          key: const ValueKey('profile-new-post-button'),
+          tooltip: '새 게시물',
+          onPressed: onCreatePost,
+          visualDensity: VisualDensity.compact,
+          icon: const Icon(Icons.add_rounded, size: 24),
+        ),
+      ],
     );
   }
 }
@@ -725,13 +752,11 @@ class _ProfileIntro extends StatelessWidget {
     required this.profile,
     required this.postCount,
     required this.onEdit,
-    required this.onCreatePost,
   });
 
   final AppUserProfile? profile;
   final int postCount;
   final VoidCallback? onEdit;
-  final VoidCallback? onCreatePost;
 
   @override
   Widget build(BuildContext context) {
@@ -753,109 +778,98 @@ class _ProfileIntro extends StatelessWidget {
               photoUrl: profile?.photoUrl,
               onTap: onEdit,
             ),
-            const SizedBox(width: 18),
+            const SizedBox(width: 15),
             Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Stat(
-                    value: '$postCount',
-                    label: '게시물',
-                    align: CrossAxisAlignment.center,
+                  Text(
+                    displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -.4,
+                    ),
                   ),
-                  Stat(
-                    value: '${profile?.checkinCount ?? 0}',
-                    label: '출석',
-                    align: CrossAxisAlignment.center,
+                  const SizedBox(height: 3),
+                  Text(
+                    username?.isNotEmpty == true ? '@$username' : '@아이디 추가',
+                    style: TextStyle(
+                      color: username?.isNotEmpty == true
+                          ? AppColors.soft
+                          : AppColors.accent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  Stat(
-                    value: '${profile?.liveCourtCount ?? 0}',
-                    label: 'LIVE',
-                    align: CrossAxisAlignment.center,
+                  const SizedBox(height: 9),
+                  Text(
+                    bio.isNotEmpty ? bio : '소개 추가',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: bio.isNotEmpty ? AppColors.soft : AppColors.muted,
+                      fontSize: 12,
+                      height: 1.4,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  Stat(
-                    value: '${profile?.meetupCount ?? 0}',
-                    label: '약속',
-                    align: CrossAxisAlignment.center,
-                  ),
+                  if (playLabels.isNotEmpty) ...[
+                    const SizedBox(height: 7),
+                    Text(
+                      playLabels.join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
           ],
         ),
-        const SizedBox(height: 17),
-        Text(
-          displayName,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -.4,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          username?.isNotEmpty == true ? '@$username' : '@아이디 추가',
-          style: TextStyle(
-            color: username?.isNotEmpty == true
-                ? AppColors.soft
-                : AppColors.accent,
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 11),
-        Text(
-          bio.isNotEmpty ? bio : '소개 추가',
-          style: TextStyle(
-            color: bio.isNotEmpty ? AppColors.soft : AppColors.muted,
-            fontSize: 11,
-            height: 1.55,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        if (playLabels.isNotEmpty) ...[
-          const SizedBox(height: 11),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: .09),
-              borderRadius: BorderRadius.circular(99),
-              border: Border.all(
-                color: AppColors.accent.withValues(alpha: .18),
-              ),
-            ),
-            child: Text(
-              playLabels.join(' · '),
-              style: const TextStyle(
-                color: AppColors.accent,
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         Row(
           children: [
             Expanded(
-              child: _ProfileActionButton(
-                key: const ValueKey('profile-edit-button'),
-                label: '프로필 편집',
-                icon: Icons.edit_rounded,
-                onTap: onEdit,
+              child: Stat(
+                value: '$postCount',
+                label: '게시물',
+                align: CrossAxisAlignment.center,
               ),
             ),
-            const SizedBox(width: 9),
+            const _VerticalDivider(height: 30, horizontalMargin: 0),
             Expanded(
-              child: _ProfileActionButton(
-                key: const ValueKey('profile-new-post-button'),
-                label: '새 게시물',
-                icon: Icons.add_photo_alternate_outlined,
-                accented: true,
-                onTap: onCreatePost,
+              child: Stat(
+                value: '${profile?.checkinCount ?? 0}',
+                label: '출석',
+                align: CrossAxisAlignment.center,
+              ),
+            ),
+            const _VerticalDivider(height: 30, horizontalMargin: 0),
+            Expanded(
+              child: Stat(
+                value: '${profile?.meetupCount ?? 0}',
+                label: '약속',
+                align: CrossAxisAlignment.center,
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 17),
+        SizedBox(
+          width: double.infinity,
+          child: _ProfileActionButton(
+            key: const ValueKey('profile-edit-button'),
+            label: '프로필 편집',
+            onTap: onEdit,
+          ),
         ),
       ],
     );
@@ -905,15 +919,11 @@ class _ProfileAvatar extends StatelessWidget {
       ),
     );
     final avatar = Container(
-      width: 84,
-      height: 84,
-      padding: const EdgeInsets.all(3),
+      width: 76,
+      height: 76,
+      padding: const EdgeInsets.all(2),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.accent, Color(0xFFFFB15C)],
-          begin: Alignment.bottomLeft,
-          end: Alignment.topRight,
-        ),
+        color: AppColors.accent,
         shape: BoxShape.circle,
       ),
       child: ClipOval(
@@ -935,15 +945,11 @@ class _ProfileActionButton extends StatelessWidget {
   const _ProfileActionButton({
     super.key,
     required this.label,
-    required this.icon,
     required this.onTap,
-    this.accented = false,
   });
 
   final String label;
-  final IconData icon;
   final VoidCallback? onTap;
-  final bool accented;
 
   @override
   Widget build(BuildContext context) {
@@ -951,197 +957,24 @@ class _ProfileActionButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(10),
         child: Ink(
-          height: 43,
+          height: 40,
           decoration: BoxDecoration(
-            color: accented
-                ? AppColors.accent.withValues(alpha: .12)
-                : AppColors.surfaceHigh,
-            borderRadius: BorderRadius.circular(13),
-            border: Border.all(
-              color: accented
-                  ? AppColors.accent.withValues(alpha: .25)
-                  : Colors.white.withValues(alpha: .065),
-            ),
+            color: AppColors.surfaceHigh,
+            borderRadius: BorderRadius.circular(10),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: accented ? AppColors.accent : AppColors.soft,
-                size: 16,
+          child: Center(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
               ),
-              const SizedBox(width: 7),
-              Text(
-                label,
-                style: TextStyle(
-                  color: accented ? AppColors.accent : Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _FavoriteCourts extends StatelessWidget {
-  const _FavoriteCourts({required this.favorites, required this.onRemove});
-
-  final List<FavoriteCourtRecord> favorites;
-  final ValueChanged<FavoriteCourtRecord>? onRemove;
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 68,
-    child: ListView.separated(
-      scrollDirection: Axis.horizontal,
-      itemCount: favorites.length,
-      separatorBuilder: (_, _) => const SizedBox(width: 9),
-      itemBuilder: (context, index) {
-        final favorite = favorites[index];
-        return Container(
-          constraints: const BoxConstraints(minWidth: 180, maxWidth: 240),
-          padding: const EdgeInsets.fromLTRB(14, 11, 7, 11),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.accent.withValues(alpha: .16)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: .13),
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: const Icon(
-                  Icons.bookmark_rounded,
-                  color: AppColors.accent,
-                  size: 17,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  favorite.court.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    height: 1.3,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: '제거',
-                onPressed: onRemove == null ? null : () => onRemove!(favorite),
-                visualDensity: VisualDensity.compact,
-                icon: const Icon(
-                  Icons.close_rounded,
-                  color: AppColors.muted,
-                  size: 16,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    ),
-  );
-}
-
-class _CourtPassport extends StatelessWidget {
-  const _CourtPassport({this.profile});
-
-  final AppUserProfile? profile;
-
-  @override
-  Widget build(BuildContext context) {
-    final checkins = profile?.checkinCount ?? 0;
-    final level = checkins ~/ 10 + 1;
-    final levelProgress = (checkins % 10) / 10;
-    final remaining = 10 - (checkins % 10);
-    return Container(
-      padding: const EdgeInsets.all(19),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Colors.white, Color(0xFFE8E8E8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'COURT PASSPORT',
-                  style: TextStyle(
-                    color: Colors.black54,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.6,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '코트 러너 · LV. $level',
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -.4,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(99),
-                  child: LinearProgressIndicator(
-                    value: levelProgress,
-                    minHeight: 5,
-                    backgroundColor: Colors.black12,
-                    valueColor: AlwaysStoppedAnimation(Colors.black),
-                  ),
-                ),
-                const SizedBox(height: 7),
-                Text(
-                  '다음 레벨까지 출석 $remaining회',
-                  style: const TextStyle(
-                    color: Colors.black54,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 18),
-          Container(
-            width: 64,
-            height: 64,
-            decoration: const BoxDecoration(
-              color: Colors.black,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.sports_basketball_rounded,
-              color: AppColors.accent,
-              size: 32,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1155,116 +988,117 @@ class _MonthlyStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(21),
-      ),
-      child: StreamBuilder<int>(
-        stream: repository?.watchMyMonthlyCheckinCount(),
-        builder: (context, checkinSnapshot) =>
-            StreamBuilder<List<RankingEntry>>(
-              stream: repository?.watchMonthlyRanking(),
-              builder: (context, rankingSnapshot) {
-                final rankings = rankingSnapshot.data ?? const [];
-                final uid = profile?.uid;
-                final index = uid == null
-                    ? -1
-                    : rankings.indexWhere((entry) => entry.uid == uid);
-                return Row(
-                  children: [
-                    Expanded(
-                      child: Stat(
-                        value: '${checkinSnapshot.data ?? 0}회',
-                        label: '이번 달 출석',
+    return StreamBuilder<int>(
+      stream: repository?.watchMyMonthlyCheckinCount(),
+      builder: (context, checkinSnapshot) => StreamBuilder<List<RankingEntry>>(
+        stream: repository?.watchMonthlyRanking(),
+        builder: (context, rankingSnapshot) {
+          final rankings = rankingSnapshot.data ?? const [];
+          final uid = profile?.uid;
+          final index = uid == null
+              ? -1
+              : rankings.indexWhere((entry) => entry.uid == uid);
+          final badgeProgress = (profile?.checkinCount ?? 0) % 10;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Stat(
+                      value: '${checkinSnapshot.data ?? 0}회',
+                      label: '이번 달 출석',
+                    ),
+                  ),
+                  const _VerticalDivider(height: 34),
+                  Expanded(
+                    child: Stat(
+                      value: index < 0 ? '—' : '${index + 1}위',
+                      label: '전국 순위',
+                      align: CrossAxisAlignment.end,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  const Text(
+                    '다음 배지',
+                    style: TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '$badgeProgress / 10',
+                    style: const TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: List.generate(
+                  10,
+                  (dotIndex) => Expanded(
+                    child: Container(
+                      height: 4,
+                      margin: EdgeInsets.only(right: dotIndex == 9 ? 0 : 4),
+                      decoration: BoxDecoration(
+                        color: dotIndex < badgeProgress
+                            ? AppColors.accent
+                            : AppColors.line,
+                        borderRadius: BorderRadius.circular(99),
                       ),
                     ),
-                    const _VerticalDivider(),
-                    Expanded(
-                      child: Stat(
-                        value: index < 0 ? '—' : '${index + 1}위',
-                        label: '전국 출석 랭킹',
-                        align: CrossAxisAlignment.center,
-                      ),
-                    ),
-                    const _VerticalDivider(),
-                    Expanded(
-                      child: Stat(
-                        value: '${profile?.liveCourtCount ?? 0}회',
-                        label: '현장 신호',
-                        align: CrossAxisAlignment.end,
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
 class _VerticalDivider extends StatelessWidget {
-  const _VerticalDivider();
+  const _VerticalDivider({this.height = 32, this.horizontalMargin = 18});
+
+  final double height;
+  final double horizontalMargin;
 
   @override
   Widget build(BuildContext context) => Container(
     width: 1,
-    height: 32,
-    margin: const EdgeInsets.symmetric(horizontal: 12),
+    height: height,
+    margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
     color: AppColors.line,
   );
 }
 
 class _EmptyPosts extends StatelessWidget {
-  const _EmptyPosts({required this.onCreatePost});
-
-  final VoidCallback? onCreatePost;
+  const _EmptyPosts();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(21),
-        border: Border.all(color: Colors.white.withValues(alpha: .055)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: .1),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.photo_library_outlined,
-              color: AppColors.accent,
-              size: 22,
-            ),
+    return const SizedBox(
+      height: 112,
+      child: Center(
+        child: Text(
+          '게시물 없음',
+          style: TextStyle(
+            color: AppColors.muted,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(height: 13),
-          const Text(
-            '게시물 없음',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 14),
-          TextButton.icon(
-            onPressed: onCreatePost,
-            icon: const Icon(Icons.add_rounded, size: 16),
-            label: const Text('새 게시물'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.accent,
-              textStyle: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

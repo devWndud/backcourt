@@ -399,6 +399,60 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('플레이 탭에서 저장한 홈코트를 바로 바꾼다', (tester) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    const courts = [
+      CourtSummary(
+        id: 'court-1',
+        name: '천안시청 농구장',
+        latitude: 36.8151,
+        longitude: 127.1139,
+      ),
+      CourtSummary(
+        id: 'court-2',
+        name: '천안종합운동장 농구장',
+        latitude: 36.8187,
+        longitude: 127.1162,
+      ),
+      CourtSummary(
+        id: 'court-3',
+        name: '불당동 체육공원 농구장',
+        latitude: 36.8082,
+        longitude: 127.1084,
+      ),
+    ];
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: AppShell(
+          useRealMap: false,
+          initialCourt: courts[0],
+          homeCourts: courts,
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('nav-1')));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.byKey(const ValueKey('home-court-switcher')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('홈코트'), findsWidgets);
+    expect(find.text('3/3'), findsOneWidget);
+    expect(find.text('홈코트 3개 저장됨'), findsOneWidget);
+
+    await tester.tap(find.text('천안종합운동장 농구장'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('천안종합운동장 농구장'), findsOneWidget);
+    expect(find.text('3/3'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('MY 설정이 빽코트 전용 시트로 표시된다', (tester) async {
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1;

@@ -69,6 +69,8 @@ class AppUserProfile {
     this.role = 'user',
     this.onboardingComplete = true,
     this.homeCourt,
+    this.homeCourts = const [],
+    this.lastActiveCourt,
     this.position,
     this.playStyles = const [],
   });
@@ -77,6 +79,18 @@ class AppUserProfile {
     DocumentSnapshot<Map<String, dynamic>> doc,
   ) {
     final data = doc.data() ?? const <String, dynamic>{};
+    final legacyHomeCourt = courtSummaryFromProfileData(data['homeCourt']);
+    final savedHomeCourts =
+        (data['homeCourts'] as List?)
+            ?.map(courtSummaryFromProfileData)
+            .whereType<CourtSummary>()
+            .toList(growable: false) ??
+        const <CourtSummary>[];
+    final homeCourts = savedHomeCourts.isNotEmpty
+        ? savedHomeCourts
+        : legacyHomeCourt == null
+        ? const <CourtSummary>[]
+        : <CourtSummary>[legacyHomeCourt];
     return AppUserProfile(
       uid: doc.id,
       displayName: (data['displayName'] as String?)?.trim().isNotEmpty == true
@@ -95,7 +109,10 @@ class AppUserProfile {
       role: data['role'] as String? ?? 'user',
       onboardingComplete:
           data['onboardingComplete'] as bool? ?? data['birthYear'] != null,
-      homeCourt: courtSummaryFromProfileData(data['homeCourt']),
+      homeCourt:
+          legacyHomeCourt ?? (homeCourts.isEmpty ? null : homeCourts.first),
+      homeCourts: homeCourts,
+      lastActiveCourt: courtSummaryFromProfileData(data['lastActiveCourt']),
       position: data['position'] as String?,
       playStyles:
           (data['playStyles'] as List?)?.whereType<String>().toList(
@@ -120,10 +137,16 @@ class AppUserProfile {
   final String role;
   final bool onboardingComplete;
   final CourtSummary? homeCourt;
+  final List<CourtSummary> homeCourts;
+  final CourtSummary? lastActiveCourt;
   final String? position;
   final List<String> playStyles;
 
   bool get isComplete => birthYear != null;
+  CourtSummary? get preferredCourt =>
+      lastActiveCourt ??
+      homeCourt ??
+      (homeCourts.isEmpty ? null : homeCourts.first);
   bool get isOperator => role == 'admin' || role == 'operator';
   bool get isMinor =>
       birthYear != null && DateTime.now().year - birthYear! < 19;

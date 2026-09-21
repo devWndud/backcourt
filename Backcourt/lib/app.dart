@@ -56,7 +56,8 @@ class BackcourtApp extends StatelessWidget {
                 onMapControllerReady: onMapControllerReady,
                 onSignOut: authService.signOut,
                 repository: repository,
-                initialCourt: profile.homeCourt,
+                initialCourt: profile.preferredCourt,
+                homeCourts: profile.homeCourts,
               ),
             ),
     );
@@ -266,6 +267,7 @@ class AppShell extends StatefulWidget {
     this.onSignOut,
     this.repository,
     this.initialCourt,
+    this.homeCourts = const [],
   });
 
   final bool useRealMap;
@@ -274,6 +276,7 @@ class AppShell extends StatefulWidget {
   final Future<void> Function()? onSignOut;
   final BackcourtRepository? repository;
   final CourtSummary? initialCourt;
+  final List<CourtSummary> homeCourts;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -352,6 +355,17 @@ class _AppShellState extends State<AppShell> {
     await _pushNotifications?.unregister();
   }
 
+  void _selectCourt(CourtSummary court) {
+    setState(() => _activeCourt = court);
+    final repository = widget.repository;
+    if (repository != null && !court.id.startsWith('sample-')) {
+      final save = widget.homeCourts.isEmpty
+          ? repository.addHomeCourt(court)
+          : repository.setActiveCourt(court);
+      unawaited(save.catchError((Object _) {}));
+    }
+  }
+
   @override
   void dispose() {
     _pushNotifications?.dispose();
@@ -371,10 +385,20 @@ class _AppShellState extends State<AppShell> {
         userLocationLoader: widget.userLocationLoader,
         onMapControllerReady: widget.onMapControllerReady,
         repository: widget.repository,
-        initialCourt: widget.initialCourt,
-        onCourtSelected: (court) => setState(() => _activeCourt = court),
+        initialCourt: _activeCourt.id == _unselectedCourt.id
+            ? null
+            : _activeCourt,
+        onCourtSelected: _selectCourt,
       ),
-      PlayScreen(repository: widget.repository, activeCourt: _activeCourt),
+      PlayScreen(
+        repository: widget.repository,
+        activeCourt: _activeCourt,
+        homeCourts:
+            widget.homeCourts.isEmpty && !_activeCourt.id.startsWith('sample-')
+            ? [_activeCourt]
+            : widget.homeCourts,
+        onCourtSelected: _selectCourt,
+      ),
       CheckinScreen(repository: widget.repository, activeCourt: _activeCourt),
       FeedScreen(repository: widget.repository, activeCourt: _activeCourt),
       ProfileScreen(

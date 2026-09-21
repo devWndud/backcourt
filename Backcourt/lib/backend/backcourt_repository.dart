@@ -154,20 +154,100 @@ class BackcourtRepository {
         cleanStyles.any((style) => !allowedStyles.contains(style))) {
       throw const BackcourtException('플레이 스타일을 1~3개 선택해주세요.');
     }
+    final courtData = _courtProfileData(homeCourt);
     await _currentUserRef.set({
-      'homeCourt': {
-        'id': homeCourt.id,
-        'name': homeCourt.name,
-        'location': GeoPoint(homeCourt.latitude, homeCourt.longitude),
-        'address': homeCourt.address,
-        'facts': homeCourt.facts,
-      },
+      'homeCourt': courtData,
+      'homeCourts': [courtData],
+      'lastActiveCourt': courtData,
       'position': position,
       'playStyles': cleanStyles,
       'onboardingComplete': true,
       'onboardingCompletedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+  }
+
+  Map<String, Object?> _courtProfileData(CourtSummary court) => {
+    'id': court.id,
+    'name': court.name,
+    'location': GeoPoint(court.latitude, court.longitude),
+    'address': court.address,
+    'facts': court.facts,
+  };
+
+  List<CourtSummary> _homeCourtsFromData(Map<String, dynamic> data) {
+    final courts =
+        (data['homeCourts'] as List?)
+            ?.map(courtSummaryFromProfileData)
+            .whereType<CourtSummary>()
+            .toList() ??
+        <CourtSummary>[];
+    if (courts.isEmpty) {
+      final legacy = courtSummaryFromProfileData(data['homeCourt']);
+      if (legacy != null) courts.add(legacy);
+    }
+    return courts;
+  }
+
+  Future<void> setActiveCourt(CourtSummary court) async {
+    _requireSavedCourt(court);
+    await _currentUserRef.set({
+      'lastActiveCourt': _courtProfileData(court),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> addHomeCourt(CourtSummary court) async {
+    _requireSavedCourt(court);
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(_currentUserRef);
+      final data = snapshot.data() ?? <String, dynamic>{};
+      final courts = _homeCourtsFromData(data);
+      if (courts.any((saved) => saved.id == court.id)) {
+        transaction.set(_currentUserRef, {
+          'lastActiveCourt': _courtProfileData(court),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+        return;
+      }
+      if (courts.length >= 3) {
+        throw const BackcourtException('홈코트는 3개까지 저장할 수 있어요.');
+      }
+      courts.add(court);
+      transaction.set(_currentUserRef, {
+        'homeCourt': _courtProfileData(courts.first),
+        'homeCourts': courts.map(_courtProfileData).toList(growable: false),
+        'lastActiveCourt': _courtProfileData(court),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    });
+  }
+
+  Future<CourtSummary> removeHomeCourt(String courtId) async {
+    late CourtSummary nextCourt;
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(_currentUserRef);
+      final data = snapshot.data() ?? <String, dynamic>{};
+      final courts = _homeCourtsFromData(data);
+      if (courts.length <= 1) {
+        throw const BackcourtException('홈코트는 하나 이상 남겨주세요.');
+      }
+      courts.removeWhere((court) => court.id == courtId);
+      if (courts.isEmpty) {
+        throw const BackcourtException('홈코트는 하나 이상 남겨주세요.');
+      }
+      final active = courtSummaryFromProfileData(data['lastActiveCourt']);
+      nextCourt = active != null && courts.any((court) => court.id == active.id)
+          ? active
+          : courts.first;
+      transaction.set(_currentUserRef, {
+        'homeCourt': _courtProfileData(courts.first),
+        'homeCourts': courts.map(_courtProfileData).toList(growable: false),
+        'lastActiveCourt': _courtProfileData(nextCourt),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    });
+    return nextCourt;
   }
 
   static String normalizeUsername(String value) => value.trim().toLowerCase();
@@ -1035,7 +1115,9 @@ class BackcourtRepository {
       .where('blockerUid', isEqualTo: currentUid)
       .snapshots()
       .map((snapshot) {
-        final users = snapshot.docs.map(BlockedUserRecord.fromDocument).toList();
+        final users = snapshot.docs
+            .map(BlockedUserRecord.fromDocument)
+            .toList();
         users.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         return users;
       });
@@ -1194,11 +1276,11 @@ class BackcourtRepository {
         transaction.set(
           eventRef,
           _notificationEventData(
-              type: AppNotificationType.meetupJoin,
-              title: '약속 참가',
-              body: '${profile.displayName}님이 ${meetup.courtName} 약속에 참가했어요.',
-              courtId: meetup.courtId,
-              entityId: meetup.id,
+            type: AppNotificationType.meetupJoin,
+            title: '약속 참가',
+            body: '${profile.displayName}님이 ${meetup.courtName} 약속에 참가했어요.',
+            courtId: meetup.courtId,
+            entityId: meetup.id,
           ),
         );
       }

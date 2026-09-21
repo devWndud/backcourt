@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1024, initial-scale=1" />
+    <title>빽코트 Google Play 그래픽</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; width: 1024px; height: 500px; overflow: hidden; }
+      .canvas {
+        position: relative;
+        width: 1024px;
+        height: 500px;
+        overflow: hidden;
+        color: #090909;
+        background: #ff612d;
+        font-family: "Apple SD Gothic Neo", "Noto Sans KR", Arial, sans-serif;
+      }
+      .back {
+        position: absolute;
+        top: -5px;
+        left: 36px;
+        margin: 0;
+        color: rgba(105, 27, 7, .18);
+        font: 900 145px/.76 "Arial Black", Arial, sans-serif;
+        letter-spacing: -12px;
+      }
+      .copy { position: absolute; z-index: 2; left: 67px; top: 179px; }
+      .eyebrow { margin: 0 0 17px; color: #fffaf4; font-size: 12px; font-weight: 900; letter-spacing: 4px; }
+      h1 { margin: 0; font-size: 58px; line-height: .96; font-weight: 950; letter-spacing: -5px; }
+      h1 span { color: #fffaf4; }
+      .line { width: 38px; height: 6px; margin-top: 28px; background: #090909; }
+      .logo {
+        position: absolute;
+        z-index: 2;
+        right: 62px;
+        top: 84px;
+        width: 338px;
+        height: 338px;
+        border-radius: 50%;
+        filter: drop-shadow(25px 27px 0 rgba(137, 39, 14, .27));
+      }
+      .meta { position: absolute; z-index: 3; top: 29px; right: 39px; font: 900 11px Arial, sans-serif; letter-spacing: 3px; }
+      .court { position: absolute; width: 390px; height: 390px; left: -220px; bottom: -260px; border: 3px solid rgba(127, 34, 10, .22); border-radius: 50%; }
+      .foot { position: absolute; left: 67px; bottom: 32px; font: 900 11px Arial, sans-serif; letter-spacing: 3px; }
+    </style>
+  </head>
+  <body>
+    <main class="canvas">
+      <p class="back" aria-hidden="true">BACK<br />COURT</p>
+      <span class="meta">BASKETBALL / KR</span>
+      <section class="copy">
+        <p class="eyebrow">BACK TO THE COURT</p>
+        <h1>농구할 땐,<br /><span>빽코트.</span></h1>
+        <i class="line" aria-hidden="true"></i>
+      </section>
+      <img class="logo" src="../Backcourt-img/app-icon-square-1024.png" alt="" />
+      <i class="court" aria-hidden="true"></i>
+      <span class="foot">IOS / ANDROID</span>
+    </main>
+  </body>
+</html>

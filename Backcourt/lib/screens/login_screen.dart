@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../auth/auth_service.dart';
 import '../theme/app_theme.dart';
@@ -54,6 +55,12 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => DirectAuthSheet(authService: widget.authService!),
     );
+  }
+
+  Future<void> _openPolicy(String path) async {
+    final uri = Uri.parse('https://backcourt.kro.kr/$path/');
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened) _showMessage('페이지를 열 수 없어요. 잠시 후 다시 시도해 주세요.');
   }
 
   @override
@@ -181,12 +188,58 @@ class _LoginScreenState extends State<LoginScreen> {
                 onTap: _openDirectLogin,
               ),
               const SizedBox(height: 16),
-              const Text(
-                '계속하면 빽코트의 이용약관과 개인정보 처리방침에 동의하게 됩니다.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.muted, fontSize: 11),
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  const Text(
+                    '계속하면 ',
+                    style: TextStyle(color: AppColors.muted, fontSize: 11),
+                  ),
+                  _PolicyLink(label: '이용약관', onTap: () => _openPolicy('terms')),
+                  const Text(
+                    '과 ',
+                    style: TextStyle(color: AppColors.muted, fontSize: 11),
+                  ),
+                  _PolicyLink(
+                    label: '개인정보 처리방침',
+                    onTap: () => _openPolicy('privacy'),
+                  ),
+                  const Text(
+                    '에 동의합니다.',
+                    style: TextStyle(color: AppColors.muted, fontSize: 11),
+                  ),
+                ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PolicyLink extends StatelessWidget {
+  const _PolicyLink({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            decoration: TextDecoration.underline,
+            decorationColor: AppColors.muted,
           ),
         ),
       ),

@@ -6,3 +6,10 @@ Backcourt_backup_*.tar.gz
 
 # Local Firebase CLI binary (download separately)
 Backcourt/tool/firebase
+
+# Android release signing (keep the private key outside Git)
+Backcourt/android/upload-keystore.jks
+Backcourt/android/key.properties
+
+# Local release artifacts
+Backcourt/releases/

@@ -14,7 +14,6 @@ RUN useradd --create-home --uid 10001 backcourt
 COPY --chown=backcourt:backcourt Backcourt-Server/app ./app
 COPY --chown=backcourt:backcourt Backcourt-Admin ./admin
 COPY --chown=backcourt:backcourt Backcourt-Web ./site
-COPY --chown=backcourt:backcourt Backcourt-Admin/assets/icon.png ./site/assets/icon.png
 USER backcourt
 
 EXPOSE 8000

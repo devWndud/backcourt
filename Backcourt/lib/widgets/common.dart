@@ -22,8 +22,8 @@ class NmLogo extends StatelessWidget {
           ),
         ),
         if (!compact) ...[
-          const SizedBox(width: 9),
-          const Text(
+          SizedBox(width: 9),
+          Text(
             '빽코트',
             style: TextStyle(
               fontSize: 18,
@@ -60,14 +60,14 @@ class PageHeader extends StatelessWidget {
             children: [
               Text(
                 eyebrow.toUpperCase(),
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.accent,
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.7,
                 ),
               ),
-              const SizedBox(height: 7),
+              SizedBox(height: 7),
               Text(title, style: Theme.of(context).textTheme.headlineLarge),
             ],
           ),
@@ -93,7 +93,7 @@ class RoundIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: light ? Colors.white : AppColors.surfaceHigh,
+      color: light ? AppColors.text : AppColors.surfaceHigh,
       shape: const CircleBorder(),
       child: InkWell(
         onTap: onTap,
@@ -103,7 +103,7 @@ class RoundIconButton extends StatelessWidget {
           height: 44,
           child: Icon(
             icon,
-            color: light ? Colors.black : Colors.white,
+            color: light ? AppColors.inverseText : AppColors.text,
             size: 21,
           ),
         ),
@@ -134,7 +134,7 @@ class UserAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         color: color ?? AppColors.surfaceHigh,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 1.5),
+        border: Border.all(color: AppColors.text, width: 1.5),
       ),
       alignment: Alignment.center,
       clipBehavior: Clip.antiAlias,
@@ -144,11 +144,8 @@ class UserAvatar extends StatelessWidget {
               width: size,
               height: size,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => _AvatarInitials(
-                initials: initials,
-                size: size,
-                color: color,
-              ),
+              errorBuilder: (_, _, _) =>
+                  _AvatarInitials(initials: initials, size: size, color: color),
             )
           : _AvatarInitials(initials: initials, size: size, color: color),
     );
@@ -171,7 +168,7 @@ class _AvatarInitials extends StatelessWidget {
     child: Text(
       initials,
       style: TextStyle(
-        color: color == null ? Colors.white : Colors.black,
+        color: color == null ? AppColors.text : AppColors.onAccent,
         fontWeight: FontWeight.w900,
         fontSize: size * .28,
       ),
@@ -230,7 +227,7 @@ class SectionTitle extends StatelessWidget {
         if (trailing != null)
           Text(
             trailing!,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.muted,
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -260,16 +257,16 @@ class Stat extends StatelessWidget {
       children: [
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w900,
             letterSpacing: -.5,
           ),
         ),
-        const SizedBox(height: 3),
+        SizedBox(height: 3),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.muted,
             fontSize: 12,
             fontWeight: FontWeight.w600,

@@ -123,7 +123,7 @@ class _ReviewComposerSheetState extends State<ReviewComposerSheet> {
                     onClose: () => Navigator.pop(context),
                   ),
                 ),
-                const SizedBox(height: 19),
+                SizedBox(height: 19),
                 Expanded(
                   child: ListView(
                     controller: controller,
@@ -137,29 +137,29 @@ class _ReviewComposerSheetState extends State<ReviewComposerSheet> {
                         icon: Icons.location_on_rounded,
                         badge: 'CHECKED IN',
                       ),
-                      const SizedBox(height: 23),
+                      SizedBox(height: 23),
                       const BackcourtSectionLabel(
                         title: '코트 만족도',
                         trailing: '필수',
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       _RatingPicker(
                         rating: _rating,
                         onChanged: (value) => setState(() => _rating = value),
                       ),
-                      const SizedBox(height: 23),
+                      SizedBox(height: 23),
                       const BackcourtSectionLabel(
                         title: '한 줄 리뷰',
                         trailing: '필수',
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       _ReviewTextField(controller: _textController),
-                      const SizedBox(height: 23),
+                      SizedBox(height: 23),
                       const BackcourtSectionLabel(
                         title: '코트 컨디션',
                         trailing: '4개 항목',
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       GridView.count(
                         crossAxisCount: 2,
                         mainAxisSpacing: 9,
@@ -202,12 +202,12 @@ class _ReviewComposerSheetState extends State<ReviewComposerSheet> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 23),
+                      SizedBox(height: 23),
                       const BackcourtSectionLabel(
                         title: '현장 미디어',
                         trailing: '선택',
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       Row(
                         children: [
                           Expanded(
@@ -221,7 +221,7 @@ class _ReviewComposerSheetState extends State<ReviewComposerSheet> {
                               onTap: _pickImages,
                             ),
                           ),
-                          const SizedBox(width: 9),
+                          SizedBox(width: 9),
                           Expanded(
                             child: BackcourtMediaAction(
                               icon: Icons.videocam_rounded,
@@ -234,15 +234,15 @@ class _ReviewComposerSheetState extends State<ReviewComposerSheet> {
                         ],
                       ),
                       if (_images.isNotEmpty) ...[
-                        const SizedBox(height: 11),
+                        SizedBox(height: 11),
                         _ImagePreviewStrip(
                           images: _images,
                           onRemove: (image) =>
                               setState(() => _images.remove(image)),
                         ),
                       ],
-                      const SizedBox(height: 10),
-                      const Row(
+                      SizedBox(height: 10),
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
@@ -275,7 +275,7 @@ class _ReviewComposerSheetState extends State<ReviewComposerSheet> {
                     color: AppColors.surface,
                     border: Border(
                       top: BorderSide(
-                        color: Colors.white.withValues(alpha: .06),
+                        color: AppColors.text.withValues(alpha: .06),
                       ),
                     ),
                   ),
@@ -310,7 +310,7 @@ class _RatingPicker extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(19),
-        border: Border.all(color: Colors.white.withValues(alpha: .06)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .06)),
       ),
       child: Column(
         children: [
@@ -334,7 +334,7 @@ class _RatingPicker extends StatelessWidget {
                             : Icons.star_outline_rounded,
                         color: selected
                             ? AppColors.accent
-                            : Colors.white.withValues(alpha: .19),
+                            : AppColors.text.withValues(alpha: .19),
                         size: 34,
                       ),
                     ),
@@ -343,13 +343,13 @@ class _RatingPicker extends StatelessWidget {
               );
             }),
           ),
-          const SizedBox(height: 7),
+          SizedBox(height: 7),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 '$rating.0',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.accent,
                   fontSize: 13,
                   fontWeight: FontWeight.w900,
@@ -359,14 +359,14 @@ class _RatingPicker extends StatelessWidget {
                 width: 3,
                 height: 3,
                 margin: const EdgeInsets.symmetric(horizontal: 7),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.muted,
                   shape: BoxShape.circle,
                 ),
               ),
               Text(
                 _labels[rating - 1],
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.soft,
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -391,7 +391,7 @@ class _ReviewTextField extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(19),
-        border: Border.all(color: Colors.white.withValues(alpha: .06)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .06)),
       ),
       child: Stack(
         children: [
@@ -400,8 +400,8 @@ class _ReviewTextField extends StatelessWidget {
             minLines: 4,
             maxLines: 7,
             maxLength: 1000,
-            style: const TextStyle(fontSize: 13, height: 1.5),
-            decoration: const InputDecoration(
+            style: TextStyle(fontSize: 13, height: 1.5),
+            decoration: InputDecoration(
               hintText: '리뷰 입력',
               hintStyle: TextStyle(
                 color: AppColors.muted,
@@ -423,7 +423,7 @@ class _ReviewTextField extends StatelessWidget {
               valueListenable: controller,
               builder: (context, value, _) => Text(
                 '${value.text.length}/1000',
-                style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                style: TextStyle(color: AppColors.muted, fontSize: 11),
               ),
             ),
           ),
@@ -452,7 +452,7 @@ class _ReviewMetricPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       initialValue: value,
-      color: const Color(0xFF242424),
+      color: AppColors.surfaceHigh,
       elevation: 14,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       onSelected: onChanged,
@@ -467,8 +467,8 @@ class _ReviewMetricPicker extends StatelessWidget {
                   color: AppColors.accent,
                   size: 16,
                 ),
-                const SizedBox(width: 8),
-                Text(item, style: const TextStyle(fontSize: 12)),
+                SizedBox(width: 8),
+                Text(item, style: TextStyle(fontSize: 12)),
               ],
             ),
           ),
@@ -478,7 +478,7 @@ class _ReviewMetricPicker extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surfaceHigh,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: .06)),
+          border: Border.all(color: AppColors.text.withValues(alpha: .06)),
         ),
         child: Row(
           children: [
@@ -486,12 +486,12 @@ class _ReviewMetricPicker extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: .05),
+                color: AppColors.text.withValues(alpha: .05),
                 borderRadius: BorderRadius.circular(11),
               ),
               child: Icon(icon, color: AppColors.soft, size: 16),
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -499,30 +499,23 @@ class _ReviewMetricPicker extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.muted,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   Text(
                     value,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                    ),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
                   ),
                 ],
               ),
             ),
-            const Icon(
-              Icons.expand_more_rounded,
-              color: AppColors.muted,
-              size: 16,
-            ),
+            Icon(Icons.expand_more_rounded, color: AppColors.muted, size: 16),
           ],
         ),
       ),
@@ -543,7 +536,7 @@ class _ImagePreviewStrip extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: images.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => SizedBox(width: 8),
         itemBuilder: (context, index) {
           final image = images[index];
           return Stack(
@@ -555,7 +548,7 @@ class _ImagePreviewStrip extends StatelessWidget {
                   width: 76,
                   height: 76,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => const ColoredBox(
+                  errorBuilder: (_, _, _) => ColoredBox(
                     color: AppColors.surfaceHigh,
                     child: SizedBox.square(
                       dimension: 76,
@@ -576,12 +569,12 @@ class _ImagePreviewStrip extends StatelessWidget {
                     width: 22,
                     height: 22,
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: .72),
+                      color: AppColors.inverseText.withValues(alpha: .72),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.close_rounded,
-                      color: Colors.white,
+                      color: AppColors.text,
                       size: 14,
                     ),
                   ),

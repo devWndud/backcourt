@@ -65,7 +65,7 @@ class ProfileScreen extends StatelessWidget {
                 _ProfilePageHeader(
                   onSettings: () => _showSettings(context, profile),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 _ProfileIntro(
                   profile: profile,
                   postCount: posts?.length ?? profile?.postCount ?? 0,
@@ -73,22 +73,22 @@ class ProfileScreen extends StatelessWidget {
                       ? null
                       : () => _showProfileEditor(context, profile),
                 ),
-                const SizedBox(height: 26),
+                SizedBox(height: 26),
                 SectionTitle(
                   title: '기록',
                   trailing:
                       '${DateTime.now().year}.${DateTime.now().month.toString().padLeft(2, '0')}',
                 ),
-                const SizedBox(height: 15),
+                SizedBox(height: 15),
                 _MonthlyStats(profile: profile, repository: backend),
-                const SizedBox(height: 30),
+                SizedBox(height: 30),
                 _PostsHeader(
                   count: posts?.length ?? profile?.postCount ?? 0,
                   onCreatePost: backend == null
                       ? null
                       : () => _showPostComposer(context),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
               ],
             ),
           ),
@@ -178,7 +178,7 @@ class _ProfilePageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Expanded(
+        Expanded(
           child: Text(
             'MY',
             style: TextStyle(
@@ -194,7 +194,7 @@ class _ProfilePageHeader extends StatelessWidget {
           tooltip: '설정',
           onPressed: onSettings,
           visualDensity: VisualDensity.compact,
-          icon: const Icon(Icons.settings_outlined, size: 22),
+          icon: Icon(Icons.settings_outlined, size: 22),
         ),
       ],
     );
@@ -212,10 +212,10 @@ class _PostsHeader extends StatelessWidget {
     return Row(
       children: [
         Text('게시물', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(width: 8),
+        SizedBox(width: 8),
         Text(
           '$count',
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.muted,
             fontSize: 12,
             fontWeight: FontWeight.w700,
@@ -227,7 +227,7 @@ class _PostsHeader extends StatelessWidget {
           tooltip: '새 게시물',
           onPressed: onCreatePost,
           visualDensity: VisualDensity.compact,
-          icon: const Icon(Icons.add_rounded, size: 24),
+          icon: Icon(Icons.add_rounded, size: 24),
         ),
       ],
     );
@@ -254,16 +254,16 @@ class _SettingsSheet extends StatelessWidget {
         await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
-            title: const Text('계정 탈퇴'),
-            content: const Text('프로필과 게시물을 포함한 계정 데이터가 삭제돼요.'),
+            title: Text('계정 탈퇴'),
+            content: Text('프로필과 게시물을 포함한 계정 데이터가 삭제돼요.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('취소'),
+                child: Text('취소'),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(dialogContext, true),
-                child: const Text('탈퇴'),
+                child: Text('탈퇴'),
               ),
             ],
           ),
@@ -273,7 +273,7 @@ class _SettingsSheet extends StatelessWidget {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(
+      builder: (_) => Center(
         child: CircularProgressIndicator(
           color: AppColors.accent,
           strokeWidth: 2.5,
@@ -342,7 +342,7 @@ class _SettingsSheet extends StatelessWidget {
                 title: '설정',
                 onClose: () => Navigator.pop(context),
               ),
-              const SizedBox(height: 21),
+              SizedBox(height: 21),
               BackcourtContextCard(
                 title: profile?.displayName ?? '빽코트 플레이어',
                 caption: profile?.username?.isNotEmpty == true
@@ -353,15 +353,15 @@ class _SettingsSheet extends StatelessWidget {
                     ? 'OPERATOR'
                     : 'PLAYER',
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               const BackcourtSectionLabel(title: '앱 환경'),
-              const SizedBox(height: 9),
+              SizedBox(height: 9),
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.surfaceHigh,
                   borderRadius: BorderRadius.circular(19),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: .06),
+                    color: AppColors.text.withValues(alpha: .06),
                   ),
                 ),
                 child: Column(
@@ -394,11 +394,22 @@ class _SettingsSheet extends StatelessWidget {
                       ),
                     ],
                     _SettingsDivider(),
-                    const _SettingsRow(
-                      icon: Icons.dark_mode_rounded,
+                    _SettingsRow(
+                      icon: BackcourtThemeController.instance.isLight
+                          ? Icons.light_mode_rounded
+                          : Icons.dark_mode_rounded,
                       title: '화면 스타일',
-                      subtitle: '다크',
-                      value: 'DARK',
+                      subtitle: BackcourtThemeController.instance.isLight
+                          ? '라이트 모드'
+                          : '다크 모드',
+                      value: BackcourtThemeController.instance.isLight
+                          ? 'LIGHT'
+                          : 'DARK',
+                      trailing: Switch.adaptive(
+                        key: const ValueKey('theme-mode-switch'),
+                        value: BackcourtThemeController.instance.isLight,
+                        onChanged: BackcourtThemeController.instance.setLight,
+                      ),
                     ),
                     _SettingsDivider(),
                     const _SettingsRow(
@@ -410,7 +421,7 @@ class _SettingsSheet extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
               Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -437,14 +448,14 @@ class _SettingsSheet extends StatelessWidget {
                             color: AppColors.accent.withValues(alpha: .13),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.logout_rounded,
                             color: AppColors.accent,
                             size: 18,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        const Expanded(
+                        SizedBox(width: 12),
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -467,7 +478,7 @@ class _SettingsSheet extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           Icons.arrow_forward_rounded,
                           color: AppColors.accent,
                           size: 17,
@@ -478,7 +489,7 @@ class _SettingsSheet extends StatelessWidget {
                 ),
               ),
               if (repository != null) ...[
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -491,13 +502,13 @@ class _SettingsSheet extends StatelessWidget {
                         vertical: 14,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .025),
+                        color: AppColors.text.withValues(alpha: .025),
                         borderRadius: BorderRadius.circular(17),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: .055),
+                          color: AppColors.text.withValues(alpha: .055),
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           Icon(
                             Icons.person_off_outlined,
@@ -526,12 +537,12 @@ class _SettingsSheet extends StatelessWidget {
                   ),
                 ),
               ],
-              const SizedBox(height: 18),
-              const Center(
+              SizedBox(height: 18),
+              Center(
                 child: Text(
                   'BACK TO THE COURT · BACKCOURT',
                   style: TextStyle(
-                    color: Color(0xFF555555),
+                    color: AppColors.muted,
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.4,
@@ -571,19 +582,19 @@ class _BlockedUsersSheet extends StatelessWidget {
                 onClose: () => Navigator.pop(context),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Expanded(
               child: StreamBuilder<List<BlockedUserRecord>>(
                 stream: repository.watchBlockedUsers(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return const Center(
+                    return Center(
                       child: CircularProgressIndicator(strokeWidth: 2),
                     );
                   }
                   final users = snapshot.data!;
                   if (users.isEmpty) {
-                    return const Center(
+                    return Center(
                       child: Text(
                         '차단한 계정 없음',
                         style: TextStyle(
@@ -603,7 +614,7 @@ class _BlockedUsersSheet extends StatelessWidget {
                       MediaQuery.paddingOf(context).bottom + 24,
                     ),
                     itemCount: users.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 9),
+                    separatorBuilder: (_, _) => SizedBox(height: 9),
                     itemBuilder: (context, index) {
                       final user = users[index];
                       return Container(
@@ -620,11 +631,11 @@ class _BlockedUsersSheet extends StatelessWidget {
                                   .toString(),
                               size: 36,
                             ),
-                            const SizedBox(width: 11),
+                            SizedBox(width: 11),
                             Expanded(
                               child: Text(
                                 user.displayName,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w900,
                                 ),
@@ -633,7 +644,7 @@ class _BlockedUsersSheet extends StatelessWidget {
                             TextButton(
                               onPressed: () =>
                                   repository.unblockUser(user.blockedUid),
-                              child: const Text('해제'),
+                              child: Text('해제'),
                             ),
                           ],
                         ),
@@ -657,7 +668,7 @@ class _SettingsDivider extends StatelessWidget {
   Widget build(BuildContext context) => Divider(
     height: 1,
     indent: 62,
-    color: Colors.white.withValues(alpha: .055),
+    color: AppColors.text.withValues(alpha: .055),
   );
 }
 
@@ -668,6 +679,7 @@ class _SettingsRow extends StatelessWidget {
     required this.subtitle,
     required this.value,
     this.onTap,
+    this.trailing,
   });
 
   final IconData icon;
@@ -675,6 +687,7 @@ class _SettingsRow extends StatelessWidget {
   final String subtitle;
   final String value;
   final VoidCallback? onTap;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -686,27 +699,24 @@ class _SettingsRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .05),
+              color: AppColors.text.withValues(alpha: .05),
               borderRadius: BorderRadius.circular(11),
             ),
             child: Icon(icon, color: AppColors.soft, size: 17),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: 3),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -715,22 +725,26 @@ class _SettingsRow extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              color: onTap == null ? AppColors.muted : AppColors.accent,
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              letterSpacing: onTap == null ? .5 : 0,
+          if (trailing != null)
+            trailing!
+          else ...[
+            Text(
+              value,
+              style: TextStyle(
+                color: onTap == null ? AppColors.muted : AppColors.accent,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: onTap == null ? .5 : 0,
+              ),
             ),
-          ),
-          if (onTap != null) ...[
-            const SizedBox(width: 4),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.accent,
-              size: 16,
-            ),
+            if (onTap != null) ...[
+              SizedBox(width: 4),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.accent,
+                size: 16,
+              ),
+            ],
           ],
         ],
       ),
@@ -778,7 +792,7 @@ class _ProfileIntro extends StatelessWidget {
               photoUrl: profile?.photoUrl,
               onTap: onEdit,
             ),
-            const SizedBox(width: 15),
+            SizedBox(width: 15),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -787,13 +801,13 @@ class _ProfileIntro extends StatelessWidget {
                     displayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 19,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -.4,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   Text(
                     username?.isNotEmpty == true ? '@$username' : '@아이디 추가',
                     style: TextStyle(
@@ -804,7 +818,7 @@ class _ProfileIntro extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 9),
+                  SizedBox(height: 9),
                   Text(
                     bio.isNotEmpty ? bio : '소개 추가',
                     maxLines: 2,
@@ -817,12 +831,12 @@ class _ProfileIntro extends StatelessWidget {
                     ),
                   ),
                   if (playLabels.isNotEmpty) ...[
-                    const SizedBox(height: 7),
+                    SizedBox(height: 7),
                     Text(
                       playLabels.join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.muted,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -834,7 +848,7 @@ class _ProfileIntro extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         Row(
           children: [
             Expanded(
@@ -862,7 +876,7 @@ class _ProfileIntro extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 17),
+        SizedBox(height: 17),
         SizedBox(
           width: double.infinity,
           child: _ProfileActionButton(
@@ -910,8 +924,8 @@ class _ProfileAvatar extends StatelessWidget {
       child: Center(
         child: Text(
           displayName.characters.take(2).toString(),
-          style: const TextStyle(
-            color: Colors.black,
+          style: TextStyle(
+            color: AppColors.onAccent,
             fontSize: 22,
             fontWeight: FontWeight.w900,
           ),
@@ -922,7 +936,7 @@ class _ProfileAvatar extends StatelessWidget {
       width: 76,
       height: 76,
       padding: const EdgeInsets.all(2),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.accent,
         shape: BoxShape.circle,
       ),
@@ -967,8 +981,8 @@ class _ProfileActionButton extends StatelessWidget {
           child: Center(
             child: Text(
               label,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: AppColors.text,
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
               ),
@@ -1020,10 +1034,10 @@ class _MonthlyStats extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              SizedBox(height: 18),
               Row(
                 children: [
-                  const Text(
+                  Text(
                     '다음 배지',
                     style: TextStyle(
                       color: AppColors.muted,
@@ -1034,7 +1048,7 @@ class _MonthlyStats extends StatelessWidget {
                   const Spacer(),
                   Text(
                     '$badgeProgress / 10',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.muted,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -1042,7 +1056,7 @@ class _MonthlyStats extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Row(
                 children: List.generate(
                   10,
@@ -1088,7 +1102,7 @@ class _EmptyPosts extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
+    return SizedBox(
       height: 112,
       child: Center(
         child: Text(
@@ -1119,7 +1133,7 @@ class _ProfilePost extends StatelessWidget {
         child: Image.network(
           item.url,
           fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => const ColoredBox(
+          errorBuilder: (_, _, _) => ColoredBox(
             color: AppColors.surfaceHigh,
             child: Center(child: Icon(Icons.broken_image_outlined)),
           ),
@@ -1149,17 +1163,17 @@ class _ProfilePost extends StatelessWidget {
               index.isEven
                   ? Icons.sports_basketball_rounded
                   : Icons.sports_rounded,
-              color: Colors.white.withValues(alpha: .55),
+              color: AppColors.onMedia.withValues(alpha: .7),
               size: 25,
             ),
           ),
           if (item?.type == 'video')
-            const Positioned(
+            Positioned(
               top: 7,
               right: 7,
               child: Icon(
                 Icons.play_circle_fill_rounded,
-                color: Colors.white,
+                color: AppColors.text,
                 size: 15,
               ),
             ),

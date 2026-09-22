@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:backcourt/app.dart';
 import 'package:backcourt/backend/app_release_config.dart';
 import 'package:backcourt/backend/backcourt_repository.dart';
@@ -472,6 +473,50 @@ void main() {
     expect(find.text('앱 권한'), findsOneWidget);
     expect(find.text('화면 스타일'), findsOneWidget);
     expect(find.text('로그아웃'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('설정에서 라이트 모드로 바꾸고 선택을 저장한다', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await BackcourtThemeController.instance.setLight(false);
+    addTearDown(() async {
+      await BackcourtThemeController.instance.setLight(false);
+    });
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const BackcourtApp(useRealMap: false, skipAuth: true),
+    );
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.dark,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('nav-4')));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.byKey(const ValueKey('profile-settings-button')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.byKey(const ValueKey('theme-mode-switch')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.light,
+    );
+    expect(find.text('라이트 모드'), findsOneWidget);
+    expect(
+      tester
+          .widget<Switch>(find.byKey(const ValueKey('theme-mode-switch')))
+          .value,
+      isTrue,
+    );
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getString('backcourt_theme_mode_v1'), 'light');
     expect(tester.takeException(), isNull);
   });
 

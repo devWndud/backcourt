@@ -185,10 +185,7 @@ class _FeedScreenState extends State<FeedScreen> {
           await repository.reportPost(post, reason);
           _showMessage('신고 접수 완료');
         case _PostAction.block:
-          await repository.blockUser(
-            post.uid,
-            displayName: post.authorName,
-          );
+          await repository.blockUser(post.uid, displayName: post.authorName);
           _showMessage('${post.authorName} 차단 완료');
       }
     } catch (error) {
@@ -201,16 +198,16 @@ class _FeedScreenState extends State<FeedScreen> {
       await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('게시물 삭제'),
-          content: const Text('삭제한 게시물은 다시 복구할 수 없어요.'),
+          title: Text('게시물 삭제'),
+          content: Text('삭제한 게시물은 다시 복구할 수 없어요.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('취소'),
+              child: Text('취소'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('삭제'),
+              child: Text('삭제'),
             ),
           ],
         ),
@@ -250,17 +247,17 @@ class _FeedScreenState extends State<FeedScreen> {
                     onTap: _openComposer,
                   ),
                 ),
-                const SizedBox(height: 22),
+                SizedBox(height: 22),
                 _FeedTabs(selected: _selectedFeed, onChanged: _selectFeed),
                 if (_selectedFeed != 0) ...[
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   _ActiveCourtBanner(
                     court: widget.activeCourt,
                     nearby: _selectedFeed == 1,
                     locating: _locatingNearby,
                   ),
                 ],
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
               ],
             ),
           ),
@@ -337,12 +334,12 @@ class _FeedTabs extends StatelessWidget {
                 Text(
                   labels[index],
                   style: TextStyle(
-                    color: active ? Colors.white : AppColors.muted,
+                    color: active ? AppColors.text : AppColors.muted,
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 7),
+                SizedBox(height: 7),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   width: active ? 24 : 0,
@@ -378,7 +375,7 @@ class _ActiveCourtBanner extends StatelessWidget {
     decoration: BoxDecoration(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: Colors.white.withValues(alpha: .07)),
+      border: Border.all(color: AppColors.text.withValues(alpha: .07)),
     ),
     child: Row(
       children: [
@@ -386,10 +383,10 @@ class _ActiveCourtBanner extends StatelessWidget {
           backgroundColor: AppColors.accent,
           child: Icon(
             nearby ? Icons.near_me_rounded : Icons.sports_basketball_rounded,
-            color: Colors.white,
+            color: AppColors.text,
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,7 +395,7 @@ class _ActiveCourtBanner extends StatelessWidget {
                 nearby ? '내 주변' : '현재 선택 코트',
                 style: TextStyle(color: AppColors.muted, fontSize: 11),
               ),
-              const SizedBox(height: 3),
+              SizedBox(height: 3),
               Text(
                 nearby
                     ? locating
@@ -407,7 +404,7 @@ class _ActiveCourtBanner extends StatelessWidget {
                     : court.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w800),
+                style: TextStyle(fontWeight: FontWeight.w800),
               ),
             ],
           ),
@@ -443,7 +440,7 @@ class _PostSliver extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
       sliver: SliverList.separated(
         itemCount: posts.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 16),
+        separatorBuilder: (_, _) => SizedBox(height: 16),
         itemBuilder: (context, index) {
           final post = posts[index];
           final liked = currentUid == null
@@ -478,7 +475,7 @@ class _FeedMessage extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(22),
       ),
-      child: Text(label, style: const TextStyle(color: AppColors.muted)),
+      child: Text(label, style: TextStyle(color: AppColors.muted)),
     ),
   );
 }
@@ -528,21 +525,18 @@ class _PostCard extends StatelessWidget {
                   size: 36,
                   photoUrl: post.authorPhotoUrl,
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         post.authorName,
-                        style: const TextStyle(fontWeight: FontWeight.w800),
+                        style: TextStyle(fontWeight: FontWeight.w800),
                       ),
                       Text(
                         '${post.courtName} · $_timeLabel',
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: AppColors.muted, fontSize: 11),
                       ),
                     ],
                   ),
@@ -551,10 +545,7 @@ class _PostCard extends StatelessWidget {
                   key: ValueKey('post-menu-${post.id}'),
                   onPressed: onMore,
                   visualDensity: VisualDensity.compact,
-                  icon: const Icon(
-                    Icons.more_horiz_rounded,
-                    color: AppColors.muted,
-                  ),
+                  icon: Icon(Icons.more_horiz_rounded, color: AppColors.muted),
                 ),
               ],
             ),
@@ -565,7 +556,7 @@ class _PostCard extends StatelessWidget {
               child: _PostMedia(media: post.media.first),
             )
           else
-            const AspectRatio(
+            AspectRatio(
               aspectRatio: 1.8,
               child: ColoredBox(
                 color: AppColors.surfaceHigh,
@@ -591,23 +582,20 @@ class _PostCard extends StatelessWidget {
                         liked
                             ? Icons.favorite_rounded
                             : Icons.favorite_border_rounded,
-                        color: liked ? AppColors.accent : Colors.white,
+                        color: liked ? AppColors.accent : AppColors.text,
                       ),
                     ),
-                    const SizedBox(width: 7),
+                    SizedBox(width: 7),
                     Text('$likeCount'),
-                    const SizedBox(width: 20),
+                    SizedBox(width: 20),
                     GestureDetector(
                       key: ValueKey('post-comments-${post.id}'),
                       onTap: onComment,
                       child: Row(
                         children: [
-                          const Icon(
-                            Icons.chat_bubble_outline_rounded,
-                            size: 21,
-                          ),
+                          Icon(Icons.chat_bubble_outline_rounded, size: 21),
                           if (post.commentCount > 0) ...[
-                            const SizedBox(width: 7),
+                            SizedBox(width: 7),
                             Text('${post.commentCount}'),
                           ],
                         ],
@@ -616,11 +604,8 @@ class _PostCard extends StatelessWidget {
                   ],
                 ),
                 if (post.text.isNotEmpty) ...[
-                  const SizedBox(height: 11),
-                  Text(
-                    post.text,
-                    style: const TextStyle(fontSize: 12, height: 1.45),
-                  ),
+                  SizedBox(height: 11),
+                  Text(post.text, style: TextStyle(fontSize: 12, height: 1.45)),
                 ],
               ],
             ),
@@ -639,15 +624,15 @@ class _PostMedia extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (media.type == 'video') {
-      return const ColoredBox(
-        color: Color(0xFF262626),
+      return ColoredBox(
+        color: AppColors.surfaceHigh,
         child: Center(child: Icon(Icons.play_circle_fill_rounded, size: 58)),
       );
     }
     return Image.network(
       media.url,
       fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => const ColoredBox(
+      errorBuilder: (_, _, _) => ColoredBox(
         color: AppColors.surfaceHigh,
         child: Center(child: Icon(Icons.broken_image_outlined)),
       ),
@@ -678,7 +663,7 @@ class _PostActionsSheet extends StatelessWidget {
               title: mine ? '게시물 관리' : authorName,
               onClose: () => Navigator.pop(context),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             if (mine)
               _PostActionRow(
                 icon: Icons.delete_outline_rounded,
@@ -692,7 +677,7 @@ class _PostActionsSheet extends StatelessWidget {
                 label: '게시물 신고',
                 onTap: () => Navigator.pop(context, _PostAction.report),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               _PostActionRow(
                 icon: Icons.block_rounded,
                 label: '사용자 차단',
@@ -734,19 +719,19 @@ class _PostActionRow extends StatelessWidget {
             Icon(
               icon,
               size: 20,
-              color: danger ? AppColors.accent : Colors.white,
+              color: danger ? AppColors.accent : AppColors.text,
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Text(
               label,
               style: TextStyle(
-                color: danger ? AppColors.accent : Colors.white,
+                color: danger ? AppColors.accent : AppColors.text,
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
               ),
             ),
             const Spacer(),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
+            Icon(Icons.chevron_right_rounded, color: AppColors.muted),
           ],
         ),
       ),
@@ -775,14 +760,14 @@ class _ReportReasonSheet extends StatelessWidget {
               title: '신고 사유',
               onClose: () => Navigator.pop(context),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             for (var index = 0; index < _reasons.length; index++) ...[
               _PostActionRow(
                 icon: Icons.flag_outlined,
                 label: _reasons[index],
                 onTap: () => Navigator.pop(context, _reasons[index]),
               ),
-              if (index != _reasons.length - 1) const SizedBox(height: 8),
+              if (index != _reasons.length - 1) SizedBox(height: 8),
             ],
           ],
         ),
@@ -876,7 +861,7 @@ class _PostCommentsSheetState extends State<PostCommentsSheet> {
                   onClose: () => Navigator.pop(context),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Expanded(
                 child: StreamBuilder<Set<String>>(
                   stream: widget.repository.watchBlockedUserIds(),
@@ -885,16 +870,18 @@ class _PostCommentsSheetState extends State<PostCommentsSheet> {
                         stream: widget.repository.watchComments(widget.post.id),
                         builder: (context, snapshot) {
                           if (!snapshot.hasData) {
-                            return const Center(
+                            return Center(
                               child: CircularProgressIndicator(strokeWidth: 2),
                             );
                           }
                           final blocked = blockedSnapshot.data ?? const {};
                           final comments = snapshot.data!
-                              .where((comment) => !blocked.contains(comment.uid))
+                              .where(
+                                (comment) => !blocked.contains(comment.uid),
+                              )
                               .toList(growable: false);
                           if (comments.isEmpty) {
-                            return const Center(
+                            return Center(
                               child: Text(
                                 '댓글 없음',
                                 style: TextStyle(
@@ -909,8 +896,7 @@ class _PostCommentsSheetState extends State<PostCommentsSheet> {
                             controller: scrollController,
                             padding: const EdgeInsets.fromLTRB(22, 8, 22, 22),
                             itemCount: comments.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: 14),
+                            separatorBuilder: (_, _) => SizedBox(height: 14),
                             itemBuilder: (context, index) {
                               final comment = comments[index];
                               return _CommentTile(
@@ -935,7 +921,9 @@ class _PostCommentsSheetState extends State<PostCommentsSheet> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   border: Border(
-                    top: BorderSide(color: Colors.white.withValues(alpha: .06)),
+                    top: BorderSide(
+                      color: AppColors.text.withValues(alpha: .06),
+                    ),
                   ),
                 ),
                 child: Row(
@@ -947,29 +935,29 @@ class _PostCommentsSheetState extends State<PostCommentsSheet> {
                         maxLength: 500,
                         textInputAction: TextInputAction.send,
                         onSubmitted: (_) => _send(),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: '댓글',
                           counterText: '',
                         ),
                       ),
                     ),
-                    const SizedBox(width: 9),
+                    SizedBox(width: 9),
                     IconButton.filled(
                       key: const ValueKey('submit-comment'),
                       onPressed: _sending ? null : _send,
                       style: IconButton.styleFrom(
                         backgroundColor: AppColors.accent,
-                        foregroundColor: Colors.black,
+                        foregroundColor: AppColors.onAccent,
                       ),
                       icon: _sending
-                          ? const SizedBox.square(
+                          ? SizedBox.square(
                               dimension: 16,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.black,
+                                color: AppColors.onAccent,
                               ),
                             )
-                          : const Icon(Icons.arrow_upward_rounded),
+                          : Icon(Icons.arrow_upward_rounded),
                     ),
                   ],
                 ),
@@ -1002,19 +990,19 @@ class _CommentTile extends StatelessWidget {
         size: 34,
         photoUrl: comment.authorPhotoUrl,
       ),
-      const SizedBox(width: 10),
+      SizedBox(width: 10),
       Expanded(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               comment.authorName,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               comment.text,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.soft,
                 fontSize: 12,
                 height: 1.45,
@@ -1027,11 +1015,7 @@ class _CommentTile extends StatelessWidget {
         IconButton(
           onPressed: onDelete,
           visualDensity: VisualDensity.compact,
-          icon: const Icon(
-            Icons.close_rounded,
-            color: AppColors.muted,
-            size: 17,
-          ),
+          icon: Icon(Icons.close_rounded, color: AppColors.muted, size: 17),
         ),
     ],
   );
@@ -1135,7 +1119,7 @@ class _PostComposerSheetState extends State<PostComposerSheet> {
                   onClose: () => Navigator.pop(context),
                 ),
               ),
-              const SizedBox(height: 19),
+              SizedBox(height: 19),
               Expanded(
                 child: ListView(
                   controller: controller,
@@ -1149,19 +1133,19 @@ class _PostComposerSheetState extends State<PostComposerSheet> {
                       icon: Icons.location_on_rounded,
                       badge: 'PUBLIC',
                     ),
-                    const SizedBox(height: 23),
+                    SizedBox(height: 23),
                     const BackcourtSectionLabel(
                       title: '내용',
                       trailing: '글 또는 미디어',
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     _PostTextField(controller: _textController),
-                    const SizedBox(height: 23),
+                    SizedBox(height: 23),
                     const BackcourtSectionLabel(
                       title: '미디어',
                       trailing: '사진 6 · 영상 1',
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
@@ -1175,7 +1159,7 @@ class _PostComposerSheetState extends State<PostComposerSheet> {
                             onTap: _pickImages,
                           ),
                         ),
-                        const SizedBox(width: 9),
+                        SizedBox(width: 9),
                         Expanded(
                           child: BackcourtMediaAction(
                             icon: Icons.video_library_rounded,
@@ -1188,7 +1172,7 @@ class _PostComposerSheetState extends State<PostComposerSheet> {
                       ],
                     ),
                     if (_images.isNotEmpty || _video != null) ...[
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       _PostMediaPreview(
                         images: _images,
                         video: _video,
@@ -1197,17 +1181,17 @@ class _PostComposerSheetState extends State<PostComposerSheet> {
                         onRemoveVideo: () => setState(() => _video = null),
                       ),
                     ],
-                    const SizedBox(height: 22),
+                    SizedBox(height: 22),
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .035),
+                        color: AppColors.text.withValues(alpha: .035),
                         borderRadius: BorderRadius.circular(17),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: .055),
+                          color: AppColors.text.withValues(alpha: .055),
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           Icon(
                             Icons.public_rounded,
@@ -1232,8 +1216,8 @@ class _PostComposerSheetState extends State<PostComposerSheet> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    const Row(
+                    SizedBox(height: 12),
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
@@ -1265,7 +1249,9 @@ class _PostComposerSheetState extends State<PostComposerSheet> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   border: Border(
-                    top: BorderSide(color: Colors.white.withValues(alpha: .06)),
+                    top: BorderSide(
+                      color: AppColors.text.withValues(alpha: .06),
+                    ),
                   ),
                 ),
                 child: BackcourtPrimaryAction(
@@ -1294,7 +1280,7 @@ class _PostTextField extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(19),
-        border: Border.all(color: Colors.white.withValues(alpha: .06)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .06)),
       ),
       child: Stack(
         children: [
@@ -1304,8 +1290,8 @@ class _PostTextField extends StatelessWidget {
             maxLines: 10,
             maxLength: 1500,
             autofocus: false,
-            style: const TextStyle(fontSize: 13, height: 1.55),
-            decoration: const InputDecoration(
+            style: TextStyle(fontSize: 13, height: 1.55),
+            decoration: InputDecoration(
               hintText: '내용 입력',
               hintStyle: TextStyle(
                 color: AppColors.muted,
@@ -1327,7 +1313,7 @@ class _PostTextField extends StatelessWidget {
               valueListenable: controller,
               builder: (context, value, _) => Text(
                 '${value.text.length}/1500',
-                style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                style: TextStyle(color: AppColors.muted, fontSize: 11),
               ),
             ),
           ),
@@ -1358,7 +1344,7 @@ class _PostMediaPreview extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: itemCount,
-        separatorBuilder: (_, _) => const SizedBox(width: 9),
+        separatorBuilder: (_, _) => SizedBox(width: 9),
         itemBuilder: (context, index) {
           final isVideo = index >= images.length;
           final image = isVideo ? null : images[index];
@@ -1370,8 +1356,8 @@ class _PostMediaPreview extends StatelessWidget {
                     ? Container(
                         width: 92,
                         height: 92,
-                        color: const Color(0xFF262626),
-                        child: const Column(
+                        color: AppColors.surfaceHigh,
+                        child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
@@ -1397,7 +1383,7 @@ class _PostMediaPreview extends StatelessWidget {
                         width: 92,
                         height: 92,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => const ColoredBox(
+                        errorBuilder: (_, _, _) => ColoredBox(
                           color: AppColors.surfaceHigh,
                           child: SizedBox.square(
                             dimension: 92,
@@ -1418,12 +1404,12 @@ class _PostMediaPreview extends StatelessWidget {
                     width: 23,
                     height: 23,
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: .74),
+                      color: AppColors.inverseText.withValues(alpha: .74),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.close_rounded,
-                      color: Colors.white,
+                      color: AppColors.text,
                       size: 14,
                     ),
                   ),

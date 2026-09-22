@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'auth/auth_service.dart';
 import 'backend/backcourt_repository.dart';
@@ -38,28 +39,54 @@ class BackcourtApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '빽코트',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
-      home: skipAuth
-          ? AppShell(
-              useRealMap: useRealMap,
-              userLocationLoader: userLocationLoader,
-              onMapControllerReady: onMapControllerReady,
-            )
-          : _AuthGate(
-              firebaseReadyOverride: firebaseReadyOverride,
-              appBuilder: (authService, repository, profile) => AppShell(
+    final themeController = BackcourtThemeController.instance;
+    return AnimatedBuilder(
+      animation: themeController,
+      builder: (context, _) => MaterialApp(
+        title: '빽코트',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: themeController.mode,
+        builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+          value: themeController.isLight
+              ? SystemUiOverlayStyle.dark.copyWith(
+                  statusBarColor: Colors.transparent,
+                  systemNavigationBarColor: AppColors.nav,
+                  systemNavigationBarDividerColor: AppColors.line,
+                  systemNavigationBarIconBrightness: Brightness.dark,
+                  systemNavigationBarContrastEnforced: false,
+                  systemStatusBarContrastEnforced: false,
+                )
+              : SystemUiOverlayStyle.light.copyWith(
+                  statusBarColor: Colors.transparent,
+                  systemNavigationBarColor: AppColors.nav,
+                  systemNavigationBarDividerColor: AppColors.line,
+                  systemNavigationBarIconBrightness: Brightness.light,
+                  systemNavigationBarContrastEnforced: false,
+                  systemStatusBarContrastEnforced: false,
+                ),
+          child: child ?? const SizedBox.shrink(),
+        ),
+        home: skipAuth
+            ? AppShell(
                 useRealMap: useRealMap,
                 userLocationLoader: userLocationLoader,
                 onMapControllerReady: onMapControllerReady,
-                onSignOut: authService.signOut,
-                repository: repository,
-                initialCourt: profile.preferredCourt,
-                homeCourts: profile.homeCourts,
+              )
+            : _AuthGate(
+                firebaseReadyOverride: firebaseReadyOverride,
+                appBuilder: (authService, repository, profile) => AppShell(
+                  useRealMap: useRealMap,
+                  userLocationLoader: userLocationLoader,
+                  onMapControllerReady: onMapControllerReady,
+                  onSignOut: authService.signOut,
+                  repository: repository,
+                  initialCourt: profile.preferredCourt,
+                  homeCourts: profile.homeCourts,
+                ),
               ),
-            ),
+      ),
     );
   }
 }
@@ -228,11 +255,11 @@ class _BackendErrorScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cloud_off_rounded, size: 42),
-              const SizedBox(height: 16),
-              const Text('서버에 연결하지 못했어요.'),
-              const SizedBox(height: 14),
-              FilledButton(onPressed: onRetry, child: const Text('다시 시도')),
+              Icon(Icons.cloud_off_rounded, size: 42),
+              SizedBox(height: 16),
+              Text('서버에 연결하지 못했어요.'),
+              SizedBox(height: 14),
+              FilledButton(onPressed: onRetry, child: Text('다시 시도')),
             ],
           ),
         ),
@@ -246,7 +273,7 @@ class _AuthLoadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ColoredBox(
+    return ColoredBox(
       color: AppColors.background,
       child: Center(
         child: CircularProgressIndicator(
@@ -467,28 +494,28 @@ class _CourtSelectionRequired extends StatelessWidget {
                       Container(
                         width: 58,
                         height: 58,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppColors.accent,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.place_rounded,
-                          color: Colors.black,
+                          color: AppColors.onAccent,
                           size: 28,
                         ),
                       ),
-                      const SizedBox(height: 18),
-                      const Text(
+                      SizedBox(height: 18),
+                      Text(
                         '코트를 선택해 주세요',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.text,
                           fontSize: 21,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -.7,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
+                      SizedBox(height: 8),
+                      Text(
                         '코트 탭으로 이동',
                         style: TextStyle(
                           color: AppColors.accent,
@@ -531,7 +558,7 @@ class _BottomNav extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.nav,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withValues(alpha: .09)),
+          border: Border.all(color: AppColors.text.withValues(alpha: .09)),
           boxShadow: const [
             BoxShadow(
               color: Colors.black54,
@@ -564,7 +591,7 @@ class _BottomNav extends StatelessWidget {
                             ? BoxDecoration(
                                 color: selected
                                     ? AppColors.accent
-                                    : Colors.white,
+                                    : AppColors.text,
                                 shape: BoxShape.circle,
                               )
                             : null,
@@ -573,17 +600,19 @@ class _BottomNav extends StatelessWidget {
                           selected ? item.$2 : item.$1,
                           size: index == 2 ? 20 : 22,
                           color: index == 2
-                              ? Colors.black
+                              ? selected
+                                    ? AppColors.onAccent
+                                    : AppColors.inverseText
                               : selected
-                              ? Colors.white
+                              ? AppColors.text
                               : AppColors.muted,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      SizedBox(height: 3),
                       Text(
                         item.$3,
                         style: TextStyle(
-                          color: selected ? Colors.white : AppColors.muted,
+                          color: selected ? AppColors.text : AppColors.muted,
                           fontSize: 11,
                           fontWeight: selected
                               ? FontWeight.w700

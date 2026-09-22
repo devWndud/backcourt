@@ -24,11 +24,11 @@ class BackcourtSheetHeader extends StatelessWidget {
           width: 38,
           height: 4,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: .16),
+            color: AppColors.text.withValues(alpha: .16),
             borderRadius: BorderRadius.circular(99),
           ),
         ),
-        const SizedBox(height: 19),
+        SizedBox(height: 19),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -38,18 +38,18 @@ class BackcourtSheetHeader extends StatelessWidget {
                 children: [
                   Text(
                     eyebrow.toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.accent,
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1.7,
                     ),
                   ),
-                  const SizedBox(height: 7),
+                  SizedBox(height: 7),
                   Text(
                     title,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: AppColors.text,
                       fontSize: 25,
                       height: 1.05,
                       fontWeight: FontWeight.w900,
@@ -57,10 +57,10 @@ class BackcourtSheetHeader extends StatelessWidget {
                     ),
                   ),
                   if (subtitle != null) ...[
-                    const SizedBox(height: 7),
+                    SizedBox(height: 7),
                     Text(
                       subtitle!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.muted,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -77,7 +77,7 @@ class BackcourtSheetHeader extends StatelessWidget {
                 child: InkWell(
                   onTap: onClose,
                   customBorder: const CircleBorder(),
-                  child: const SizedBox.square(
+                  child: SizedBox.square(
                     dimension: 39,
                     child: Icon(
                       Icons.close_rounded,
@@ -115,7 +115,7 @@ class BackcourtContextCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: .06)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .06)),
       ),
       child: Row(
         children: [
@@ -131,7 +131,7 @@ class BackcourtContextCard extends StatelessWidget {
             ),
             child: Icon(icon, color: AppColors.accent, size: 21),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,16 +140,16 @@ class BackcourtContextCard extends StatelessWidget {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -.3,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   caption,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -167,7 +167,7 @@ class BackcourtContextCard extends StatelessWidget {
               ),
               child: Text(
                 badge!,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.accent,
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
@@ -194,7 +194,7 @@ class BackcourtSectionLabel extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.soft,
               fontSize: 11,
               fontWeight: FontWeight.w800,
@@ -204,7 +204,7 @@ class BackcourtSectionLabel extends StatelessWidget {
         if (trailing != null)
           Text(
             trailing!,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.muted,
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -248,7 +248,7 @@ class BackcourtMediaAction extends StatelessWidget {
             border: Border.all(
               color: active
                   ? AppColors.accent.withValues(alpha: .32)
-                  : Colors.white.withValues(alpha: .06),
+                  : AppColors.text.withValues(alpha: .06),
             ),
           ),
           child: Row(
@@ -259,7 +259,7 @@ class BackcourtMediaAction extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: active
                       ? AppColors.accent.withValues(alpha: .16)
-                      : Colors.white.withValues(alpha: .05),
+                      : AppColors.text.withValues(alpha: .05),
                   borderRadius: BorderRadius.circular(11),
                 ),
                 child: Icon(
@@ -268,24 +268,24 @@ class BackcourtMediaAction extends StatelessWidget {
                   size: 18,
                 ),
               ),
-              const SizedBox(width: 11),
+              SizedBox(width: 11),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    SizedBox(height: 3),
                     Text(
                       caption,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.muted,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -325,17 +325,17 @@ class BackcourtPrimaryAction extends StatelessWidget {
         onPressed: loading ? null : onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.accent,
-          foregroundColor: Colors.black,
+          foregroundColor: AppColors.onAccent,
           disabledBackgroundColor: AppColors.accent.withValues(alpha: .36),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(17),
           ),
         ),
         child: loading
-            ? const SizedBox.square(
+            ? SizedBox.square(
                 dimension: 18,
                 child: CircularProgressIndicator(
-                  color: Colors.black,
+                  color: AppColors.onAccent,
                   strokeWidth: 2,
                 ),
               )
@@ -344,12 +344,9 @@ class BackcourtPrimaryAction extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                    ),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Icon(icon, size: 18),
                 ],
               ),
@@ -361,7 +358,7 @@ class BackcourtPrimaryAction extends StatelessWidget {
 BoxDecoration backcourtSheetDecoration() => BoxDecoration(
   color: AppColors.surface,
   borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-  border: Border(top: BorderSide(color: Colors.white.withValues(alpha: .08))),
+  border: Border(top: BorderSide(color: AppColors.text.withValues(alpha: .08))),
   boxShadow: const [
     BoxShadow(color: Colors.black54, blurRadius: 34, offset: Offset(0, -10)),
   ],

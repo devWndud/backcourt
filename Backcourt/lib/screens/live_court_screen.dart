@@ -16,7 +16,7 @@ void showLiveCourtInfo(BuildContext context) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),
-    builder: (context) => const SafeArea(
+    builder: (context) => SafeArea(
       top: false,
       child: Padding(
         padding: EdgeInsets.fromLTRB(22, 12, 22, 28),
@@ -143,7 +143,7 @@ class _LiveCourtScreenState extends State<LiveCourtScreen> {
           return _buildContent(const [], error: true);
         }
         if (!snapshot.hasData) {
-          return const SafeArea(
+          return SafeArea(
             child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
           );
         }
@@ -187,11 +187,11 @@ class _LiveCourtScreenState extends State<LiveCourtScreen> {
                       onTap: () => showLiveCourtInfo(context),
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18),
                 ],
                 if (!widget.embedded) ...[
                   _SelectedCourtBar(court: widget.activeCourt),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                 ],
                 _LiveHero(
                   statuses: selectedStatuses,
@@ -200,12 +200,12 @@ class _LiveCourtScreenState extends State<LiveCourtScreen> {
                   onTap: () => _showStatusSheet(myStatus),
                 ),
                 if (selectedStatuses.isNotEmpty) ...[
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   SectionTitle(
                     title: '지금 이 코트',
                     trailing: '${selectedStatuses.length}명 공유 중',
                   ),
-                  const SizedBox(height: 11),
+                  SizedBox(height: 11),
                   for (var index = 0; index < selectedStatuses.length; index++)
                     Padding(
                       padding: EdgeInsets.only(
@@ -226,9 +226,9 @@ class _LiveCourtScreenState extends State<LiveCourtScreen> {
                     ),
                 ],
                 if (groups.isNotEmpty) ...[
-                  const SizedBox(height: 28),
+                  SizedBox(height: 28),
                   SectionTitle(title: '근처 LIVE', trailing: '${groups.length}곳'),
-                  const SizedBox(height: 11),
+                  SizedBox(height: 11),
                 ],
               ],
             ),
@@ -239,7 +239,7 @@ class _LiveCourtScreenState extends State<LiveCourtScreen> {
                 ? const SliverToBoxAdapter(child: SizedBox.shrink())
                 : SliverList.separated(
                     itemCount: groups.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    separatorBuilder: (_, _) => SizedBox(height: 10),
                     itemBuilder: (context, index) => _OtherCourtCard(
                       group: groups[index],
                       distanceLabel: _distanceLabel(groups[index]),
@@ -344,18 +344,18 @@ class _SelectedCourtBar extends StatelessWidget {
     decoration: BoxDecoration(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(17),
-      border: Border.all(color: Colors.white.withValues(alpha: .07)),
+      border: Border.all(color: AppColors.text.withValues(alpha: .07)),
     ),
     child: Row(
       children: [
-        const Icon(Icons.place_rounded, color: AppColors.accent, size: 20),
-        const SizedBox(width: 10),
+        Icon(Icons.place_rounded, color: AppColors.accent, size: 20),
+        SizedBox(width: 10),
         Expanded(
           child: Text(
             court.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
           ),
         ),
       ],
@@ -384,7 +384,7 @@ class _LiveHero extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withValues(alpha: .07)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .07)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,8 +392,8 @@ class _LiveHero extends StatelessWidget {
           Row(
             children: [
               const _BlinkingDot(),
-              const SizedBox(width: 7),
-              const Text(
+              SizedBox(width: 7),
+              Text(
                 'LIVE',
                 style: TextStyle(
                   color: AppColors.accent,
@@ -407,7 +407,7 @@ class _LiveHero extends StatelessWidget {
                 key: const ValueKey('live-court-publish-button'),
                 onPressed: onTap,
                 style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.text,
                   backgroundColor: AppColors.surfaceHigh,
                   minimumSize: const Size(0, 36),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -423,29 +423,29 @@ class _LiveHero extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             error
                 ? '상태를 불러오지 못했어요'
                 : group == null
                 ? '아직 조용해요'
                 : '지금 ${group.playerCount}명',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: AppColors.text,
               fontSize: 28,
               height: 1.05,
               fontWeight: FontWeight.w900,
               letterSpacing: -1,
             ),
           ),
-          const SizedBox(height: 7),
+          SizedBox(height: 7),
           Text(
             group == null
                 ? '현장에 있다면 첫 상태를 남겨보세요'
                 : group.neededPlayers > 0
                 ? '${group.neededPlayers}명 더 필요해요 · ${group.arrivalCount}명 오는 중'
                 : '${group.primaryActivity.label} · ${group.arrivalCount}명 오는 중',
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.muted,
               fontSize: 14,
               height: 1.35,
@@ -453,7 +453,7 @@ class _LiveHero extends StatelessWidget {
             ),
           ),
           if (group != null) ...[
-            const SizedBox(height: 17),
+            SizedBox(height: 17),
             Container(
               height: 3,
               decoration: BoxDecoration(
@@ -537,7 +537,7 @@ class _LiveStatusCard extends StatelessWidget {
       border: Border.all(
         color: status.isLooking
             ? AppColors.accent.withValues(alpha: .24)
-            : Colors.white.withValues(alpha: .06),
+            : AppColors.text.withValues(alpha: .06),
       ),
     ),
     child: Column(
@@ -550,7 +550,7 @@ class _LiveStatusCard extends StatelessWidget {
               size: 40,
               color: status.activity.color,
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,15 +562,15 @@ class _LiveStatusCard extends StatelessWidget {
                           status.displayName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
                       ),
                       if (isMine) ...[
-                        const SizedBox(width: 6),
-                        const Text(
+                        SizedBox(width: 6),
+                        Text(
                           '나',
                           style: TextStyle(
                             color: AppColors.accent,
@@ -581,13 +581,10 @@ class _LiveStatusCard extends StatelessWidget {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   Text(
                     '${_relativeTime(status.updatedAt)} · GPS 인증',
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: AppColors.muted, fontSize: 12),
                   ),
                 ],
               ),
@@ -595,15 +592,11 @@ class _LiveStatusCard extends StatelessWidget {
             _ActivityBadge(activity: status.activity),
           ],
         ),
-        const SizedBox(height: 13),
+        SizedBox(height: 13),
         Row(
           children: [
-            const Icon(
-              Icons.groups_2_outlined,
-              color: AppColors.muted,
-              size: 17,
-            ),
-            const SizedBox(width: 7),
+            Icon(Icons.groups_2_outlined, color: AppColors.muted, size: 17),
+            SizedBox(width: 7),
             Expanded(
               child: Text(
                 [
@@ -614,7 +607,7 @@ class _LiveStatusCard extends StatelessWidget {
                 ].join(' · '),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.soft,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -622,37 +615,39 @@ class _LiveStatusCard extends StatelessWidget {
               ),
             ),
             if (isMine) ...[
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               TextButton(
                 onPressed: onEdit,
                 style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.text,
                   minimumSize: const Size(48, 34),
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                 ),
-                child: const Text('수정'),
+                child: Text('수정'),
               ),
               IconButton(
                 tooltip: 'LIVE 종료',
                 onPressed: onEnd,
                 visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.stop_circle_outlined, size: 18),
+                icon: Icon(Icons.stop_circle_outlined, size: 18),
               ),
             ] else if (status.isLooking) ...[
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               FilledButton(
                 onPressed: onJoin,
                 style: FilledButton.styleFrom(
                   backgroundColor: hasJoined
                       ? AppColors.surfaceHigh
                       : AppColors.accent,
-                  foregroundColor: hasJoined ? Colors.white : Colors.black,
+                  foregroundColor: hasJoined
+                      ? AppColors.text
+                      : AppColors.onAccent,
                   minimumSize: const Size(66, 34),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(11),
                   ),
-                  textStyle: const TextStyle(
+                  textStyle: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w900,
                   ),
@@ -683,7 +678,7 @@ class _ActivityBadge extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(activity.icon, color: activity.color, size: 14),
-        const SizedBox(width: 5),
+        SizedBox(width: 5),
         Text(
           activity.label,
           style: TextStyle(
@@ -709,7 +704,7 @@ class _OtherCourtCard extends StatelessWidget {
     decoration: BoxDecoration(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: Colors.white.withValues(alpha: .06)),
+      border: Border.all(color: AppColors.text.withValues(alpha: .06)),
     ),
     child: Row(
       children: [
@@ -725,7 +720,7 @@ class _OtherCourtCard extends StatelessWidget {
             color: group.primaryActivity.color,
           ),
         ),
-        const SizedBox(width: 13),
+        SizedBox(width: 13),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -734,17 +729,14 @@ class _OtherCourtCard extends StatelessWidget {
                 group.courtName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
               ),
-              const SizedBox(height: 5),
+              SizedBox(height: 5),
               Text(
                 '$distanceLabel · 현재 ${group.playerCount}명',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
               ),
             ],
           ),
@@ -758,7 +750,7 @@ class _OtherCourtCard extends StatelessWidget {
             ),
             child: Text(
               '${group.neededPlayers}명 모집',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.accent,
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
@@ -894,7 +886,7 @@ class _LiveStatusSheetState extends State<_LiveStatusSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _SheetHandle(),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           Row(
             children: [
               Expanded(
@@ -905,8 +897,8 @@ class _LiveStatusSheetState extends State<_LiveStatusSheet> {
                       widget.existing == null ? 'LIVE 등록' : 'LIVE 수정',
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
-                    const SizedBox(height: 5),
-                    const Text(
+                    SizedBox(height: 5),
+                    Text(
                       '90분 후 자동 종료',
                       style: TextStyle(color: AppColors.muted, fontSize: 13),
                     ),
@@ -915,11 +907,11 @@ class _LiveStatusSheetState extends State<_LiveStatusSheet> {
               ),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close_rounded),
+                icon: Icon(Icons.close_rounded),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -928,20 +920,17 @@ class _LiveStatusSheetState extends State<_LiveStatusSheet> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.place_rounded, color: AppColors.accent),
-                const SizedBox(width: 10),
+                Icon(Icons.place_rounded, color: AppColors.accent),
+                SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     widget.court.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
                   ),
                 ),
-                const Text(
+                Text(
                   'GPS 100m',
                   style: TextStyle(
                     color: AppColors.success,
@@ -952,12 +941,12 @@ class _LiveStatusSheetState extends State<_LiveStatusSheet> {
               ],
             ),
           ),
-          const SizedBox(height: 22),
-          const Text(
+          SizedBox(height: 22),
+          Text(
             '지금 상황',
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: 11),
+          SizedBox(height: 11),
           LayoutBuilder(
             builder: (context, constraints) {
               final width = (constraints.maxWidth - 10) / 2;
@@ -979,7 +968,7 @@ class _LiveStatusSheetState extends State<_LiveStatusSheet> {
             },
           ),
           if (_showsPlayers) ...[
-            const SizedBox(height: 23),
+            SizedBox(height: 23),
             _NumberSlider(
               label: '현재 코트 인원',
               valueLabel: '$_playerCount명',
@@ -992,7 +981,7 @@ class _LiveStatusSheetState extends State<_LiveStatusSheet> {
             ),
           ],
           if (_activity == LiveCourtActivity.looking) ...[
-            const SizedBox(height: 18),
+            SizedBox(height: 18),
             _NumberSlider(
               label: '더 필요한 인원',
               valueLabel: '$_neededPlayers명',
@@ -1004,14 +993,14 @@ class _LiveStatusSheetState extends State<_LiveStatusSheet> {
                   setState(() => _neededPlayers = value.round()),
             ),
           ],
-          const SizedBox(height: 22),
+          SizedBox(height: 22),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
             decoration: BoxDecoration(
               color: AppColors.success.withValues(alpha: .09),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 Icon(
                   Icons.verified_user_outlined,
@@ -1028,22 +1017,22 @@ class _LiveStatusSheetState extends State<_LiveStatusSheet> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
               key: const ValueKey('live-court-submit-button'),
               onPressed: _saving ? null : _submit,
               icon: _saving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.black,
+                        color: AppColors.inverseText,
                       ),
                     )
-                  : const Icon(Icons.sensors_rounded),
+                  : Icon(Icons.sensors_rounded),
               label: Text(_saving ? '위치 확인 중...' : 'GPS 확인 후 등록'),
             ),
           ),
@@ -1080,7 +1069,7 @@ class _ActivityOption extends StatelessWidget {
           border: Border.all(
             color: selected
                 ? activity.color
-                : Colors.white.withValues(alpha: .05),
+                : AppColors.text.withValues(alpha: .05),
           ),
         ),
         child: Row(
@@ -1090,12 +1079,12 @@ class _ActivityOption extends StatelessWidget {
               size: 21,
               color: selected ? activity.color : AppColors.muted,
             ),
-            const SizedBox(width: 9),
+            SizedBox(width: 9),
             Expanded(
               child: Text(
                 activity.label,
                 style: TextStyle(
-                  color: selected ? Colors.white : AppColors.soft,
+                  color: selected ? AppColors.text : AppColors.soft,
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                 ),
@@ -1137,7 +1126,7 @@ class _NumberSlider extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
             ),
           ),
           Container(
@@ -1148,7 +1137,7 @@ class _NumberSlider extends StatelessWidget {
             ),
             child: Text(
               valueLabel,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.accent,
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
@@ -1189,11 +1178,11 @@ class _InfoRow extends StatelessWidget {
           ),
           child: Icon(icon, color: AppColors.accent, size: 20),
         ),
-        const SizedBox(width: 11),
+        SizedBox(width: 11),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
           ),
         ),
       ],
@@ -1210,7 +1199,7 @@ class _SheetHandle extends StatelessWidget {
       width: 42,
       height: 4,
       decoration: BoxDecoration(
-        color: Colors.white24,
+        color: AppColors.text.withValues(alpha: .18),
         borderRadius: BorderRadius.circular(99),
       ),
     ),

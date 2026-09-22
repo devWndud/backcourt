@@ -44,11 +44,11 @@ class _PlayScreenState extends State<PlayScreen> {
               children: [
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         '플레이',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.text,
                           fontSize: 28,
                           height: 1.1,
                           fontWeight: FontWeight.w900,
@@ -84,7 +84,7 @@ class _PlayScreenState extends State<PlayScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 9),
+                SizedBox(height: 9),
                 _ActiveCourtLine(
                   court: widget.activeCourt,
                   onTap: _openHomeCourts,
@@ -92,7 +92,7 @@ class _PlayScreenState extends State<PlayScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 15),
+          SizedBox(height: 15),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: PlayModeSwitch(
@@ -105,7 +105,7 @@ class _PlayScreenState extends State<PlayScreen> {
               },
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Expanded(
             child: IndexedStack(
               index: _selectedIndex,
@@ -166,30 +166,22 @@ class _ActiveCourtLine extends StatelessWidget {
               color: AppColors.accent.withValues(alpha: .14),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.place_rounded,
-              size: 14,
-              color: AppColors.accent,
-            ),
+            child: Icon(Icons.place_rounded, size: 14, color: AppColors.accent),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Expanded(
             child: Text(
               court.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.soft,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),
             ),
           ),
-          const Icon(
-            Icons.unfold_more_rounded,
-            color: AppColors.muted,
-            size: 18,
-          ),
+          Icon(Icons.unfold_more_rounded, color: AppColors.muted, size: 18),
         ],
       ),
     ),
@@ -307,7 +299,7 @@ class _HomeCourtsSheetState extends State<_HomeCourtsSheet> {
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
@@ -320,19 +312,19 @@ class _HomeCourtsSheetState extends State<_HomeCourtsSheet> {
                 width: 38,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: AppColors.text.withValues(alpha: .18),
                   borderRadius: BorderRadius.circular(99),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     '홈코트',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.text,
                       fontSize: 23,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -.7,
@@ -341,7 +333,7 @@ class _HomeCourtsSheetState extends State<_HomeCourtsSheet> {
                 ),
                 Text(
                   '${_courts.length}/3',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
@@ -349,12 +341,12 @@ class _HomeCourtsSheetState extends State<_HomeCourtsSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 5),
-            const Text(
+            SizedBox(height: 5),
+            Text(
               '자주 뛰는 코트를 저장하고 바로 바꿔보세요.',
               style: TextStyle(color: AppColors.soft, fontSize: 13),
             ),
-            const SizedBox(height: 18),
+            SizedBox(height: 18),
             ..._courts.map(
               (court) => _HomeCourtTile(
                 court: court,
@@ -364,14 +356,14 @@ class _HomeCourtsSheetState extends State<_HomeCourtsSheet> {
                 onRemove: () => _remove(court),
               ),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             SizedBox(
               width: double.infinity,
               height: 52,
               child: OutlinedButton.icon(
                 key: const ValueKey('add-home-court'),
                 onPressed: _courts.length >= 3 || _busy ? null : _add,
-                icon: const Icon(Icons.add_rounded, size: 20),
+                icon: Icon(Icons.add_rounded, size: 20),
                 label: Text(_courts.length >= 3 ? '홈코트 3개 저장됨' : '홈코트 추가'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.accent,
@@ -418,7 +410,7 @@ class _HomeCourtTile extends StatelessWidget {
         side: BorderSide(
           color: selected
               ? AppColors.accent.withValues(alpha: .55)
-              : Colors.white.withValues(alpha: .07),
+              : AppColors.text.withValues(alpha: .07),
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -429,12 +421,12 @@ class _HomeCourtTile extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: selected ? AppColors.accent : Colors.white10,
+            color: selected ? AppColors.accent : AppColors.subtleFill,
             shape: BoxShape.circle,
           ),
           child: Icon(
             selected ? Icons.check_rounded : Icons.sports_basketball_rounded,
-            color: selected ? Colors.black : Colors.white70,
+            color: selected ? AppColors.onAccent : AppColors.muted,
             size: 20,
           ),
         ),
@@ -442,8 +434,8 @@ class _HomeCourtTile extends StatelessWidget {
           court.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: AppColors.text,
             fontSize: 15,
             fontWeight: FontWeight.w800,
           ),
@@ -461,7 +453,7 @@ class _HomeCourtTile extends StatelessWidget {
         trailing: IconButton(
           tooltip: '홈코트 삭제',
           onPressed: removeEnabled ? onRemove : null,
-          icon: const Icon(Icons.close_rounded, size: 19),
+          icon: Icon(Icons.close_rounded, size: 19),
           color: AppColors.muted,
         ),
       ),

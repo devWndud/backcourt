@@ -20,7 +20,7 @@ class PlayModeSwitch extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: .06)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .06)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -60,7 +60,7 @@ class PlayModeSwitch extends StatelessWidget {
                                 duration: const Duration(milliseconds: 160),
                                 style: TextStyle(
                                   color: selected
-                                      ? Colors.black
+                                      ? AppColors.onAccent
                                       : AppColors.muted,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w900,

@@ -60,7 +60,9 @@ class _MapScreenState extends State<MapScreen> {
     target: LatLng(37.5240, 126.9349),
     zoom: _initialZoom,
   );
-  static const _styleUrl = 'https://tiles.openfreemap.org/styles/dark';
+  static String get _styleUrl => AppColors.isLight
+      ? 'https://tiles.openfreemap.org/styles/positron'
+      : 'https://tiles.openfreemap.org/styles/dark';
 
   LatLng get _initialTarget => initialCourtPosition(widget.initialCourt);
 
@@ -1120,6 +1122,7 @@ class _MapScreenState extends State<MapScreen> {
       children: [
         if (widget.useRealMap)
           MapLibreMap(
+            key: ValueKey(_styleUrl),
             initialCameraPosition: _startingCamera,
             styleString: _styleUrl,
             minMaxZoomPreference: const MinMaxZoomPreference(6, 19),
@@ -1142,7 +1145,7 @@ class _MapScreenState extends State<MapScreen> {
               AnnotationType.circle,
               AnnotationType.symbol,
             ],
-            foregroundLoadColor: const Color(0xFF101214),
+            foregroundLoadColor: AppColors.background,
             onMapCreated: _onMapCreated,
             onMapClick: _onMapTapped,
             onStyleLoadedCallback: _onStyleLoaded,
@@ -1150,8 +1153,8 @@ class _MapScreenState extends State<MapScreen> {
             onCameraIdle: _onCameraIdle,
           )
         else ...[
-          const ColoredBox(color: Color(0xFF101214)),
-          CustomPaint(painter: _DarkMapPainter()),
+          ColoredBox(color: AppColors.background),
+          CustomPaint(painter: _MapPreviewPainter(light: AppColors.isLight)),
           _MapMarker(
             leftFactor: .55,
             topFactor: .35,
@@ -1216,15 +1219,15 @@ class _MapScreenState extends State<MapScreen> {
                           backgroundColor: AppColors.surface.withValues(
                             alpha: .92,
                           ),
-                          foregroundColor: Colors.white,
+                          foregroundColor: AppColors.text,
                         ),
-                        icon: const Icon(Icons.arrow_back_rounded),
+                        icon: Icon(Icons.arrow_back_rounded),
                       ),
-                      const SizedBox(width: 10),
-                      const Text(
+                      SizedBox(width: 10),
+                      Text(
                         '홈코트 선택',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.text,
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -.6,
@@ -1237,7 +1240,7 @@ class _MapScreenState extends State<MapScreen> {
                       NotificationBell(repository: widget.repository),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 TextField(
                   key: const ValueKey('court-search-field'),
                   controller: _searchController,
@@ -1246,21 +1249,21 @@ class _MapScreenState extends State<MapScreen> {
                   onSubmitted: _submitSearch,
                   decoration: InputDecoration(
                     hintText: '코트 이름, 주소, 운영자로 검색',
-                    prefixIcon: const Icon(Icons.search_rounded),
+                    prefixIcon: Icon(Icons.search_rounded),
                     suffixIcon: _searchQuery.isEmpty
                         ? null
                         : IconButton(
                             key: const ValueKey('clear-court-search'),
                             tooltip: '검색어 지우기',
                             onPressed: _clearSearch,
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.close_rounded,
-                              color: Colors.white,
+                              color: AppColors.text,
                             ),
                           ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 SizedBox(
                   height: 38,
                   child: ListView(
@@ -1365,7 +1368,7 @@ class _MapCourtPickerCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface.withValues(alpha: .97),
         borderRadius: BorderRadius.circular(21),
-        border: Border.all(color: Colors.white.withValues(alpha: .09)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .09)),
         boxShadow: const [
           BoxShadow(
             color: Color(0x66000000),
@@ -1383,13 +1386,13 @@ class _MapCourtPickerCard extends StatelessWidget {
               color: AppColors.accent.withValues(alpha: .13),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.sports_basketball_rounded,
               color: AppColors.accent,
               size: 21,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1399,19 +1402,19 @@ class _MapCourtPickerCard extends StatelessWidget {
                   court.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.text,
                     fontSize: 15,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -.35,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   court.address ?? court.distance,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -1420,20 +1423,20 @@ class _MapCourtPickerCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           FilledButton(
             key: const ValueKey('map-court-confirm'),
             onPressed: onConfirm,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.accent,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.text,
               minimumSize: const Size(84, 46),
               padding: const EdgeInsets.symmetric(horizontal: 15),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            child: const Text('선택'),
+            child: Text('선택'),
           ),
         ],
       ),
@@ -1672,8 +1675,8 @@ class _CourtCountBadge extends StatelessWidget {
             : filtered
             ? '검색 결과 $matchingCourtCount개'
             : '전국 $courtCount개 코트',
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: AppColors.text,
           fontSize: 11,
           fontWeight: FontWeight.w800,
         ),
@@ -1690,12 +1693,12 @@ class _MapCredits extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: .72),
+        color: AppColors.surface.withValues(alpha: .88),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Text(
+      child: Text(
         'OpenFreeMap © OpenMapTiles · OpenStreetMap · KOSTAT',
-        style: TextStyle(color: Colors.white70, fontSize: 11),
+        style: TextStyle(color: AppColors.muted, fontSize: 11),
       ),
     );
   }
@@ -1718,7 +1721,7 @@ class _LocationButton extends StatelessWidget {
       button: true,
       label: '내 위치로 이동',
       child: Material(
-        color: Colors.white,
+        color: AppColors.text,
         shape: const CircleBorder(),
         child: InkWell(
           key: const ValueKey('my-location-button'),
@@ -1729,10 +1732,10 @@ class _LocationButton extends StatelessWidget {
             height: 44,
             child: Center(
               child: loading
-                  ? const SizedBox.square(
+                  ? SizedBox.square(
                       dimension: 18,
                       child: CircularProgressIndicator(
-                        color: Colors.black,
+                        color: AppColors.inverseText,
                         strokeWidth: 2.2,
                       ),
                     )
@@ -1740,7 +1743,7 @@ class _LocationButton extends StatelessWidget {
                       active
                           ? Icons.gps_fixed_rounded
                           : Icons.my_location_rounded,
-                      color: active ? AppColors.accent : Colors.black,
+                      color: active ? AppColors.accent : AppColors.inverseText,
                       size: 21,
                     ),
             ),
@@ -1768,10 +1771,12 @@ class _FilterChip extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Material(
-        color: selected ? Colors.white : const Color(0xE61A1B1D),
+        color: selected
+            ? AppColors.text
+            : AppColors.surface.withValues(alpha: .9),
         shape: StadiumBorder(
           side: BorderSide(
-            color: Colors.white.withValues(alpha: selected ? 0 : .1),
+            color: AppColors.text.withValues(alpha: selected ? 0 : .1),
           ),
         ),
         child: InkWell(
@@ -1783,7 +1788,7 @@ class _FilterChip extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  color: selected ? Colors.black : Colors.white,
+                  color: selected ? AppColors.inverseText : AppColors.text,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1827,7 +1832,7 @@ class _MapMarker extends StatelessWidget {
             vertical: selected ? 9 : 7,
           ),
           decoration: BoxDecoration(
-            color: selected ? AppColors.accent : Colors.white,
+            color: selected ? AppColors.accent : AppColors.text,
             borderRadius: BorderRadius.circular(16),
             boxShadow: const [
               BoxShadow(
@@ -1843,14 +1848,14 @@ class _MapMarker extends StatelessWidget {
               Icon(
                 Icons.sports_basketball_rounded,
                 size: 15,
-                color: selected ? Colors.white : Colors.black,
+                color: selected ? AppColors.onAccent : AppColors.inverseText,
               ),
               if (selected) ...[
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.onAccent,
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                   ),
@@ -1926,12 +1931,12 @@ class _CourtDetailSheetState extends State<_CourtDetailSheet> {
     final facts = court.facts.take(3).toList(growable: false);
     return Material(
       key: const ValueKey('court-sheet-surface'),
-      color: const Color(0xFA151515),
+      color: AppColors.surface,
       elevation: 20,
-      shadowColor: Colors.black,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        side: BorderSide(color: Color(0x1FFFFFFF)),
+      shadowColor: Colors.black54,
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        side: BorderSide(color: AppColors.subtleBorder),
       ),
       clipBehavior: Clip.antiAlias,
       child: ListView(
@@ -1948,12 +1953,12 @@ class _CourtDetailSheetState extends State<_CourtDetailSheet> {
               width: 38,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFF555555),
+                color: AppColors.line,
                 borderRadius: BorderRadius.circular(99),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           InkWell(
             onTap: widget.onExpand,
             borderRadius: BorderRadius.circular(18),
@@ -1966,13 +1971,13 @@ class _CourtDetailSheetState extends State<_CourtDetailSheet> {
                     color: AppColors.accent,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.sports_basketball_rounded,
-                    color: Colors.white,
+                    color: AppColors.text,
                     size: 22,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1981,23 +1986,20 @@ class _CourtDetailSheetState extends State<_CourtDetailSheet> {
                         court.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -.3,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      SizedBox(height: 3),
                       Text(
                         court.summary.isEmpty
                             ? court.distance
                             : '${court.distance} · ${court.summary}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: AppColors.muted, fontSize: 11),
                       ),
                     ],
                   ),
@@ -2024,36 +2026,36 @@ class _CourtDetailSheetState extends State<_CourtDetailSheet> {
                 IconButton(
                   tooltip: '닫기',
                   onPressed: () => unawaited(widget.onClose()),
-                  icon: const Icon(Icons.close_rounded, size: 20),
+                  icon: Icon(Icons.close_rounded, size: 20),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           if (facts.isNotEmpty) ...[
             Wrap(
               spacing: 7,
               runSpacing: 7,
               children: [for (final fact in facts) _CourtFact(label: fact)],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
           ],
           if (court.address != null) ...[
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
+                Icon(
                   Icons.location_on_rounded,
                   color: AppColors.muted,
                   size: 18,
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     court.address!,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.soft,
                       fontSize: 12,
                       height: 1.4,
@@ -2063,7 +2065,7 @@ class _CourtDetailSheetState extends State<_CourtDetailSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            SizedBox(height: 18),
           ],
           Row(
             children: [
@@ -2076,7 +2078,7 @@ class _CourtDetailSheetState extends State<_CourtDetailSheet> {
                   onTap: repository == null ? null : widget.onWriteReview,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: _CourtSheetAction(
                   key: const ValueKey('toggle-court-ranking'),
@@ -2088,7 +2090,7 @@ class _CourtDetailSheetState extends State<_CourtDetailSheet> {
                       : () => setState(() => _showRanking = !_showRanking),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: _CourtSheetAction(
                   key: const ValueKey('request-court-name-change'),
@@ -2126,7 +2128,7 @@ class _CourtDetailSheetState extends State<_CourtDetailSheet> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 22),
+                    SizedBox(height: 22),
                     Row(
                       children: [
                         Text(
@@ -2134,14 +2136,14 @@ class _CourtDetailSheetState extends State<_CourtDetailSheet> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const Spacer(),
-                        const Icon(
+                        Icon(
                           Icons.verified_rounded,
                           color: AppColors.accent,
                           size: 17,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     for (final review in reviews.take(3))
                       _ReviewPreview(
                         review: review,
@@ -2155,7 +2157,7 @@ class _CourtDetailSheetState extends State<_CourtDetailSheet> {
               },
             ),
           ],
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
         ],
       ),
     );
@@ -2198,18 +2200,18 @@ class _CourtSheetAction extends StatelessWidget {
                 color: onTap == null
                     ? AppColors.muted
                     : highlighted
-                    ? Colors.black
-                    : Colors.white,
+                    ? AppColors.onAccent
+                    : AppColors.text,
               ),
-              const SizedBox(width: 7),
+              SizedBox(width: 7),
               Text(
                 label,
                 style: TextStyle(
                   color: onTap == null
                       ? AppColors.muted
                       : highlighted
-                      ? Colors.black
-                      : Colors.white,
+                      ? AppColors.onAccent
+                      : AppColors.text,
                   fontSize: 12,
                   fontWeight: FontWeight.w900,
                 ),
@@ -2240,9 +2242,9 @@ class _ReviewPreview extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .045),
+        color: AppColors.text.withValues(alpha: .045),
         borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: Colors.white.withValues(alpha: .06)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2252,38 +2254,32 @@ class _ReviewPreview extends StatelessWidget {
               Expanded(
                 child: Text(
                   review.authorName,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
                 ),
               ),
-              const Icon(Icons.star_rounded, color: AppColors.accent, size: 17),
+              Icon(Icons.star_rounded, color: AppColors.accent, size: 17),
               Text(
                 review.rating.toStringAsFixed(1),
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(review.text, style: const TextStyle(fontSize: 12, height: 1.45)),
-          const SizedBox(height: 9),
+          SizedBox(height: 8),
+          Text(review.text, style: TextStyle(fontSize: 12, height: 1.45)),
+          SizedBox(height: 9),
           Text(
             '${review.courtCondition} · 조명 ${review.lighting} · '
             '그물 ${review.netCondition} · ${review.crowdLevel}',
-            style: const TextStyle(color: AppColors.muted, fontSize: 11),
+            style: TextStyle(color: AppColors.muted, fontSize: 11),
           ),
           if (review.media.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             SizedBox(
               height: 72,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: review.media.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 7),
+                separatorBuilder: (_, _) => SizedBox(width: 7),
                 itemBuilder: (context, index) {
                   final media = review.media[index];
                   return ClipRRect(
@@ -2292,7 +2288,7 @@ class _ReviewPreview extends StatelessWidget {
                       dimension: 72,
                       child: media.type == 'image'
                           ? Image.network(media.url, fit: BoxFit.cover)
-                          : const ColoredBox(
+                          : ColoredBox(
                               color: AppColors.surfaceHigh,
                               child: Icon(Icons.play_circle_fill_rounded),
                             ),
@@ -2307,8 +2303,8 @@ class _ReviewPreview extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 onPressed: onAddPhotos,
-                icon: const Icon(Icons.add_photo_alternate_outlined, size: 17),
-                label: const Text('사진 추가'),
+                icon: Icon(Icons.add_photo_alternate_outlined, size: 17),
+                label: Text('사진 추가'),
               ),
             ),
         ],
@@ -2327,12 +2323,12 @@ class _CourtFact extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .07),
+        color: AppColors.text.withValues(alpha: .07),
         borderRadius: BorderRadius.circular(99),
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -2457,7 +2453,7 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: Material(
-        color: const Color(0xFF111111),
+        color: AppColors.surface,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
         ),
@@ -2475,12 +2471,12 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4C4C4C),
+                      color: AppColors.line,
                       borderRadius: BorderRadius.circular(99),
                     ),
                   ),
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2500,14 +2496,14 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                         size: 23,
                       ),
                     ),
-                    const SizedBox(width: 13),
+                    SizedBox(width: 13),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             reportCopy.eyebrow,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.accent,
                               fontSize: 11,
                               fontWeight: FontWeight.w900,
@@ -2517,8 +2513,8 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                           SizedBox(height: 4),
                           Text(
                             reportCopy.title,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: AppColors.text,
                               fontSize: 21,
                               fontWeight: FontWeight.w900,
                               letterSpacing: -.8,
@@ -2531,13 +2527,13 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                       tooltip: '닫기',
                       onPressed: () => Navigator.pop(context),
                       style: IconButton.styleFrom(
-                        backgroundColor: Colors.white.withValues(alpha: .06),
+                        backgroundColor: AppColors.text.withValues(alpha: .06),
                       ),
-                      icon: const Icon(Icons.close_rounded, size: 20),
+                      icon: Icon(Icons.close_rounded, size: 20),
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 _CourtReportTypePicker(
                   selected: _type,
                   onChanged: (value) => setState(() {
@@ -2546,22 +2542,22 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                     _reasonError = null;
                   }),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 if (_type == CourtReportType.name) ...[
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF181818),
+                      color: AppColors.surfaceHigh,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: .075),
+                        color: AppColors.text.withValues(alpha: .075),
                       ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'NAME PREVIEW',
                           style: TextStyle(
                             color: AppColors.muted,
@@ -2570,7 +2566,7 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                             letterSpacing: 1.3,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         _NamePreviewRow(
                           label: '현재',
                           name: widget.currentName,
@@ -2588,7 +2584,7 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18),
                   _CourtRequestField(
                     fieldKey: const ValueKey('requested-court-name-field'),
                     label: 'NEW COURT NAME',
@@ -2608,7 +2604,7 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                     courtName: widget.currentName,
                   ),
                 ],
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _CourtRequestField(
                   fieldKey: const ValueKey('court-name-reason-field'),
                   label: 'WHY?',
@@ -2623,7 +2619,7 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                   onChanged: (_) => setState(() => _reasonError = null),
                   onSubmitted: (_) => _submit(),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
@@ -2633,7 +2629,7 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                       color: AppColors.accent.withValues(alpha: .13),
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Icon(
@@ -2655,7 +2651,7 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 160),
                   width: double.infinity,
@@ -2663,7 +2659,7 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                   decoration: BoxDecoration(
                     color: _canSubmit
                         ? AppColors.accent
-                        : const Color(0xFF292929),
+                        : AppColors.surfaceHigh,
                     borderRadius: BorderRadius.circular(17),
                     boxShadow: _canSubmit
                         ? [
@@ -2683,10 +2679,10 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                       borderRadius: BorderRadius.circular(17),
                       child: Center(
                         child: _submitting
-                            ? const SizedBox.square(
+                            ? SizedBox.square(
                                 dimension: 19,
                                 child: CircularProgressIndicator(
-                                  color: Colors.black,
+                                  color: AppColors.onAccent,
                                   strokeWidth: 2.2,
                                 ),
                               )
@@ -2697,17 +2693,17 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
                                     '운영자에게 제보 보내기',
                                     style: TextStyle(
                                       color: _canSubmit
-                                          ? Colors.black
+                                          ? AppColors.onAccent
                                           : AppColors.muted,
                                       fontSize: 13,
                                       fontWeight: FontWeight.w900,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  SizedBox(width: 8),
                                   Icon(
                                     Icons.arrow_forward_rounded,
                                     color: _canSubmit
-                                        ? Colors.black
+                                        ? AppColors.onAccent
                                         : AppColors.muted,
                                     size: 18,
                                   ),
@@ -2740,9 +2736,9 @@ class _CourtReportTypePicker extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF181818),
+        color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: .07)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .07)),
       ),
       child: Row(
         children: [
@@ -2787,7 +2783,7 @@ class _CourtReportTypeItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Material(
-        color: selected ? Colors.white : Colors.transparent,
+        color: selected ? AppColors.text : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
@@ -2799,14 +2795,14 @@ class _CourtReportTypeItem extends StatelessWidget {
               children: [
                 Icon(
                   icon,
-                  color: selected ? Colors.black : AppColors.muted,
+                  color: selected ? AppColors.inverseText : AppColors.muted,
                   size: 15,
                 ),
-                const SizedBox(width: 5),
+                SizedBox(width: 5),
                 Text(
                   label,
                   style: TextStyle(
-                    color: selected ? Colors.black : AppColors.muted,
+                    color: selected ? AppColors.inverseText : AppColors.muted,
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
                   ),
@@ -2855,7 +2851,7 @@ class _CourtIssueSummary extends StatelessWidget {
               size: 20,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2864,12 +2860,9 @@ class _CourtIssueSummary extends StatelessWidget {
                   courtName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   isDuplicate ? '중복 등록' : '이용 불가',
                   style: TextStyle(
@@ -2908,22 +2901,22 @@ class _NamePreviewRow extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: muted
-                ? Colors.white.withValues(alpha: .06)
+                ? AppColors.text.withValues(alpha: .06)
                 : AppColors.accent,
             shape: BoxShape.circle,
           ),
           child: Icon(
             muted ? Icons.remove_rounded : Icons.check_rounded,
-            color: muted ? AppColors.muted : Colors.black,
+            color: muted ? AppColors.muted : AppColors.onAccent,
             size: 13,
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         SizedBox(
           width: 32,
           child: Text(
             label,
-            style: const TextStyle(color: AppColors.muted, fontSize: 11),
+            style: TextStyle(color: AppColors.muted, fontSize: 11),
           ),
         ),
         Expanded(
@@ -2932,7 +2925,7 @@ class _NamePreviewRow extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: muted ? AppColors.muted : Colors.white,
+              color: muted ? AppColors.muted : AppColors.text,
               fontSize: 13,
               fontWeight: FontWeight.w800,
             ),
@@ -2978,11 +2971,11 @@ class _CourtRequestField extends StatelessWidget {
       duration: const Duration(milliseconds: 160),
       padding: const EdgeInsets.fromLTRB(15, 13, 15, 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF191919),
+        color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(19),
         border: Border.all(
           color: errorText == null
-              ? Colors.white.withValues(alpha: .08)
+              ? AppColors.text.withValues(alpha: .08)
               : AppColors.accent.withValues(alpha: .7),
         ),
       ),
@@ -2993,12 +2986,12 @@ class _CourtRequestField extends StatelessWidget {
             width: 37,
             height: 37,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .055),
+              color: AppColors.text.withValues(alpha: .055),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: AppColors.soft, size: 19),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3007,7 +3000,7 @@ class _CourtRequestField extends StatelessWidget {
                   children: [
                     Text(
                       label,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.accent,
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
@@ -3017,10 +3010,7 @@ class _CourtRequestField extends StatelessWidget {
                     const Spacer(),
                     Text(
                       '${controller.text.length}/$maxLength',
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 11,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 11),
                     ),
                   ],
                 ),
@@ -3035,8 +3025,8 @@ class _CourtRequestField extends StatelessWidget {
                   onChanged: onChanged,
                   onSubmitted: onSubmitted,
                   cursorColor: AppColors.accent,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.text,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
@@ -3045,8 +3035,8 @@ class _CourtRequestField extends StatelessWidget {
                     filled: false,
                     counterText: '',
                     hintText: hintText,
-                    hintStyle: const TextStyle(
-                      color: Color(0xFF686868),
+                    hintStyle: TextStyle(
+                      color: AppColors.muted,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -3057,10 +3047,10 @@ class _CourtRequestField extends StatelessWidget {
                   ),
                 ),
                 if (errorText != null) ...[
-                  const SizedBox(height: 5),
+                  SizedBox(height: 5),
                   Text(
                     errorText!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.accent,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -3076,22 +3066,27 @@ class _CourtRequestField extends StatelessWidget {
   }
 }
 
-class _DarkMapPainter extends CustomPainter {
+class _MapPreviewPainter extends CustomPainter {
+  const _MapPreviewPainter({required this.light});
+
+  final bool light;
+
   @override
   void paint(Canvas canvas, Size size) {
     final minor = Paint()
-      ..color = const Color(0xFF23262A)
+      ..color = light ? const Color(0xFFD8D7D1) : const Color(0xFF23262A)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
     final major = Paint()
-      ..color = const Color(0xFF34383E)
+      ..color = light ? const Color(0xFFB9BAB7) : const Color(0xFF34383E)
       ..strokeWidth = 8
       ..style = PaintingStyle.stroke;
     final river = Paint()
-      ..color = const Color(0xFF161F26)
+      ..color = light ? const Color(0xFFD4E6F2) : const Color(0xFF161F26)
       ..strokeWidth = 55
       ..style = PaintingStyle.stroke;
-    final park = Paint()..color = const Color(0xFF14201A);
+    final park = Paint()
+      ..color = light ? const Color(0xFFDCE8D6) : const Color(0xFF14201A);
 
     canvas.drawOval(
       Rect.fromCenter(
@@ -3164,5 +3159,6 @@ class _DarkMapPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _MapPreviewPainter oldDelegate) =>
+      oldDelegate.light != light;
 }

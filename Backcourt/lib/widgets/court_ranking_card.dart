@@ -41,11 +41,7 @@ class _CourtRankingCardState extends State<CourtRankingCard> {
     return Container(
       key: const ValueKey('court-ranking-card'),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2A1B16), Color(0xFF171514), Color(0xFF121212)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.accent.withValues(alpha: .22)),
       ),
@@ -63,14 +59,14 @@ class _CourtRankingCardState extends State<CourtRankingCard> {
                     color: AppColors.accent,
                     borderRadius: BorderRadius.circular(13),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.emoji_events_rounded,
-                    color: Colors.black,
+                    color: AppColors.onAccent,
                     size: 21,
                   ),
                 ),
-                const SizedBox(width: 11),
-                const Expanded(
+                SizedBox(width: 11),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -87,7 +83,7 @@ class _CourtRankingCardState extends State<CourtRankingCard> {
                       Text(
                         '코트 랭킹',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.text,
                           fontSize: 17,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -.5,
@@ -102,10 +98,10 @@ class _CourtRankingCardState extends State<CourtRankingCard> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: .065),
+                    color: AppColors.text.withValues(alpha: .065),
                     borderRadius: BorderRadius.circular(99),
                   ),
-                  child: const Text(
+                  child: Text(
                     'PLAY TIME',
                     style: TextStyle(
                       color: AppColors.soft,
@@ -117,14 +113,16 @@ class _CourtRankingCardState extends State<CourtRankingCard> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Container(
               height: 39,
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: .3),
+                color: AppColors.subtleFill,
                 borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: Colors.white.withValues(alpha: .055)),
+                border: Border.all(
+                  color: AppColors.text.withValues(alpha: .055),
+                ),
               ),
               child: Row(
                 children: [
@@ -149,13 +147,13 @@ class _CourtRankingCardState extends State<CourtRankingCard> {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
                   child: Text(
                     _periodCaption,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.muted,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -164,7 +162,7 @@ class _CourtRankingCardState extends State<CourtRankingCard> {
                 ),
               ],
             ),
-            const SizedBox(height: 9),
+            SizedBox(height: 9),
             StreamBuilder<List<MonthlyPlayStat>>(
               stream:
                   widget.previewStream?.call(_period) ??
@@ -181,7 +179,7 @@ class _CourtRankingCardState extends State<CourtRankingCard> {
                   );
                 }
                 if (!snapshot.hasData) {
-                  return const Padding(
+                  return Padding(
                     padding: EdgeInsets.symmetric(vertical: 26),
                     child: Center(
                       child: SizedBox.square(
@@ -262,13 +260,13 @@ class _PeriodButton extends StatelessWidget {
             duration: const Duration(milliseconds: 160),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: selected ? Colors.white : Colors.transparent,
+              color: selected ? AppColors.text : Colors.transparent,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
               label,
               style: TextStyle(
-                color: selected ? Colors.black : AppColors.muted,
+                color: selected ? AppColors.inverseText : AppColors.muted,
                 fontSize: 11,
                 fontWeight: FontWeight.w900,
               ),
@@ -298,12 +296,12 @@ class _RankingRow extends StatelessWidget {
     final fallback = ColoredBox(
       color: rank == 1
           ? AppColors.accentSoft
-          : Colors.white.withValues(alpha: .08),
+          : AppColors.text.withValues(alpha: .08),
       child: Center(
         child: Text(
           name.characters.take(1).toString(),
           style: TextStyle(
-            color: rank == 1 ? Colors.black : AppColors.soft,
+            color: rank == 1 ? AppColors.onAccent : AppColors.soft,
             fontSize: 12,
             fontWeight: FontWeight.w900,
           ),
@@ -316,7 +314,7 @@ class _RankingRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: isMe
             ? AppColors.accent.withValues(alpha: .1)
-            : Colors.white.withValues(alpha: .035),
+            : AppColors.text.withValues(alpha: .035),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isMe
@@ -349,7 +347,7 @@ class _RankingRow extends StatelessWidget {
                   : fallback,
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,20 +356,20 @@ class _RankingRow extends StatelessWidget {
                   isMe ? '$name · 나' : name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.text,
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   stat.username?.isNotEmpty == true
                       ? '@${stat.username}'
                       : '${stat.sessionCount}번 플레이',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -380,7 +378,7 @@ class _RankingRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             _formatMinutes(stat.totalMinutes),
             style: TextStyle(
@@ -412,22 +410,22 @@ class _RankingMessage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .035),
+        color: AppColors.text.withValues(alpha: .035),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
           Icon(icon, color: AppColors.muted, size: 23),
-          const SizedBox(height: 9),
+          SizedBox(height: 9),
           Text(
             title,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: 5),
+          SizedBox(height: 5),
           Text(
             caption,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.muted,
               fontSize: 11,
               height: 1.45,

@@ -118,8 +118,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               padding: const EdgeInsets.fromLTRB(22, 18, 22, 138),
               children: [
                 const _ProfileHeader(),
-                const SizedBox(height: 48),
-                const Text(
+                SizedBox(height: 48),
+                Text(
                   'WELCOME TO THE COURT',
                   style: TextStyle(
                     color: AppColors.accent,
@@ -128,19 +128,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     letterSpacing: 1.8,
                   ),
                 ),
-                const SizedBox(height: 12),
-                const Text(
+                SizedBox(height: 12),
+                Text(
                   '코트에서,\n뭐라고 부를까요?',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.text,
                     fontSize: 38,
                     height: 1.08,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -2.2,
                   ),
                 ),
-                const SizedBox(height: 12),
-                const Text(
+                SizedBox(height: 12),
+                Text(
                   '닉네임 · 출생 연도',
                   style: TextStyle(
                     color: AppColors.muted,
@@ -148,9 +148,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     height: 1.45,
                   ),
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: 30),
                 _ProfilePreview(name: _name),
-                const SizedBox(height: 26),
+                SizedBox(height: 26),
                 _ProfileField(
                   label: 'NICKNAME',
                   hintText: '코트에서 사용할 이름',
@@ -163,7 +163,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   onChanged: (_) => setState(() {}),
                   onSubmitted: (_) => _birthYearFocus.requestFocus(),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
                 _ProfileField(
                   label: 'BIRTH YEAR',
                   hintText: '예: 2002',
@@ -182,7 +182,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     if (_canSubmit) _submit();
                   },
                 ),
-                const Padding(
+                Padding(
                   padding: EdgeInsets.fromLTRB(3, 9, 3, 0),
                   child: Row(
                     children: [
@@ -242,8 +242,8 @@ class _ProfileHeader extends StatelessWidget {
           borderRadius: BorderRadius.circular(11),
           child: Image.asset('icon.png', width: 38, height: 38),
         ),
-        const SizedBox(width: 10),
-        const Text(
+        SizedBox(width: 10),
+        Text(
           '빽코트',
           style: TextStyle(
             fontSize: 18,
@@ -255,11 +255,11 @@ class _ProfileHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: .06),
+            color: AppColors.text.withValues(alpha: .06),
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Colors.white.withValues(alpha: .08)),
+            border: Border.all(color: AppColors.text.withValues(alpha: .08)),
           ),
-          child: const Text(
+          child: Text(
             'SETUP  ·  01/03',
             style: TextStyle(
               color: AppColors.soft,
@@ -287,9 +287,9 @@ class _ProfilePreview extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF151515),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: .08)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .08)),
         boxShadow: const [
           BoxShadow(
             color: Color(0x33000000),
@@ -308,25 +308,25 @@ class _ProfilePreview extends StatelessWidget {
               color: AppColors.accent,
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.white.withValues(alpha: .35),
+                color: AppColors.text.withValues(alpha: .35),
                 width: 1.5,
               ),
             ),
             child: Text(
               initial,
-              style: const TextStyle(
-                color: Colors.black,
+              style: TextStyle(
+                color: AppColors.onAccent,
                 fontSize: 23,
                 fontWeight: FontWeight.w900,
               ),
             ),
           ),
-          const SizedBox(width: 15),
+          SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'MY COURT NAME',
                   style: TextStyle(
                     color: AppColors.muted,
@@ -335,7 +335,7 @@ class _ProfilePreview extends StatelessWidget {
                     letterSpacing: 1.4,
                   ),
                 ),
-                const SizedBox(height: 5),
+                SizedBox(height: 5),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 160),
                   child: Text(
@@ -344,7 +344,7 @@ class _ProfilePreview extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: hasName ? Colors.white : AppColors.muted,
+                      color: hasName ? AppColors.text : AppColors.muted,
                       fontSize: 19,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -.7,
@@ -354,7 +354,7 @@ class _ProfilePreview extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(
+          Icon(
             Icons.sports_basketball_rounded,
             color: AppColors.accent,
             size: 22,
@@ -401,12 +401,14 @@ class _ProfileField extends StatelessWidget {
       duration: const Duration(milliseconds: 170),
       padding: const EdgeInsets.fromLTRB(16, 13, 14, 10),
       decoration: BoxDecoration(
-        color: focused ? const Color(0xFF1A1817) : AppColors.surface,
+        color: focused
+            ? AppColors.accent.withValues(alpha: .06)
+            : AppColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: focused
               ? AppColors.accent
-              : Colors.white.withValues(alpha: .09),
+              : AppColors.text.withValues(alpha: .09),
           width: focused ? 1.4 : 1,
         ),
       ),
@@ -419,7 +421,7 @@ class _ProfileField extends StatelessWidget {
             decoration: BoxDecoration(
               color: focused
                   ? AppColors.accent.withValues(alpha: .13)
-                  : Colors.white.withValues(alpha: .05),
+                  : AppColors.text.withValues(alpha: .05),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -428,7 +430,7 @@ class _ProfileField extends StatelessWidget {
               size: 19,
             ),
           ),
-          const SizedBox(width: 13),
+          SizedBox(width: 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -472,8 +474,8 @@ class _ProfileField extends StatelessWidget {
                     onChanged: onChanged,
                     onSubmitted: onSubmitted,
                     cursorColor: AppColors.accent,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: AppColors.text,
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -.3,
@@ -483,8 +485,8 @@ class _ProfileField extends StatelessWidget {
                       filled: false,
                       counterText: '',
                       hintText: hintText,
-                      hintStyle: const TextStyle(
-                        color: Color(0xFF666666),
+                      hintStyle: TextStyle(
+                        color: AppColors.muted,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -528,7 +530,7 @@ class _ConsentCard extends StatelessWidget {
             border: Border.all(
               color: checked
                   ? AppColors.accent.withValues(alpha: .65)
-                  : Colors.white.withValues(alpha: .09),
+                  : AppColors.text.withValues(alpha: .09),
             ),
           ),
           child: Row(
@@ -546,22 +548,22 @@ class _ConsentCard extends StatelessWidget {
                   ),
                 ),
                 child: checked
-                    ? const Icon(
+                    ? Icon(
                         Icons.check_rounded,
-                        color: Colors.black,
+                        color: AppColors.onAccent,
                         size: 17,
                       )
                     : null,
               ),
-              const SizedBox(width: 13),
-              const Expanded(
+              SizedBox(width: 13),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       '보호자 동의를 받았어요',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.text,
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
                       ),
@@ -606,11 +608,15 @@ class _BottomAction extends StatelessWidget {
         22,
         MediaQuery.paddingOf(context).bottom + 14,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Colors.transparent, Color(0xFF090909), Color(0xFF090909)],
+          colors: [
+            Colors.transparent,
+            AppColors.background,
+            AppColors.background,
+          ],
           stops: [0, .38, 1],
         ),
       ),
@@ -618,7 +624,7 @@ class _BottomAction extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         height: 58,
         decoration: BoxDecoration(
-          color: enabled ? AppColors.accent : const Color(0xFF252525),
+          color: enabled ? AppColors.accent : AppColors.surfaceHigh,
           borderRadius: BorderRadius.circular(19),
           boxShadow: enabled
               ? [
@@ -638,10 +644,10 @@ class _BottomAction extends StatelessWidget {
             borderRadius: BorderRadius.circular(19),
             child: Center(
               child: loading
-                  ? const SizedBox.square(
+                  ? SizedBox.square(
                       dimension: 20,
                       child: CircularProgressIndicator(
-                        color: Colors.black,
+                        color: AppColors.onAccent,
                         strokeWidth: 2.2,
                       ),
                     )
@@ -651,16 +657,18 @@ class _BottomAction extends StatelessWidget {
                         Text(
                           '다음',
                           style: TextStyle(
-                            color: enabled ? Colors.black : AppColors.muted,
+                            color: enabled
+                                ? AppColors.onAccent
+                                : AppColors.muted,
                             fontSize: 15,
                             fontWeight: FontWeight.w900,
                             letterSpacing: -.4,
                           ),
                         ),
-                        const SizedBox(width: 9),
+                        SizedBox(width: 9),
                         Icon(
                           Icons.arrow_forward_rounded,
-                          color: enabled ? Colors.black : AppColors.muted,
+                          color: enabled ? AppColors.onAccent : AppColors.muted,
                           size: 19,
                         ),
                       ],
@@ -716,7 +724,7 @@ class _CourtArc extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: Colors.white.withValues(alpha: .055),
+          color: AppColors.text.withValues(alpha: .055),
           width: 1.2,
         ),
       ),
@@ -725,7 +733,7 @@ class _CourtArc extends StatelessWidget {
         child: Container(
           width: 80,
           height: 1.2,
-          color: Colors.white.withValues(alpha: .055),
+          color: AppColors.text.withValues(alpha: .055),
         ),
       ),
     );

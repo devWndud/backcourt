@@ -145,13 +145,13 @@ class _OperatorReportsScreenState extends State<OperatorReportsScreen> {
                   sliver: SliverList.list(
                     children: [
                       _TopBar(onBack: () => Navigator.pop(context)),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _OpsOverview(
                         pending: pending,
                         onHold: onHold,
                         approved: approved,
                       ),
-                      const SizedBox(height: 22),
+                      SizedBox(height: 22),
                       _FilterBar(
                         selected: _filter,
                         pending: pending,
@@ -159,7 +159,7 @@ class _OperatorReportsScreenState extends State<OperatorReportsScreen> {
                         completed: reports.length - pending - onHold,
                         onChanged: (value) => setState(() => _filter = value),
                       ),
-                      const SizedBox(height: 17),
+                      SizedBox(height: 17),
                     ],
                   ),
                 ),
@@ -202,7 +202,7 @@ class _OperatorReportsScreenState extends State<OperatorReportsScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 34),
                     sliver: SliverList.separated(
                       itemCount: visible.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 11),
+                      separatorBuilder: (_, _) => SizedBox(height: 11),
                       itemBuilder: (context, index) {
                         final report = visible[index];
                         return _ReportCard(
@@ -233,8 +233,8 @@ class _TopBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _CircleButton(icon: Icons.arrow_back_rounded, onTap: onBack),
-        const SizedBox(width: 15),
-        const Expanded(
+        SizedBox(width: 15),
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -266,7 +266,7 @@ class _TopBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(99),
             border: Border.all(color: AppColors.success.withValues(alpha: .18)),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.shield_rounded, size: 13, color: AppColors.success),
@@ -327,17 +327,17 @@ class _OpsOverview extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: .14),
+                  color: AppColors.onAccent.withValues(alpha: .14),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.manage_search_rounded,
-                  color: Colors.black,
+                  color: AppColors.onAccent,
                   size: 23,
                 ),
               ),
               const Spacer(),
-              const Text(
+              Text(
                 'LIVE QUEUE',
                 style: TextStyle(
                   color: Colors.black54,
@@ -348,26 +348,26 @@ class _OpsOverview extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           Text(
             pending == 0 ? '처리할 제보가 없어요' : '$pending건을 확인해주세요',
-            style: const TextStyle(
-              color: Colors.black,
+            style: TextStyle(
+              color: AppColors.onAccent,
               fontSize: 24,
               fontWeight: FontWeight.w900,
               letterSpacing: -1,
             ),
           ),
-          const SizedBox(height: 5),
+          SizedBox(height: 5),
           Text(
             pending == 0 ? '전국 코트 데이터가 최신 상태예요.' : '승인하면 코트 데이터에 즉시 반영됩니다.',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.black54,
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 19),
+          SizedBox(height: 19),
           Row(
             children: [
               _OverviewStat(value: '$pending', label: '대기'),
@@ -396,15 +396,15 @@ class _OverviewStat extends StatelessWidget {
       children: [
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.black,
+          style: TextStyle(
+            color: AppColors.onAccent,
             fontSize: 19,
             fontWeight: FontWeight.w900,
           ),
         ),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.black54,
             fontSize: 11,
             fontWeight: FontWeight.w800,
@@ -423,7 +423,7 @@ class _DarkDivider extends StatelessWidget {
     width: 1,
     height: 29,
     margin: const EdgeInsets.symmetric(horizontal: 15),
-    color: Colors.black.withValues(alpha: .17),
+    color: AppColors.onAccent.withValues(alpha: .17),
   );
 }
 
@@ -449,7 +449,7 @@ class _FilterBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: .055)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .055)),
       ),
       child: Row(
         children: [
@@ -493,7 +493,7 @@ class _FilterItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Expanded(
     child: Material(
-      color: selected ? Colors.white : Colors.transparent,
+      color: selected ? AppColors.text : Colors.transparent,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
@@ -506,26 +506,26 @@ class _FilterItem extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: selected ? Colors.black : AppColors.muted,
+                  color: selected ? AppColors.inverseText : AppColors.muted,
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Container(
                 constraints: const BoxConstraints(minWidth: 19),
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 decoration: BoxDecoration(
                   color: selected
                       ? AppColors.accent
-                      : Colors.white.withValues(alpha: .07),
+                      : AppColors.text.withValues(alpha: .07),
                   borderRadius: BorderRadius.circular(99),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   '$count',
                   style: TextStyle(
-                    color: selected ? Colors.black : AppColors.soft,
+                    color: selected ? AppColors.onAccent : AppColors.soft,
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
                   ),
@@ -564,7 +564,7 @@ class _ReportCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(21),
-            border: Border.all(color: Colors.white.withValues(alpha: .06)),
+            border: Border.all(color: AppColors.text.withValues(alpha: .06)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -572,12 +572,12 @@ class _ReportCard extends StatelessWidget {
               Row(
                 children: [
                   _TypeBadge(meta: meta),
-                  const SizedBox(width: 7),
+                  SizedBox(width: 7),
                   _StatusBadge(status: report.status),
                   const Spacer(),
                   Text(
                     _relativeDate(report.createdAt),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.muted,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -585,33 +585,33 @@ class _ReportCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
               Text(
                 report.currentName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -.4,
                 ),
               ),
               if (report.type == CourtReportType.name) ...[
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.subdirectory_arrow_right_rounded,
                       color: AppColors.accent,
                       size: 17,
                     ),
-                    const SizedBox(width: 7),
+                    SizedBox(width: 7),
                     Expanded(
                       child: Text(
                         report.requestedName ?? '새 이름 없음',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.accent,
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
@@ -621,7 +621,7 @@ class _ReportCard extends StatelessWidget {
                   ],
                 ),
               ],
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
@@ -629,15 +629,12 @@ class _ReportCard extends StatelessWidget {
                       report.reason,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 11,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 11),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   if (processing)
-                    const SizedBox.square(
+                    SizedBox.square(
                       dimension: 17,
                       child: CircularProgressIndicator(
                         color: AppColors.accent,
@@ -645,7 +642,7 @@ class _ReportCard extends StatelessWidget {
                       ),
                     )
                   else
-                    const Icon(
+                    Icon(
                       Icons.arrow_forward_ios_rounded,
                       color: AppColors.muted,
                       size: 13,
@@ -683,7 +680,7 @@ class _ReportDetailSheet extends StatelessWidget {
       maxChildSize: .94,
       expand: false,
       builder: (context, controller) => Material(
-        color: const Color(0xFF111111),
+        color: AppColors.surface,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
         ),
@@ -697,12 +694,12 @@ class _ReportDetailSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4C4C4C),
+                  color: AppColors.line,
                   borderRadius: BorderRadius.circular(99),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Row(
               children: [
                 Container(
@@ -715,7 +712,7 @@ class _ReportDetailSheet extends StatelessWidget {
                   ),
                   child: Icon(meta.icon, color: meta.color, size: 24),
                 ),
-                const SizedBox(width: 13),
+                SizedBox(width: 13),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -729,10 +726,10 @@ class _ReportDetailSheet extends StatelessWidget {
                           letterSpacing: 1.4,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         meta.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 21,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -.7,
@@ -744,7 +741,7 @@ class _ReportDetailSheet extends StatelessWidget {
                 _StatusBadge(status: report.status),
               ],
             ),
-            const SizedBox(height: 22),
+            SizedBox(height: 22),
             _DataBlock(
               label: report.type == CourtReportType.name
                   ? 'NAME CHANGE'
@@ -756,18 +753,18 @@ class _ReportDetailSheet extends StatelessWidget {
                     )
                   : Text(
                       report.currentName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
             ),
-            const SizedBox(height: 11),
+            SizedBox(height: 11),
             _DataBlock(
               label: 'REPORT',
               child: Text(
                 report.reason,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.soft,
                   fontSize: 13,
                   height: 1.55,
@@ -775,7 +772,7 @@ class _ReportDetailSheet extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 11),
+            SizedBox(height: 11),
             _DataBlock(
               label: 'DETAILS',
               child: Column(
@@ -807,12 +804,12 @@ class _ReportDetailSheet extends StatelessWidget {
               ),
             ),
             if (report.resolutionNote?.isNotEmpty == true) ...[
-              const SizedBox(height: 11),
+              SizedBox(height: 11),
               _DataBlock(
                 label: 'OPERATOR NOTE',
                 child: Text(
                   report.resolutionNote!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.soft,
                     fontSize: 12,
                     height: 1.5,
@@ -820,20 +817,20 @@ class _ReportDetailSheet extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             if (isDone)
               Container(
                 height: 52,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .055),
+                  color: AppColors.text.withValues(alpha: .055),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
                   report.status == CourtReportStatus.approved
                       ? '처리가 완료된 제보입니다'
                       : '반려 처리된 제보입니다',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -851,7 +848,7 @@ class _ReportDetailSheet extends StatelessWidget {
                         ? null
                         : () => onDecision(CourtReportStatus.onHold),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   _DecisionButton(
                     icon: Icons.close_rounded,
                     label: '반려',
@@ -860,7 +857,7 @@ class _ReportDetailSheet extends StatelessWidget {
                         ? null
                         : () => onDecision(CourtReportStatus.rejected),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   _DecisionButton(
                     icon: Icons.check_rounded,
                     label: '승인',
@@ -920,7 +917,7 @@ class _DecisionSheetState extends State<_DecisionSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: Material(
-        color: const Color(0xFF111111),
+        color: AppColors.surface,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
@@ -937,32 +934,32 @@ class _DecisionSheetState extends State<_DecisionSheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4C4C4C),
+                      color: AppColors.line,
                       borderRadius: BorderRadius.circular(99),
                     ),
                   ),
                 ),
-                const SizedBox(height: 22),
+                SizedBox(height: 22),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 21,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -.7,
                   ),
                 ),
-                const SizedBox(height: 7),
+                SizedBox(height: 7),
                 Text(
                   approved
                       ? _approvalDescription(widget.report)
                       : '제보자에게 보여줄 운영 메모를 선택적으로 남길 수 있어요.',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 11,
                     height: 1.45,
                   ),
                 ),
-                const SizedBox(height: 17),
+                SizedBox(height: 17),
                 TextField(
                   controller: _noteController,
                   maxLength: 200,
@@ -972,13 +969,13 @@ class _DecisionSheetState extends State<_DecisionSheet> {
                         ? '중복되는 코트명이나 코트 ID를 적어두세요.'
                         : '운영 메모 (선택)',
                     counterText: '',
-                    prefixIcon: const Padding(
+                    prefixIcon: Padding(
                       padding: EdgeInsets.only(bottom: 48),
                       child: Icon(Icons.notes_rounded),
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
                 SizedBox(
                   width: double.infinity,
                   height: 53,
@@ -993,7 +990,7 @@ class _DecisionSheetState extends State<_DecisionSheet> {
                     ),
                     style: FilledButton.styleFrom(
                       backgroundColor: color,
-                      foregroundColor: Colors.black,
+                      foregroundColor: AppColors.onAccent,
                     ),
                     child: Text(action),
                   ),
@@ -1058,28 +1055,30 @@ class _NameLine extends StatelessWidget {
         width: 21,
         height: 21,
         decoration: BoxDecoration(
-          color: muted ? Colors.white.withValues(alpha: .07) : AppColors.accent,
+          color: muted
+              ? AppColors.text.withValues(alpha: .07)
+              : AppColors.accent,
           shape: BoxShape.circle,
         ),
         child: Icon(
           muted ? Icons.remove_rounded : Icons.check_rounded,
-          color: muted ? AppColors.muted : Colors.black,
+          color: muted ? AppColors.muted : AppColors.onAccent,
           size: 13,
         ),
       ),
-      const SizedBox(width: 10),
+      SizedBox(width: 10),
       SizedBox(
         width: 34,
         child: Text(
           label,
-          style: const TextStyle(color: AppColors.muted, fontSize: 11),
+          style: TextStyle(color: AppColors.muted, fontSize: 11),
         ),
       ),
       Expanded(
         child: Text(
           value,
           style: TextStyle(
-            color: muted ? AppColors.muted : Colors.white,
+            color: muted ? AppColors.muted : AppColors.text,
             fontSize: 13,
             fontWeight: FontWeight.w800,
           ),
@@ -1102,21 +1101,21 @@ class _DataBlock extends StatelessWidget {
     decoration: BoxDecoration(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(19),
-      border: Border.all(color: Colors.white.withValues(alpha: .06)),
+      border: Border.all(color: AppColors.text.withValues(alpha: .06)),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.muted,
             fontSize: 11,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.35,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         child,
       ],
     ),
@@ -1143,19 +1142,19 @@ class _DetailRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, color: AppColors.muted, size: 17),
-        const SizedBox(width: 9),
+        SizedBox(width: 9),
         SizedBox(
           width: 48,
           child: Text(
             label,
-            style: const TextStyle(color: AppColors.muted, fontSize: 11),
+            style: TextStyle(color: AppColors.muted, fontSize: 11),
           ),
         ),
         Expanded(
           child: Text(
             value,
             textAlign: TextAlign.right,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
           ),
         ),
       ],
@@ -1188,7 +1187,7 @@ class _DecisionButton extends StatelessWidget {
         label: Text(label),
         style: OutlinedButton.styleFrom(
           backgroundColor: filled ? color : color.withValues(alpha: .08),
-          foregroundColor: filled ? Colors.black : color,
+          foregroundColor: filled ? AppColors.onAccent : color,
           side: BorderSide(
             color: filled ? color : color.withValues(alpha: .24),
           ),
@@ -1196,7 +1195,7 @@ class _DecisionButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+          textStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
         ),
       ),
     ),
@@ -1220,7 +1219,7 @@ class _TypeBadge extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(meta.icon, color: meta.color, size: 12),
-        const SizedBox(width: 4),
+        SizedBox(width: 4),
         Text(
           meta.shortLabel,
           style: TextStyle(
@@ -1306,20 +1305,17 @@ class _EmptyState extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.surface,
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withValues(alpha: .06)),
+            border: Border.all(color: AppColors.text.withValues(alpha: .06)),
           ),
           child: Icon(icon, color: AppColors.accent, size: 28),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Text(
           title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
         ),
-        const SizedBox(height: 5),
-        Text(
-          subtitle,
-          style: const TextStyle(color: AppColors.muted, fontSize: 11),
-        ),
+        SizedBox(height: 5),
+        Text(subtitle, style: TextStyle(color: AppColors.muted, fontSize: 11)),
       ],
     ),
   );

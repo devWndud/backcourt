@@ -61,7 +61,7 @@ class _MeetupsScreenState extends State<MeetupsScreen> {
             return _buildContent(const [], error: true);
           }
           if (!snapshot.hasData) {
-            return const SafeArea(
+            return SafeArea(
               child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
             );
           }
@@ -113,22 +113,22 @@ class _MeetupsScreenState extends State<MeetupsScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18),
                 ],
                 if (!widget.embedded) ...[
                   _SelectedCourt(court: widget.activeCourt),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                 ],
                 _SegmentedFilter(
                   selected: _filter,
                   onChanged: (value) => setState(() => _filter = value),
                 ),
-                const SizedBox(height: 23),
+                SizedBox(height: 23),
                 SectionTitle(
                   title: '다가오는 약속',
                   trailing: '${visibleGames.length}개',
                 ),
-                const SizedBox(height: 11),
+                SizedBox(height: 11),
                 if (visibleGames.isNotEmpty)
                   _NextGameCard(
                     game: visibleGames.first,
@@ -136,7 +136,7 @@ class _MeetupsScreenState extends State<MeetupsScreen> {
                   )
                 else
                   _EmptyMeetups(error: error),
-                if (visibleGames.length > 1) ...[const SizedBox(height: 10)],
+                if (visibleGames.length > 1) ...[SizedBox(height: 10)],
               ],
             ),
           ),
@@ -146,7 +146,7 @@ class _MeetupsScreenState extends State<MeetupsScreen> {
                 ? const SliverToBoxAdapter(child: SizedBox.shrink())
                 : SliverList.separated(
                     itemCount: visibleGames.length - 1,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    separatorBuilder: (_, _) => SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final game = visibleGames[index + 1];
                       return _GameCard(
@@ -186,27 +186,27 @@ class _EmptyMeetups extends StatelessWidget {
     decoration: BoxDecoration(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: Colors.white.withValues(alpha: .06)),
+      border: Border.all(color: AppColors.text.withValues(alpha: .06)),
     ),
     child: Row(
       children: [
         Container(
           width: 40,
           height: 40,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.surfaceHigh,
             shape: BoxShape.circle,
           ),
-          child: const Icon(
+          child: Icon(
             Icons.sports_basketball_outlined,
             color: AppColors.muted,
             size: 21,
           ),
         ),
-        const SizedBox(width: 13),
+        SizedBox(width: 13),
         Text(
           error ? '약속을 불러오지 못했어요' : '아직 잡힌 약속이 없어요',
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.soft,
             fontSize: 14,
             fontWeight: FontWeight.w700,
@@ -228,18 +228,18 @@ class _SelectedCourt extends StatelessWidget {
     decoration: BoxDecoration(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(17),
-      border: Border.all(color: Colors.white.withValues(alpha: .07)),
+      border: Border.all(color: AppColors.text.withValues(alpha: .07)),
     ),
     child: Row(
       children: [
-        const Icon(Icons.place_rounded, color: AppColors.accent, size: 20),
-        const SizedBox(width: 10),
+        Icon(Icons.place_rounded, color: AppColors.accent, size: 20),
+        SizedBox(width: 10),
         Expanded(
           child: Text(
             court.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
           ),
         ),
       ],
@@ -343,7 +343,7 @@ class _CreateMeetupSheetState extends State<_CreateMeetupSheet> {
                   onClose: () => Navigator.pop(context),
                 ),
               ),
-              const SizedBox(height: 18),
+              SizedBox(height: 18),
               Expanded(
                 child: ListView(
                   controller: controller,
@@ -355,9 +355,9 @@ class _CreateMeetupSheetState extends State<_CreateMeetupSheet> {
                       icon: Icons.place_rounded,
                       badge: 'COURT',
                     ),
-                    const SizedBox(height: 22),
+                    SizedBox(height: 22),
                     const BackcourtSectionLabel(title: '날짜 · 시간'),
-                    const SizedBox(height: 9),
+                    SizedBox(height: 9),
                     InkWell(
                       onTap: _pickDateTime,
                       borderRadius: BorderRadius.circular(17),
@@ -367,7 +367,7 @@ class _CreateMeetupSheetState extends State<_CreateMeetupSheet> {
                         caption: '시작',
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     BackcourtSectionLabel(title: '정원', trailing: '$_capacity명'),
                     Slider(
                       value: _capacity.toDouble(),
@@ -378,16 +378,16 @@ class _CreateMeetupSheetState extends State<_CreateMeetupSheet> {
                       onChanged: (value) =>
                           setState(() => _capacity = value.round()),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     const BackcourtSectionLabel(title: '게임'),
-                    const SizedBox(height: 9),
+                    SizedBox(height: 9),
                     Row(
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
                             initialValue: _gameType,
                             dropdownColor: AppColors.surfaceHigh,
-                            decoration: const InputDecoration(labelText: '방식'),
+                            decoration: InputDecoration(labelText: '방식'),
                             items: const [
                               DropdownMenuItem(
                                 value: '3 vs 3 · 반코트',
@@ -406,12 +406,12 @@ class _CreateMeetupSheetState extends State<_CreateMeetupSheet> {
                                 setState(() => _gameType = value!),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        SizedBox(width: 10),
                         Expanded(
                           child: DropdownButtonFormField<String>(
                             initialValue: _level,
                             dropdownColor: AppColors.surfaceHigh,
-                            decoration: const InputDecoration(labelText: '레벨'),
+                            decoration: InputDecoration(labelText: '레벨'),
                             items: const [
                               DropdownMenuItem(
                                 value: '누구나',
@@ -440,7 +440,9 @@ class _CreateMeetupSheetState extends State<_CreateMeetupSheet> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   border: Border(
-                    top: BorderSide(color: Colors.white.withValues(alpha: .06)),
+                    top: BorderSide(
+                      color: AppColors.text.withValues(alpha: .06),
+                    ),
                   ),
                 ),
                 child: SizedBox(
@@ -477,7 +479,7 @@ class _SegmentedFilter extends StatelessWidget {
           child: SizedBox(
             width: index == 2 ? 78 : 64,
             child: Material(
-              color: active ? Colors.white : AppColors.surface,
+              color: active ? AppColors.text : AppColors.surface,
               borderRadius: BorderRadius.circular(99),
               child: InkWell(
                 onTap: () => onChanged(index),
@@ -490,14 +492,14 @@ class _SegmentedFilter extends StatelessWidget {
                     borderRadius: BorderRadius.circular(99),
                     border: Border.all(
                       color: active
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: .06),
+                          ? AppColors.text
+                          : AppColors.text.withValues(alpha: .06),
                     ),
                   ),
                   child: Text(
                     labels[index],
                     style: TextStyle(
-                      color: active ? Colors.black : AppColors.soft,
+                      color: active ? AppColors.inverseText : AppColors.soft,
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                     ),
@@ -541,13 +543,13 @@ class _NextGameCard extends StatelessWidget {
                   Container(
                     width: 7,
                     height: 7,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: AppColors.accent,
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(width: 7),
-                  const Text(
+                  SizedBox(width: 7),
+                  Text(
                     '가장 빠른 약속',
                     style: TextStyle(
                       color: AppColors.accent,
@@ -580,56 +582,56 @@ class _NextGameCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              SizedBox(height: 18),
               Text(
                 game.time,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: AppColors.text,
                   fontSize: 29,
                   height: 1,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1,
                 ),
               ),
-              const SizedBox(height: 9),
+              SizedBox(height: 9),
               Text(
                 game.court,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: AppColors.text,
                   fontSize: 17,
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(height: 7),
+              SizedBox(height: 7),
               Text(
                 '${game.type} · ${game.level}',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 18),
+              SizedBox(height: 18),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.groups_2_outlined,
                     color: AppColors.muted,
                     size: 18,
                   ),
-                  const SizedBox(width: 7),
+                  SizedBox(width: 7),
                   Text(
                     '${game.current}/${game.capacity}명 참가',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.soft,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const Spacer(),
-                  const Icon(
+                  Icon(
                     Icons.arrow_forward_rounded,
-                    color: Colors.white,
+                    color: AppColors.text,
                     size: 20,
                   ),
                 ],
@@ -674,17 +676,17 @@ class _GameCard extends StatelessWidget {
                   children: [
                     Text(
                       game.dayLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.muted,
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    SizedBox(height: 3),
                     Text(
                       game.clockLabel,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: AppColors.text,
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
                       ),
@@ -692,7 +694,7 @@ class _GameCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 13),
+              SizedBox(width: 13),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -701,26 +703,23 @@ class _GameCard extends StatelessWidget {
                       game.court,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: AppColors.text,
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Text(
                       '${game.type} · ${game.level}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 12),
                     ),
-                    const SizedBox(height: 7),
+                    SizedBox(height: 7),
                     Text(
                       '${game.current}/${game.capacity}명 참가',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.soft,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -729,7 +728,7 @@ class _GameCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 remaining <= 0 ? '마감' : '$remaining자리',
                 style: TextStyle(
@@ -805,16 +804,16 @@ class _GameDetailState extends State<_GameDetail> {
         await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('약속 취소'),
-            content: const Text('참가자에게 취소 알림이 가요.'),
+            title: Text('약속 취소'),
+            content: Text('참가자에게 취소 알림이 가요.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('닫기'),
+                child: Text('닫기'),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('약속 취소'),
+                child: Text('약속 취소'),
               ),
             ],
           ),
@@ -854,7 +853,7 @@ class _GameDetailState extends State<_GameDetail> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _SheetHandle(),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Row(
             children: [
               Container(
@@ -868,10 +867,7 @@ class _GameDetailState extends State<_GameDetail> {
                 ),
                 child: Text(
                   game.time,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
                 ),
               ),
               const Spacer(),
@@ -879,7 +875,7 @@ class _GameDetailState extends State<_GameDetail> {
                 game.current >= game.capacity
                     ? '마감'
                     : '${game.capacity - game.current}자리',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -887,30 +883,27 @@ class _GameDetailState extends State<_GameDetail> {
               ),
             ],
           ),
-          const SizedBox(height: 15),
+          SizedBox(height: 15),
           Text(game.court, style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 7),
+          SizedBox(height: 7),
           Text(
             game.distance.isEmpty
                 ? '${game.type} · ${game.level}'
                 : '${game.type} · ${game.level} · ${game.distance}',
-            style: const TextStyle(color: AppColors.muted, fontSize: 13),
+            style: TextStyle(color: AppColors.muted, fontSize: 13),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Row(
             children: [
               AvatarStack(count: game.current.clamp(1, 4)),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Text(
                 '${game.current}/${game.capacity}명 참가 중',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           if (_createdByMe)
             OutlinedButton.icon(
               key: const ValueKey('cancel-meetup'),
@@ -919,7 +912,7 @@ class _GameDetailState extends State<_GameDetail> {
                 foregroundColor: AppColors.accent,
                 side: BorderSide(color: AppColors.accent.withValues(alpha: .4)),
               ),
-              icon: const Icon(Icons.event_busy_rounded, size: 18),
+              icon: Icon(Icons.event_busy_rounded, size: 18),
               label: Center(child: Text(_updating ? '처리 중' : '약속 취소')),
             )
           else
@@ -930,8 +923,12 @@ class _GameDetailState extends State<_GameDetail> {
                   ? null
                   : _toggleJoin,
               style: FilledButton.styleFrom(
-                backgroundColor: _joined ? AppColors.surfaceHigh : Colors.white,
-                foregroundColor: _joined ? Colors.white : Colors.black,
+                backgroundColor: _joined
+                    ? AppColors.surfaceHigh
+                    : AppColors.text,
+                foregroundColor: _joined
+                    ? AppColors.text
+                    : AppColors.inverseText,
               ),
               child: Center(
                 child: Text(
@@ -973,32 +970,29 @@ class _FormRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 21, color: Colors.white),
-          const SizedBox(width: 13),
+          Icon(icon, size: 21, color: AppColors.text),
+          SizedBox(width: 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   caption,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: 3),
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
+          Icon(Icons.chevron_right_rounded, color: AppColors.muted),
         ],
       ),
     );

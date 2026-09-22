@@ -195,7 +195,7 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
                     onClose: () => Navigator.pop(context),
                   ),
                 ),
-                const SizedBox(height: 17),
+                SizedBox(height: 17),
                 Expanded(
                   child: ListView(
                     controller: scrollController,
@@ -211,8 +211,8 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
                           onTap: _pickProfilePhoto,
                         ),
                       ),
-                      const SizedBox(height: 11),
-                      const Center(
+                      SizedBox(height: 11),
+                      Center(
                         child: Text(
                           '프로필 사진 변경',
                           style: TextStyle(
@@ -222,9 +222,9 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 25),
+                      SizedBox(height: 25),
                       const BackcourtSectionLabel(title: '기본 정보'),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       _ProfileField(
                         controller: _nameController,
                         label: '이름',
@@ -234,7 +234,7 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
                         textInputAction: TextInputAction.next,
                         onChanged: (_) => setState(() {}),
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       _ProfileField(
                         key: const ValueKey('profile-username-field'),
                         controller: _usernameController,
@@ -267,12 +267,12 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 19),
+                      SizedBox(height: 19),
                       const BackcourtSectionLabel(
                         title: '소개',
                         trailing: '최대 120자',
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       _ProfileField(
                         controller: _bioController,
                         label: '소개',
@@ -297,7 +297,7 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
                     color: AppColors.surface,
                     border: Border(
                       top: BorderSide(
-                        color: Colors.white.withValues(alpha: .06),
+                        color: AppColors.text.withValues(alpha: .06),
                       ),
                     ),
                   ),
@@ -352,7 +352,7 @@ class _EditableAvatar extends StatelessWidget {
             width: 96,
             height: 96,
             padding: const EdgeInsets.all(3),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [AppColors.accent, Color(0xFFFFB15C)],
                 begin: Alignment.bottomLeft,
@@ -369,13 +369,13 @@ class _EditableAvatar extends StatelessWidget {
               width: 31,
               height: 31,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.text,
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.surface, width: 3),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.photo_camera_rounded,
-                color: Colors.black,
+                color: AppColors.inverseText,
                 size: 15,
               ),
             ),
@@ -410,8 +410,8 @@ class _EditableAvatar extends StatelessWidget {
     child: Center(
       child: Text(
         displayName.characters.take(2).toString(),
-        style: const TextStyle(
-          color: Colors.black,
+        style: TextStyle(
+          color: AppColors.onAccent,
           fontSize: 23,
           fontWeight: FontWeight.w900,
         ),
@@ -456,7 +456,7 @@ class _ProfileField extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: .06)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .06)),
       ),
       child: TextField(
         controller: controller,
@@ -467,12 +467,12 @@ class _ProfileField extends StatelessWidget {
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
         onChanged: onChanged,
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          labelStyle: const TextStyle(color: AppColors.muted, fontSize: 11),
-          hintStyle: const TextStyle(color: Color(0xFF626262), fontSize: 11),
+          labelStyle: TextStyle(color: AppColors.muted, fontSize: 11),
+          hintStyle: TextStyle(color: AppColors.muted, fontSize: 11),
           prefixIcon: Icon(icon, color: AppColors.muted, size: 18),
           suffixIcon: suffix,
           filled: false,
@@ -501,7 +501,7 @@ class _UsernameStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (checking) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.all(14),
         child: SizedBox.square(
           dimension: 15,
@@ -541,7 +541,7 @@ class _PhotoSourceSheet extends StatelessWidget {
                 eyebrow: 'PROFILE IMAGE',
                 title: '사진 가져오기',
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               Row(
                 children: [
                   Expanded(
@@ -552,7 +552,7 @@ class _PhotoSourceSheet extends StatelessWidget {
                       onTap: () => onSelected(ImageSource.gallery),
                     ),
                   ),
-                  const SizedBox(width: 9),
+                  SizedBox(width: 9),
                   Expanded(
                     child: BackcourtMediaAction(
                       icon: Icons.photo_camera_rounded,

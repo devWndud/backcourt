@@ -52,8 +52,8 @@ class NotificationBell extends StatelessWidget {
                   ),
                   child: Text(
                     count > 9 ? '9+' : '$count',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: AppColors.text,
                       fontSize: 8,
                       height: 1,
                       fontWeight: FontWeight.w900,
@@ -116,13 +116,13 @@ class _NotificationsSheetState extends State<_NotificationsSheet> {
                 onClose: () => Navigator.pop(context),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Expanded(
               child: StreamBuilder<List<AppNotificationRecord>>(
                 stream: widget.repository.watchNotifications(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
+                    return Center(
                       child: CircularProgressIndicator(strokeWidth: 2),
                     );
                   }
@@ -137,7 +137,7 @@ class _NotificationsSheetState extends State<_NotificationsSheet> {
                       MediaQuery.paddingOf(context).bottom + 24,
                     ),
                     itemCount: items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 9),
+                    separatorBuilder: (_, _) => SizedBox(height: 9),
                     itemBuilder: (context, index) =>
                         _NotificationTile(notification: items[index]),
                   );
@@ -155,7 +155,7 @@ class _EmptyNotifications extends StatelessWidget {
   const _EmptyNotifications();
 
   @override
-  Widget build(BuildContext context) => const Center(
+  Widget build(BuildContext context) => Center(
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -212,7 +212,7 @@ class _NotificationTile extends StatelessWidget {
       border: Border.all(
         color: notification.isUnread
             ? AppColors.accent.withValues(alpha: .2)
-            : Colors.white.withValues(alpha: .055),
+            : AppColors.text.withValues(alpha: .055),
       ),
     ),
     child: Row(
@@ -227,7 +227,7 @@ class _NotificationTile extends StatelessWidget {
           ),
           child: Icon(_icon, color: AppColors.accent, size: 19),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,28 +239,25 @@ class _NotificationTile extends StatelessWidget {
                       notification.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Text(
                     _time,
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 10,
-                    ),
+                    style: TextStyle(color: AppColors.muted, fontSize: 10),
                   ),
                 ],
               ),
-              const SizedBox(height: 5),
+              SizedBox(height: 5),
               Text(
                 notification.body,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.soft,
                   fontSize: 11,
                   height: 1.4,

@@ -411,7 +411,7 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
       key: const ValueKey('setup-court-step'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.fromLTRB(22, 30, 22, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,7 +429,7 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
               Text(
                 '자주 가는 코트를\n골라주세요.',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.text,
                   fontSize: 34,
                   height: 1.08,
                   fontWeight: FontWeight.w900,
@@ -448,13 +448,13 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                   key: const ValueKey('setup-court-search'),
                   controller: _searchController,
                   onChanged: (value) => setState(() => _query = value),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: '코트 이름이나 동네 검색',
                     prefixIcon: Icon(Icons.search_rounded),
                   ),
                 ),
               ),
-              const SizedBox(width: 9),
+              SizedBox(width: 9),
               SizedBox.square(
                 dimension: 56,
                 child: IconButton.filled(
@@ -465,21 +465,21 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                         ? AppColors.surfaceHigh
                         : AppColors.accent,
                     foregroundColor: _origin == null
-                        ? Colors.white
-                        : Colors.black,
+                        ? AppColors.text
+                        : AppColors.onAccent,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(17),
                     ),
                   ),
                   icon: _locating
-                      ? const SizedBox.square(
+                      ? SizedBox.square(
                           dimension: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.my_location_rounded),
+                      : Icon(Icons.my_location_rounded),
                 ),
               ),
-              const SizedBox(width: 9),
+              SizedBox(width: 9),
               _SetupMapButton(onTap: _openCourtMap),
             ],
           ),
@@ -497,7 +497,7 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                 : _origin != null
                 ? '가까운 코트'
                 : '위치 버튼을 누르거나 검색하세요',
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.muted,
               fontSize: 11,
               fontWeight: FontWeight.w800,
@@ -506,7 +506,7 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
         ),
         Expanded(
           child: _loadingCourts
-              ? const Center(
+              ? Center(
                   child: CircularProgressIndicator(
                     color: AppColors.accent,
                     strokeWidth: 2.5,
@@ -519,7 +519,7 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                       ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.fromLTRB(22, 0, 22, 130),
                   itemCount: visibleCourts.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 9),
+                  separatorBuilder: (_, _) => SizedBox(height: 9),
                   itemBuilder: (context, index) {
                     final option = visibleCourts[index];
                     final court = _resolvedCourt(option);
@@ -541,7 +541,7 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
       key: const ValueKey('setup-play-step'),
       padding: const EdgeInsets.fromLTRB(22, 30, 22, 140),
       children: [
-        const Text(
+        Text(
           'MY PLAY',
           style: TextStyle(
             color: AppColors.accent,
@@ -550,19 +550,19 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
             letterSpacing: 1.8,
           ),
         ),
-        const SizedBox(height: 11),
-        const Text(
+        SizedBox(height: 11),
+        Text(
           '포지션과 스타일',
           style: TextStyle(
-            color: Colors.white,
+            color: AppColors.text,
             fontSize: 34,
             fontWeight: FontWeight.w900,
             letterSpacing: -1.8,
           ),
         ),
-        const SizedBox(height: 35),
+        SizedBox(height: 35),
         const _SetupLabel(title: '포지션'),
-        const SizedBox(height: 11),
+        SizedBox(height: 11),
         Row(
           children: _positions
               .map((choice) {
@@ -585,13 +585,13 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
               })
               .toList(growable: false),
         ),
-        const SizedBox(height: 31),
+        SizedBox(height: 31),
         Row(
           children: [
-            const Expanded(child: _SetupLabel(title: '플레이 스타일')),
+            Expanded(child: _SetupLabel(title: '플레이 스타일')),
             Text(
               '${_playStyles.length}/3',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.muted,
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
@@ -599,7 +599,7 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 11),
+        SizedBox(height: 11),
         Wrap(
           spacing: 9,
           runSpacing: 9,
@@ -613,7 +613,7 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
               )
               .toList(growable: false),
         ),
-        const SizedBox(height: 35),
+        SizedBox(height: 35),
         if (_selectedCourt case final court?)
           _SetupSummary(
             court: court,
@@ -709,7 +709,7 @@ class _SetupMapButton extends StatelessWidget {
         key: const ValueKey('setup-court-map'),
         onTap: onTap,
         borderRadius: BorderRadius.circular(17),
-        child: const SizedBox(
+        child: SizedBox(
           width: 72,
           height: 56,
           child: Column(
@@ -720,7 +720,7 @@ class _SetupMapButton extends StatelessWidget {
               Text(
                 '지도',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.text,
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
                 ),
@@ -755,20 +755,20 @@ class _SetupHeader extends StatelessWidget {
               key: const ValueKey('setup-back'),
               onPressed: onBack,
               style: IconButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: .06),
+                backgroundColor: AppColors.text.withValues(alpha: .06),
               ),
               icon: Icon(
                 step == 0 ? Icons.close_rounded : Icons.arrow_back_rounded,
               ),
             ),
-            const SizedBox(width: 9),
+            SizedBox(width: 9),
           ] else
             ClipRRect(
               borderRadius: BorderRadius.circular(11),
               child: Image.asset('icon.png', width: 38, height: 38),
             ),
-          const SizedBox(width: 10),
-          const Text(
+          SizedBox(width: 10),
+          Text(
             '빽코트',
             style: TextStyle(
               fontSize: 18,
@@ -780,13 +780,13 @@ class _SetupHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .06),
+              color: AppColors.text.withValues(alpha: .06),
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.white.withValues(alpha: .08)),
+              border: Border.all(color: AppColors.text.withValues(alpha: .08)),
             ),
             child: Text(
               editing ? 'MY PLAY' : 'SETUP  ·  0${step + 2}/03',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.soft,
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
@@ -823,18 +823,18 @@ class _SelectedCourtCard extends StatelessWidget {
               color: AppColors.accent,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.sports_basketball_rounded,
-              color: Colors.black,
+              color: AppColors.onAccent,
               size: 20,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   '내 코트',
                   style: TextStyle(
                     color: AppColors.accent,
@@ -842,13 +842,13 @@ class _SelectedCourtCard extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: 3),
                 Text(
                   court.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.text,
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
                   ),
@@ -856,7 +856,7 @@ class _SelectedCourtCard extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.check_circle_rounded, color: AppColors.accent),
+          Icon(Icons.check_circle_rounded, color: AppColors.accent),
         ],
       ),
     );
@@ -894,7 +894,7 @@ class _CourtChoiceRow extends StatelessWidget {
             border: Border.all(
               color: selected
                   ? AppColors.accent.withValues(alpha: .55)
-                  : Colors.white.withValues(alpha: .07),
+                  : AppColors.text.withValues(alpha: .07),
             ),
           ),
           child: Row(
@@ -904,7 +904,7 @@ class _CourtChoiceRow extends StatelessWidget {
                 color: selected ? AppColors.accent : AppColors.soft,
                 size: 21,
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -913,28 +913,25 @@ class _CourtChoiceRow extends StatelessWidget {
                       court.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: AppColors.text,
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                     if (court.address?.isNotEmpty == true) ...[
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         court.address!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: AppColors.muted, fontSize: 11),
                       ),
                     ],
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Text(
                 distance,
                 style: TextStyle(
@@ -979,7 +976,7 @@ class _PositionCard extends StatelessWidget {
             border: Border.all(
               color: selected
                   ? AppColors.accent
-                  : Colors.white.withValues(alpha: .08),
+                  : AppColors.text.withValues(alpha: .08),
             ),
           ),
           child: Column(
@@ -987,14 +984,14 @@ class _PositionCard extends StatelessWidget {
             children: [
               Icon(
                 choice.icon,
-                color: selected ? Colors.black : AppColors.soft,
+                color: selected ? AppColors.onAccent : AppColors.soft,
                 size: 25,
               ),
-              const SizedBox(height: 9),
+              SizedBox(height: 9),
               Text(
                 choice.label,
                 style: TextStyle(
-                  color: selected ? Colors.black : Colors.white,
+                  color: selected ? AppColors.onAccent : AppColors.text,
                   fontSize: 13,
                   fontWeight: FontWeight.w900,
                 ),
@@ -1037,7 +1034,7 @@ class _StyleChip extends StatelessWidget {
             border: Border.all(
               color: selected
                   ? AppColors.accent
-                  : Colors.white.withValues(alpha: .08),
+                  : AppColors.text.withValues(alpha: .08),
             ),
           ),
           child: Row(
@@ -1048,11 +1045,11 @@ class _StyleChip extends StatelessWidget {
                 color: selected ? AppColors.accent : AppColors.muted,
                 size: 17,
               ),
-              const SizedBox(width: 7),
+              SizedBox(width: 7),
               Text(
                 choice.label,
                 style: TextStyle(
-                  color: selected ? Colors.white : AppColors.soft,
+                  color: selected ? AppColors.text : AppColors.soft,
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                 ),
@@ -1081,9 +1078,7 @@ class _SetupSummary extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF271713), Color(0xFF151313)],
-        ),
+        color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(23),
         border: Border.all(color: AppColors.accent.withValues(alpha: .25)),
       ),
@@ -1092,16 +1087,16 @@ class _SetupSummary extends StatelessWidget {
           Container(
             width: 47,
             height: 47,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.accent,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.sports_basketball_rounded,
-              color: Colors.black,
+              color: AppColors.onAccent,
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1110,18 +1105,18 @@ class _SetupSummary extends StatelessWidget {
                   court.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.text,
                     fontSize: 15,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 5),
+                SizedBox(height: 5),
                 Text(
                   [?position, ...styles].join(' · '),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -1144,8 +1139,8 @@ class _SetupLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
     title,
-    style: const TextStyle(
-      color: Colors.white,
+    style: TextStyle(
+      color: AppColors.text,
       fontSize: 14,
       fontWeight: FontWeight.w900,
     ),
@@ -1164,7 +1159,7 @@ class _CourtEmpty extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 80),
         child: Text(
           querying ? '검색 결과가 없어요.' : '',
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.muted,
             fontSize: 13,
             fontWeight: FontWeight.w700,
@@ -1197,7 +1192,7 @@ class _SetupAction extends StatelessWidget {
         22,
         MediaQuery.paddingOf(context).bottom + 14,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -1216,15 +1211,15 @@ class _SetupAction extends StatelessWidget {
           onPressed: enabled ? onTap : null,
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.accent,
-            foregroundColor: Colors.black,
-            disabledBackgroundColor: const Color(0xFF252525),
+            foregroundColor: AppColors.onAccent,
+            disabledBackgroundColor: AppColors.surfaceHigh,
             disabledForegroundColor: AppColors.muted,
           ),
           child: loading
-              ? const SizedBox.square(
+              ? SizedBox.square(
                   dimension: 20,
                   child: CircularProgressIndicator(
-                    color: Colors.black,
+                    color: AppColors.onAccent,
                     strokeWidth: 2.2,
                   ),
                 )
@@ -1232,8 +1227,8 @@ class _SetupAction extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(label),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward_rounded, size: 19),
+                    SizedBox(width: 8),
+                    Icon(Icons.arrow_forward_rounded, size: 19),
                   ],
                 ),
         ),

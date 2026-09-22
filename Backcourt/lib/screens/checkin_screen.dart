@@ -157,11 +157,11 @@ class _CheckinScreenState extends State<CheckinScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         '출석',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.text,
                           fontSize: 28,
                           height: 1,
                           fontWeight: FontWeight.w900,
@@ -171,7 +171,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                     ),
                     Text(
                       '${now.month}월 ${now.day}일',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.muted,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -179,7 +179,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 22),
+                SizedBox(height: 22),
                 _CheckInPanel(
                   court: widget.activeCourt,
                   checkedIn: _checkedIn,
@@ -187,26 +187,26 @@ class _CheckinScreenState extends State<CheckinScreen> {
                   distanceMeters: _distanceMeters,
                   onCheckIn: _performCheckIn,
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: 30),
                 const _SectionHeader(title: '이번 달'),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _MonthlyCourtCard(
                   repository: widget.repository,
                   activeCourt: widget.activeCourt,
                   checkedIn: _checkedIn,
                   stampPulse: _stampPulse,
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: 30),
                 const _SectionHeader(title: '플레이 기록'),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _PlayRecordCard(
                   repository: widget.repository,
                   activeCourt: widget.activeCourt,
                   checkedIn: _checkedIn,
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: 30),
                 _SectionHeader(title: '출석 랭킹', trailing: '${now.month}월'),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _AttendanceRankingCard(repository: widget.repository),
               ],
             ),
@@ -229,8 +229,8 @@ class _SectionHeader extends StatelessWidget {
       Expanded(
         child: Text(
           title,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: AppColors.text,
             fontSize: 18,
             fontWeight: FontWeight.w900,
             letterSpacing: -.5,
@@ -240,7 +240,7 @@ class _SectionHeader extends StatelessWidget {
       if (trailing != null)
         Text(
           trailing!,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.muted,
             fontSize: 12,
             fontWeight: FontWeight.w700,
@@ -276,7 +276,7 @@ class _CheckInPanel extends StatelessWidget {
         border: Border.all(
           color: checkedIn
               ? AppColors.success.withValues(alpha: .28)
-              : Colors.white.withValues(alpha: .07),
+              : AppColors.text.withValues(alpha: .07),
         ),
       ),
       child: Column(
@@ -289,8 +289,8 @@ class _CheckInPanel extends StatelessWidget {
                   court.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.text,
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -.6,
@@ -307,7 +307,7 @@ class _CheckInPanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             checkedIn
                 ? '${now.month}.${now.day} 출석 완료'
@@ -319,13 +319,13 @@ class _CheckInPanel extends StatelessWidget {
             ),
           ),
           if (checkedIn && distanceMeters != null) ...[
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               '코트에서 ${distanceMeters!.round()}m',
-              style: const TextStyle(color: AppColors.muted, fontSize: 11),
+              style: TextStyle(color: AppColors.muted, fontSize: 11),
             ),
           ],
-          const SizedBox(height: 22),
+          SizedBox(height: 22),
           SizedBox(
             width: double.infinity,
             height: 58,
@@ -333,11 +333,11 @@ class _CheckInPanel extends StatelessWidget {
               key: const ValueKey('check-in-button'),
               onPressed: checkedIn || checking ? null : onCheckIn,
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
+                backgroundColor: AppColors.text,
+                foregroundColor: AppColors.inverseText,
                 disabledBackgroundColor: checkedIn
                     ? AppColors.success.withValues(alpha: .12)
-                    : Colors.white.withValues(alpha: .08),
+                    : AppColors.text.withValues(alpha: .08),
                 disabledForegroundColor: checkedIn
                     ? AppColors.success
                     : AppColors.muted,
@@ -346,27 +346,27 @@ class _CheckInPanel extends StatelessWidget {
                 ),
               ),
               child: checking
-                  ? const SizedBox.square(
+                  ? SizedBox.square(
                       dimension: 19,
                       child: CircularProgressIndicator(
-                        color: Colors.black,
+                        color: AppColors.inverseText,
                         strokeWidth: 2,
                       ),
                     )
                   : Text(
                       checkedIn ? '출석 완료' : 'GPS로 출석하기',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Center(
             child: Text(
               checkedIn ? '리뷰 작성 가능 · 48시간' : '코트별 하루 한 번',
-              style: const TextStyle(color: AppColors.muted, fontSize: 11),
+              style: TextStyle(color: AppColors.muted, fontSize: 11),
             ),
           ),
         ],
@@ -446,7 +446,7 @@ class _MonthlyCourtSurface extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withValues(alpha: .07)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .07)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -462,17 +462,17 @@ class _MonthlyCourtSurface extends StatelessWidget {
                       court.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.soft,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Text(
                       _status,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: AppColors.text,
                         fontSize: 21,
                         fontWeight: FontWeight.w900,
                         letterSpacing: -.7,
@@ -486,14 +486,14 @@ class _MonthlyCourtSurface extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: loading ? '-' : '$visibleCount',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.accent,
                         fontSize: 30,
                         fontWeight: FontWeight.w900,
                         letterSpacing: -1.5,
                       ),
                     ),
-                    const TextSpan(
+                    TextSpan(
                       text: ' / 12',
                       style: TextStyle(
                         color: AppColors.muted,
@@ -506,7 +506,7 @@ class _MonthlyCourtSurface extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 22),
+          SizedBox(height: 22),
           TweenAnimationBuilder<double>(
             key: ValueKey('${stampPulse}_$visibleCount'),
             duration: const Duration(milliseconds: 500),
@@ -522,7 +522,7 @@ class _MonthlyCourtSurface extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: filled
                           ? AppColors.accent
-                          : Colors.white.withValues(alpha: .06),
+                          : AppColors.text.withValues(alpha: .06),
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
@@ -530,10 +530,10 @@ class _MonthlyCourtSurface extends StatelessWidget {
               }),
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
           Text(
             _next,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.muted,
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -755,7 +755,7 @@ class _PlayRecordSurface extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withValues(alpha: .07)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .07)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -764,21 +764,21 @@ class _PlayRecordSurface extends StatelessWidget {
             activeCourt.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.muted,
               fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 9),
+          SizedBox(height: 9),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
                 child: Text(
                   _formatPlayMinutes(totalMinutes),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.text,
                     fontSize: 28,
                     height: 1,
                     fontWeight: FontWeight.w900,
@@ -797,7 +797,7 @@ class _PlayRecordSurface extends StatelessWidget {
             ],
           ),
           if (activeSession != null) ...[
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
               decoration: BoxDecoration(
@@ -809,13 +809,13 @@ class _PlayRecordSurface extends StatelessWidget {
                   Container(
                     width: 7,
                     height: 7,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: AppColors.success,
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(width: 9),
-                  const Expanded(
+                  SizedBox(width: 9),
+                  Expanded(
                     child: Text(
                       '기록 중',
                       style: TextStyle(
@@ -827,8 +827,8 @@ class _PlayRecordSurface extends StatelessWidget {
                   ),
                   Text(
                     _formatStopwatch(elapsed),
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: AppColors.text,
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
                     ),
@@ -837,8 +837,8 @@ class _PlayRecordSurface extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: 22),
-          const Text(
+          SizedBox(height: 22),
+          Text(
             '이 코트 상위 기록',
             style: TextStyle(
               color: AppColors.soft,
@@ -846,14 +846,14 @@ class _PlayRecordSurface extends StatelessWidget {
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 7),
+          SizedBox(height: 7),
           if (!loaded)
-            const SizedBox(
+            SizedBox(
               height: 100,
               child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
             )
           else if (stats.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 18),
               child: Center(
                 child: Text(
@@ -872,7 +872,7 @@ class _PlayRecordSurface extends StatelessWidget {
                 value: _formatPlayMinutes(stats[index].totalMinutes),
                 highlighted: stats[index].uid == currentUid,
               ),
-          const SizedBox(height: 17),
+          SizedBox(height: 17),
           SizedBox(
             width: double.infinity,
             height: 52,
@@ -881,20 +881,24 @@ class _PlayRecordSurface extends StatelessWidget {
               onPressed: busy || !loaded || !canStart ? null : onToggle,
               style: FilledButton.styleFrom(
                 backgroundColor: activeSession == null
-                    ? Colors.white
+                    ? AppColors.text
                     : AppColors.accent,
-                foregroundColor: Colors.black,
-                disabledBackgroundColor: Colors.white.withValues(alpha: .07),
+                foregroundColor: activeSession == null
+                    ? AppColors.inverseText
+                    : AppColors.onAccent,
+                disabledBackgroundColor: AppColors.text.withValues(alpha: .07),
                 disabledForegroundColor: AppColors.muted,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
               child: busy
-                  ? const SizedBox.square(
+                  ? SizedBox.square(
                       dimension: 17,
                       child: CircularProgressIndicator(
-                        color: Colors.black,
+                        color: activeSession == null
+                            ? AppColors.inverseText
+                            : AppColors.onAccent,
                         strokeWidth: 2,
                       ),
                     )
@@ -904,7 +908,7 @@ class _PlayRecordSurface extends StatelessWidget {
                           : checkedIn
                           ? '플레이 기록 시작'
                           : '출석 후 기록 가능',
-                      style: const TextStyle(fontWeight: FontWeight.w900),
+                      style: TextStyle(fontWeight: FontWeight.w900),
                     ),
             ),
           ),
@@ -927,7 +931,7 @@ class _AttendanceRankingCard extends StatelessWidget {
         stream: repository.watchMonthlyRanking(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return const SizedBox(
+            return SizedBox(
               height: 120,
               child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
             );
@@ -969,7 +973,7 @@ class _AttendanceRankingSurface extends StatelessWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(22),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             '아직 출석 기록이 없어요',
             style: TextStyle(color: AppColors.muted, fontSize: 12),
@@ -993,7 +997,7 @@ class _AttendanceRankingSurface extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withValues(alpha: .07)),
+        border: Border.all(color: AppColors.text.withValues(alpha: .07)),
       ),
       child: Column(
         children: [
@@ -1008,7 +1012,7 @@ class _AttendanceRankingSurface extends StatelessWidget {
               divider: index != top.length - 1,
             ),
           if (mine != null && !mineVisible) ...[
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 4),
               child: Divider(height: 1),
             ),
@@ -1064,7 +1068,7 @@ class _SimpleRankRow extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: highlighted ? Colors.white : AppColors.soft,
+                  color: highlighted ? AppColors.text : AppColors.soft,
                   fontSize: 13,
                   fontWeight: highlighted ? FontWeight.w900 : FontWeight.w700,
                 ),
@@ -1073,7 +1077,7 @@ class _SimpleRankRow extends StatelessWidget {
             Text(
               value,
               style: TextStyle(
-                color: highlighted ? AppColors.accent : Colors.white,
+                color: highlighted ? AppColors.accent : AppColors.text,
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
               ),
@@ -1081,7 +1085,7 @@ class _SimpleRankRow extends StatelessWidget {
           ],
         ),
       ),
-      if (divider) const Divider(height: 1),
+      if (divider) Divider(height: 1),
     ],
   );
 }

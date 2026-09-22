@@ -69,19 +69,19 @@ class _AppAccessGateState extends State<AppAccessGate> {
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('업데이트'),
+          title: Text('업데이트'),
           content: Text(decision.message),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('나중에'),
+              child: Text('나중에'),
             ),
             FilledButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
                 unawaited(_openStore(decision.storeUrl));
               },
-              child: const Text('업데이트'),
+              child: Text('업데이트'),
             ),
           ],
         ),
@@ -145,7 +145,7 @@ class _GateLoadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ColoredBox(
+    return ColoredBox(
       color: AppColors.background,
       child: Center(
         child: CircularProgressIndicator(
@@ -189,8 +189,8 @@ class _StatusScreen extends StatelessWidget {
               Row(
                 children: [
                   Image.asset('icon.png', width: 38, height: 38),
-                  const SizedBox(width: 9),
-                  const Text(
+                  SizedBox(width: 9),
+                  Text(
                     '빽코트',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                   ),
@@ -210,31 +210,31 @@ class _StatusScreen extends StatelessWidget {
                 ),
                 child: Icon(icon, color: AppColors.accent, size: 29),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.accent,
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1.2,
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: AppColors.text,
                   fontSize: 34,
                   height: 1.05,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1.6,
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
               Text(
                 message,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 14,
                   height: 1.55,
@@ -242,11 +242,11 @@ class _StatusScreen extends StatelessWidget {
                 ),
               ),
               if (maintenanceEndsAt != null) ...[
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 Text(
                   '예정 · ${_dateLabel(maintenanceEndsAt!)}',
-                  style: const TextStyle(
-                    color: Colors.white70,
+                  style: TextStyle(
+                    color: AppColors.soft,
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                   ),
@@ -258,14 +258,14 @@ class _StatusScreen extends StatelessWidget {
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(56),
                   backgroundColor: AppColors.accent,
-                  foregroundColor: Colors.black,
+                  foregroundColor: AppColors.onAccent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                   ),
                 ),
                 child: Text(
                   buttonLabel,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
+                  style: TextStyle(fontWeight: FontWeight.w900),
                 ),
               ),
             ],

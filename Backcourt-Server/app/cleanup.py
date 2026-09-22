@@ -180,6 +180,17 @@ def delete_account(database: Any, uid: str) -> None:
         ).stream()
         delete_documents(database, snapshots)
 
+    for field in ("followerUid", "followingUid"):
+        snapshots = database.collection("follows").where(
+            filter=FieldFilter(field, "==", uid)
+        ).stream()
+        delete_documents(database, snapshots)
+
+    friendships = database.collection("friendships").where(
+        filter=FieldFilter("memberUids", "array_contains", uid)
+    ).stream()
+    delete_documents(database, friendships)
+
     joined = database.collection("meetups").where(
         filter=FieldFilter("participantUids", "array_contains", uid)
     ).stream()
@@ -207,6 +218,7 @@ def delete_account(database: Any, uid: str) -> None:
     database.collection("active_play_sessions").document(uid).delete()
     database.collection("live_court_statuses").document(uid).delete()
     database.collection("private_users").document(uid).delete()
+    database.collection("public_profiles").document(uid).delete()
     database.collection("users").document(uid).delete()
     if isinstance(username, str) and username:
         database.collection("usernames").document(username).delete()

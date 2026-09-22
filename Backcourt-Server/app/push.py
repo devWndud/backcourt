@@ -211,6 +211,32 @@ class NotificationEventDispatcher:
             title = "새 댓글"
             body = f"{source.get('authorName') or '플레이어'} · {source.get('text') or ''}"
             notification_entity_id = str(source.get("postId") or entity_id)
+        elif event_type in {"friend_request", "friend_accepted"}:
+            source = self._document("friendships", entity_id)
+            requester_uid = str(source.get("requesterUid") or "")
+            target_uid = str(source.get("targetUid") or "")
+            profile = self._document("users", actor_uid)
+            display_name = str(profile.get("displayName") or "플레이어")
+            if event_type == "friend_request":
+                if (
+                    requester_uid != actor_uid
+                    or target_uid == actor_uid
+                    or source.get("status") != "pending"
+                ):
+                    raise ValueError("Invalid friend request event")
+                targets = {target_uid}
+                title = "친구 요청"
+                body = f"{display_name}님이 친구 요청을 보냈어요."
+            else:
+                if (
+                    target_uid != actor_uid
+                    or str(source.get("acceptedBy") or "") != actor_uid
+                    or source.get("status") != "accepted"
+                ):
+                    raise ValueError("Invalid friend accepted event")
+                targets = {requester_uid}
+                title = "친구가 됐어요"
+                body = f"{display_name}님과 이제 친구예요."
         elif event_type == "court_report":
             profile = self._document("users", actor_uid)
             if profile.get("role") not in {"admin", "operator"}:

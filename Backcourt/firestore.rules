@@ -80,6 +80,89 @@ service cloud.firestore {
       allow delete: if isOwner(uid);
     }
 
+    match /public_profiles/{uid} {
+      function validPublicProfile() {
+        return request.resource.data.keys().hasOnly([
+            'uid', 'displayName', 'username', 'bio', 'photoUrl', 'position',
+            'playStyles', 'homeCourt', 'homeCourts', 'updatedAt'
+          ])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() >= 2
+          && request.resource.data.displayName.size() <= 24
+          && (!request.resource.data.keys().hasAny(['username'])
+            || request.resource.data.username == null
+            || validUsername(request.resource.data.username))
+          && (!request.resource.data.keys().hasAny(['bio'])
+            || (request.resource.data.bio is string
+              && request.resource.data.bio.size() <= 120))
+          && request.resource.data.updatedAt == request.time;
+      }
+
+      allow read: if signedIn();
+      allow create, update: if isOwner(uid) && validPublicProfile();
+      allow delete: if isOwner(uid);
+    }
+
+    match /follows/{followId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          'followerUid', 'followingUid', 'createdAt'
+        ])
+        && request.resource.data.followerUid == request.auth.uid
+        && request.resource.data.followingUid is string
+        && request.resource.data.followingUid != request.auth.uid
+        && followId == request.auth.uid + '_'
+          + request.resource.data.followingUid
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if signedIn()
+        && resource.data.followerUid == request.auth.uid;
+    }
+
+    match /friendships/{friendshipId} {
+      function currentUserIsMember() {
+        return signedIn() && request.auth.uid in resource.data.memberUids;
+      }
+
+      allow read: if currentUserIsMember();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          'requesterUid', 'targetUid', 'memberUids', 'status',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.requesterUid == request.auth.uid
+        && request.resource.data.targetUid is string
+        && request.resource.data.targetUid != request.auth.uid
+        && request.resource.data.memberUids is list
+        && request.resource.data.memberUids.size() == 2
+        && request.resource.data.memberUids.hasAll([
+          request.auth.uid, request.resource.data.targetUid
+        ])
+        && (friendshipId == request.auth.uid + '_'
+              + request.resource.data.targetUid
+          || friendshipId == request.resource.data.targetUid + '_'
+              + request.auth.uid)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if signedIn()
+        && resource.data.status == 'pending'
+        && resource.data.targetUid == request.auth.uid
+        && request.resource.data.requesterUid == resource.data.requesterUid
+        && request.resource.data.targetUid == resource.data.targetUid
+        && request.resource.data.memberUids == resource.data.memberUids
+        && request.resource.data.status == 'accepted'
+        && request.resource.data.acceptedBy == request.auth.uid
+        && request.resource.data.acceptedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'acceptedBy', 'acceptedAt', 'updatedAt'
+        ]);
+      allow delete: if currentUserIsMember();
+    }
+
     match /usernames/{username} {
       allow read: if signedIn();
       allow create: if signedIn()
@@ -501,6 +584,12 @@ service cloud.firestore {
         ).data;
       }
 
+      function friendshipAfter() {
+        return getAfter(
+          /databases/$(database)/documents/friendships/$(request.resource.data.entityId)
+        ).data;
+      }
+
       function validCommonEvent() {
         return signedIn()
           && request.resource.data.keys().hasOnly([
@@ -510,7 +599,7 @@ service cloud.firestore {
           && request.resource.data.actorUid == request.auth.uid
           && request.resource.data.type in [
             'live', 'meetup', 'meetup_join', 'meetup_cancelled',
-            'comment', 'court_report'
+            'comment', 'friend_request', 'friend_accepted', 'court_report'
           ]
           && request.resource.data.title is string
           && request.resource.data.title.size() >= 1
@@ -564,6 +653,22 @@ service cloud.firestore {
           && commentSource().createdAt == request.time;
       }
 
+      function validFriendRequestEvent() {
+        return request.resource.data.type == 'friend_request'
+          && friendshipAfter().requesterUid == request.auth.uid
+          && friendshipAfter().targetUid != request.auth.uid
+          && friendshipAfter().status == 'pending'
+          && friendshipAfter().createdAt == request.time;
+      }
+
+      function validFriendAcceptedEvent() {
+        return request.resource.data.type == 'friend_accepted'
+          && friendshipAfter().targetUid == request.auth.uid
+          && friendshipAfter().acceptedBy == request.auth.uid
+          && friendshipAfter().status == 'accepted'
+          && friendshipAfter().acceptedAt == request.time;
+      }
+
       function validReportEvent() {
         return request.resource.data.type == 'court_report'
           && isOperator()
@@ -593,6 +698,8 @@ service cloud.firestore {
           || validMeetupJoinEvent()
           || validMeetupCancelledEvent()
           || validCommentEvent()
+          || validFriendRequestEvent()
+          || validFriendAcceptedEvent()
           || validReportEvent());
       allow read, update, delete: if false;
     }

@@ -204,6 +204,8 @@ class _NotificationTile extends StatelessWidget {
     AppNotificationType.meetupJoin => Icons.person_add_alt_1_rounded,
     AppNotificationType.meetupCancelled => Icons.event_busy_rounded,
     AppNotificationType.comment => Icons.chat_bubble_rounded,
+    AppNotificationType.friendRequest => Icons.person_add_alt_1_rounded,
+    AppNotificationType.friendAccepted => Icons.people_alt_rounded,
     AppNotificationType.courtReport => Icons.verified_rounded,
   };
 

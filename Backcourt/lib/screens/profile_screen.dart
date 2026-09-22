@@ -9,6 +9,7 @@ import '../widgets/common.dart';
 import 'feed_screen.dart';
 import 'player_setup_screen.dart';
 import 'profile_edit_sheet.dart';
+import 'user_profile_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({
@@ -76,9 +77,10 @@ class ProfileScreen extends StatelessWidget {
                 _ProfileIntro(
                   profile: profile,
                   postCount: posts?.length ?? profile?.postCount ?? 0,
-                  checkinCount:
-                      activity?.checkins ?? profile?.checkinCount ?? 0,
-                  meetupCount: activity?.meetups ?? profile?.meetupCount ?? 0,
+                  repository: backend,
+                  onFriends: backend == null
+                      ? null
+                      : () => showFriendsSheet(context, backend),
                   onEdit: backend == null || profile == null
                       ? null
                       : () => _showProfileEditor(context, profile),
@@ -775,15 +777,15 @@ class _ProfileIntro extends StatelessWidget {
   const _ProfileIntro({
     required this.profile,
     required this.postCount,
-    required this.checkinCount,
-    required this.meetupCount,
+    required this.repository,
+    required this.onFriends,
     required this.onEdit,
   });
 
   final AppUserProfile? profile;
   final int postCount;
-  final int checkinCount;
-  final int meetupCount;
+  final BackcourtRepository? repository;
+  final VoidCallback? onFriends;
   final VoidCallback? onEdit;
 
   @override
@@ -870,18 +872,31 @@ class _ProfileIntro extends StatelessWidget {
             ),
             const _VerticalDivider(height: 30, horizontalMargin: 0),
             Expanded(
-              child: Stat(
-                value: '$checkinCount',
-                label: '체크인',
-                align: CrossAxisAlignment.center,
+              child: _SocialStat(
+                stream: profile == null || repository == null
+                    ? null
+                    : repository!.watchFollowerCount(profile!.uid),
+                label: '팔로워',
               ),
             ),
             const _VerticalDivider(height: 30, horizontalMargin: 0),
             Expanded(
-              child: Stat(
-                value: '$meetupCount',
-                label: '약속',
-                align: CrossAxisAlignment.center,
+              child: _SocialStat(
+                stream: profile == null || repository == null
+                    ? null
+                    : repository!.watchFollowingCount(profile!.uid),
+                label: '팔로잉',
+              ),
+            ),
+            const _VerticalDivider(height: 30, horizontalMargin: 0),
+            Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onFriends,
+                child: _SocialStat(
+                  stream: repository?.watchFriendCount(),
+                  label: '친구',
+                ),
               ),
             ),
           ],
@@ -914,6 +929,23 @@ class _ProfileIntro extends StatelessWidget {
     'rebound' => '리바운드',
     _ => value,
   };
+}
+
+class _SocialStat extends StatelessWidget {
+  const _SocialStat({required this.stream, required this.label});
+
+  final Stream<int>? stream;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<int>(
+    stream: stream,
+    builder: (context, snapshot) => Stat(
+      value: '${snapshot.data ?? 0}',
+      label: label,
+      align: CrossAxisAlignment.center,
+    ),
+  );
 }
 
 class _ProfileAvatar extends StatelessWidget {

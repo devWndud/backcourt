@@ -143,7 +143,7 @@ class PushNotificationService {
             const AndroidNotificationChannel(
               _channelId,
               '빽코트 활동',
-              description: 'LIVE, 약속, 댓글과 제보 처리 알림',
+              description: 'LIVE, 약속, 댓글과 친구 알림',
               importance: Importance.high,
             ),
           );
@@ -220,7 +220,7 @@ class PushNotificationService {
         android: AndroidNotificationDetails(
           _channelId,
           '빽코트 활동',
-          channelDescription: 'LIVE, 약속, 댓글과 제보 처리 알림',
+          channelDescription: 'LIVE, 약속, 댓글과 친구 알림',
           importance: Importance.high,
           priority: Priority.high,
           icon: 'ic_stat_backcourt',

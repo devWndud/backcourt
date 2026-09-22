@@ -152,6 +152,62 @@ class AppUserProfile {
       birthYear != null && DateTime.now().year - birthYear! < 19;
 }
 
+enum FriendshipStatus {
+  pending('pending'),
+  accepted('accepted');
+
+  const FriendshipStatus(this.value);
+
+  final String value;
+
+  static FriendshipStatus fromValue(Object? value) => switch (value) {
+    'accepted' => accepted,
+    _ => pending,
+  };
+}
+
+class FriendshipRecord {
+  const FriendshipRecord({
+    required this.id,
+    required this.requesterUid,
+    required this.targetUid,
+    required this.memberUids,
+    required this.status,
+    required this.createdAt,
+    this.acceptedAt,
+  });
+
+  factory FriendshipRecord.fromDocument(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data() ?? const <String, dynamic>{};
+    return FriendshipRecord(
+      id: doc.id,
+      requesterUid: data['requesterUid'] as String? ?? '',
+      targetUid: data['targetUid'] as String? ?? '',
+      memberUids:
+          (data['memberUids'] as List?)?.whereType<String>().toList(
+            growable: false,
+          ) ??
+          const [],
+      status: FriendshipStatus.fromValue(data['status']),
+      createdAt: dateTimeFromFirestore(data['createdAt']) ?? DateTime.now(),
+      acceptedAt: dateTimeFromFirestore(data['acceptedAt']),
+    );
+  }
+
+  final String id;
+  final String requesterUid;
+  final String targetUid;
+  final List<String> memberUids;
+  final FriendshipStatus status;
+  final DateTime createdAt;
+  final DateTime? acceptedAt;
+
+  String otherUid(String currentUid) =>
+      memberUids.firstWhere((uid) => uid != currentUid, orElse: () => '');
+}
+
 enum CourtReportType {
   name('name'),
   duplicate('duplicate'),
@@ -579,6 +635,8 @@ enum AppNotificationType {
   meetupJoin('meetup_join'),
   meetupCancelled('meetup_cancelled'),
   comment('comment'),
+  friendRequest('friend_request'),
+  friendAccepted('friend_accepted'),
   courtReport('court_report');
 
   const AppNotificationType(this.value);
@@ -590,6 +648,8 @@ enum AppNotificationType {
     'meetup_join' => meetupJoin,
     'meetup_cancelled' => meetupCancelled,
     'comment' => comment,
+    'friend_request' => friendRequest,
+    'friend_accepted' => friendAccepted,
     'court_report' => courtReport,
     _ => live,
   };

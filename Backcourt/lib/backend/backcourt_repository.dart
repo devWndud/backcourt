@@ -39,6 +39,9 @@ class BackcourtRepository {
   DocumentReference<Map<String, dynamic>> get _currentUserRef =>
       _firestore.collection('users').doc(currentUid);
 
+  DocumentReference<Map<String, dynamic>> get _currentPublicProfileRef =>
+      _firestore.collection('public_profiles').doc(currentUid);
+
   void _requireSavedCourt(CourtSummary court) {
     if (court.id.startsWith('sample-')) {
       throw const BackcourtException('코트 탭에서 실제 코트를 먼저 선택해주세요.');
@@ -48,12 +51,23 @@ class BackcourtRepository {
   Future<void> ensureUserProfile(User user) async {
     final ref = _firestore.collection('users').doc(user.uid);
     final privateRef = _firestore.collection('private_users').doc(user.uid);
+    final publicRef = _firestore.collection('public_profiles').doc(user.uid);
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(ref);
+      late final String displayName;
+      String? photoUrl;
+      String? username;
+      String bio = '';
+      String? position;
+      List<String> playStyles = const [];
+      Object? homeCourt;
+      Object? homeCourts;
       if (!snapshot.exists) {
+        displayName = _defaultDisplayName(user);
+        photoUrl = user.photoURL;
         transaction.set(ref, {
-          'displayName': _defaultDisplayName(user),
-          'photoUrl': user.photoURL,
+          'displayName': displayName,
+          'photoUrl': photoUrl,
           'role': 'user',
           'checkinCount': 0,
           'postCount': 0,
@@ -68,11 +82,25 @@ class BackcourtRepository {
         final hasCustomPhoto =
             (data['photoStoragePath'] as String?)?.isNotEmpty == true;
         final savedName = (data['displayName'] as String?)?.trim() ?? '';
+        displayName = savedName.length >= 2 && savedName.length <= 24
+            ? savedName
+            : _defaultDisplayName(user);
+        photoUrl = hasCustomPhoto ? data['photoUrl'] as String? : user.photoURL;
+        username = data['username'] as String?;
+        bio = data['bio'] as String? ?? '';
+        position = data['position'] as String?;
+        playStyles =
+            (data['playStyles'] as List?)?.whereType<String>().toList(
+              growable: false,
+            ) ??
+            const [];
+        homeCourt = data['homeCourt'];
+        homeCourts = data['homeCourts'];
         transaction.set(ref, {
           if (data.containsKey('email')) 'email': FieldValue.delete(),
           if (savedName.length < 2 || savedName.length > 24)
-            'displayName': _defaultDisplayName(user),
-          if (!hasCustomPhoto) 'photoUrl': user.photoURL,
+            'displayName': displayName,
+          if (!hasCustomPhoto) 'photoUrl': photoUrl,
           if (!data.containsKey('onboardingComplete') &&
               data['birthYear'] != null)
             'onboardingComplete': true,
@@ -81,6 +109,18 @@ class BackcourtRepository {
       }
       transaction.set(privateRef, {
         'email': user.email,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      transaction.set(publicRef, {
+        'uid': user.uid,
+        'displayName': displayName,
+        'photoUrl': photoUrl,
+        'username': username,
+        'bio': bio,
+        'position': position,
+        'playStyles': playStyles,
+        'homeCourt': homeCourt,
+        'homeCourts': homeCourts,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     });
@@ -137,6 +177,11 @@ class BackcourtRepository {
       'guardianConsentAt': age < 19 ? FieldValue.serverTimestamp() : null,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+    await _currentPublicProfileRef.set({
+      'uid': currentUid,
+      'displayName': cleanName,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   Future<void> completePlayerSetup({
@@ -163,7 +208,7 @@ class BackcourtRepository {
       throw const BackcourtException('플레이 스타일을 1~3개 선택해주세요.');
     }
     final courtData = _courtProfileData(homeCourt);
-    await _currentUserRef.set({
+    final setupData = <String, Object?>{
       'homeCourt': courtData,
       'homeCourts': [courtData],
       'homeCourtIds': [homeCourt.id],
@@ -173,7 +218,18 @@ class BackcourtRepository {
       'onboardingComplete': true,
       'onboardingCompletedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
+    };
+    final batch = _firestore.batch();
+    batch.set(_currentUserRef, setupData, SetOptions(merge: true));
+    batch.set(_currentPublicProfileRef, {
+      'uid': currentUid,
+      'homeCourt': courtData,
+      'homeCourts': [courtData],
+      'position': position,
+      'playStyles': cleanStyles,
+      'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+    await batch.commit();
   }
 
   Map<String, Object?> _courtProfileData(CourtSummary court) => {
@@ -356,6 +412,14 @@ class BackcourtRepository {
         updates['photoStoragePath'] = uploadedPhoto.storagePath;
       }
       transaction.update(userRef, updates);
+      transaction.set(_currentPublicProfileRef, {
+        'uid': currentUid,
+        'displayName': cleanName,
+        'username': cleanUsername,
+        'bio': cleanBio,
+        if (uploadedPhoto != null) 'photoUrl': uploadedPhoto.url,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     });
 
     try {
@@ -367,6 +431,174 @@ class BackcourtRepository {
       } catch (_) {}
     }
   }
+
+  Stream<AppUserProfile?> watchPublicProfile(String uid) => _firestore
+      .collection('public_profiles')
+      .doc(uid)
+      .snapshots()
+      .map(
+        (snapshot) =>
+            snapshot.exists ? AppUserProfile.fromDocument(snapshot) : null,
+      );
+
+  Stream<List<PostRecord>> watchUserPosts(String uid) => _firestore
+      .collection('posts')
+      .where('uid', isEqualTo: uid)
+      .orderBy('createdAt', descending: true)
+      .limit(30)
+      .snapshots()
+      .map((snapshot) => snapshot.docs.map(PostRecord.fromDocument).toList());
+
+  Stream<Set<String>> watchFollowingUserIds() => _firestore
+      .collection('follows')
+      .where('followerUid', isEqualTo: currentUid)
+      .snapshots()
+      .map(
+        (snapshot) => snapshot.docs
+            .map((doc) => doc.data()['followingUid'] as String?)
+            .whereType<String>()
+            .toSet(),
+      );
+
+  Stream<bool> watchIsFollowing(String uid) => _firestore
+      .collection('follows')
+      .doc('${currentUid}_$uid')
+      .snapshots()
+      .map((snapshot) => snapshot.exists);
+
+  Stream<int> watchFollowerCount(String uid) => _firestore
+      .collection('follows')
+      .where('followingUid', isEqualTo: uid)
+      .snapshots()
+      .map((snapshot) => snapshot.size);
+
+  Stream<int> watchFollowingCount(String uid) => _firestore
+      .collection('follows')
+      .where('followerUid', isEqualTo: uid)
+      .snapshots()
+      .map((snapshot) => snapshot.size);
+
+  Future<void> toggleFollow(String uid) async {
+    if (uid == currentUid) return;
+    final ref = _firestore.collection('follows').doc('${currentUid}_$uid');
+    final snapshot = await ref.get();
+    if (snapshot.exists) {
+      await ref.delete();
+      return;
+    }
+    await ref.set({
+      'followerUid': currentUid,
+      'followingUid': uid,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  String friendshipId(String uid) {
+    final members = [currentUid, uid]..sort();
+    return members.join('_');
+  }
+
+  Stream<FriendshipRecord?> watchFriendshipWith(String uid) => _firestore
+      .collection('friendships')
+      .doc(friendshipId(uid))
+      .snapshots()
+      .map(
+        (snapshot) =>
+            snapshot.exists ? FriendshipRecord.fromDocument(snapshot) : null,
+      );
+
+  Stream<List<FriendshipRecord>> watchIncomingFriendRequests() => _firestore
+      .collection('friendships')
+      .where('memberUids', arrayContains: currentUid)
+      .snapshots()
+      .map((snapshot) {
+        final requests = snapshot.docs
+            .map(FriendshipRecord.fromDocument)
+            .where(
+              (item) =>
+                  item.status == FriendshipStatus.pending &&
+                  item.targetUid == currentUid,
+            )
+            .toList();
+        requests.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return requests;
+      });
+
+  Stream<List<FriendshipRecord>> watchFriends() => _firestore
+      .collection('friendships')
+      .where('memberUids', arrayContains: currentUid)
+      .snapshots()
+      .map((snapshot) {
+        final friends = snapshot.docs
+            .map(FriendshipRecord.fromDocument)
+            .where((item) => item.status == FriendshipStatus.accepted)
+            .toList();
+        friends.sort(
+          (a, b) => (b.acceptedAt ?? b.createdAt).compareTo(
+            a.acceptedAt ?? a.createdAt,
+          ),
+        );
+        return friends;
+      });
+
+  Stream<int> watchFriendCount() => watchFriends().map((items) => items.length);
+
+  Future<void> sendFriendRequest(String uid) async {
+    if (uid == currentUid) return;
+    final profile = await getCurrentProfile();
+    final members = [currentUid, uid]..sort();
+    final ref = _firestore.collection('friendships').doc(members.join('_'));
+    final eventRef = _firestore.collection('notification_events').doc();
+    final batch = _firestore.batch();
+    batch.set(ref, {
+      'requesterUid': currentUid,
+      'targetUid': uid,
+      'memberUids': members,
+      'status': FriendshipStatus.pending.value,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    batch.set(
+      eventRef,
+      _notificationEventData(
+        type: AppNotificationType.friendRequest,
+        title: '친구 요청',
+        body: '${profile.displayName}님이 친구 요청을 보냈어요.',
+        entityId: ref.id,
+      ),
+    );
+    await batch.commit();
+  }
+
+  Future<void> acceptFriendRequest(FriendshipRecord friendship) async {
+    if (friendship.targetUid != currentUid ||
+        friendship.status != FriendshipStatus.pending) {
+      throw const BackcourtException('받은 친구 요청만 수락할 수 있어요.');
+    }
+    final profile = await getCurrentProfile();
+    final ref = _firestore.collection('friendships').doc(friendship.id);
+    final eventRef = _firestore.collection('notification_events').doc();
+    final batch = _firestore.batch();
+    batch.update(ref, {
+      'status': FriendshipStatus.accepted.value,
+      'acceptedBy': currentUid,
+      'acceptedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    batch.set(
+      eventRef,
+      _notificationEventData(
+        type: AppNotificationType.friendAccepted,
+        title: '친구가 됐어요',
+        body: '${profile.displayName}님과 이제 친구예요.',
+        entityId: ref.id,
+      ),
+    );
+    await batch.commit();
+  }
+
+  Future<void> removeFriendship(String uid) =>
+      _firestore.collection('friendships').doc(friendshipId(uid)).delete();
 
   Stream<Map<String, CourtOverride>> watchCourtOverrides() {
     late final StreamController<Map<String, CourtOverride>> controller;

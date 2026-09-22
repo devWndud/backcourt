@@ -386,6 +386,7 @@ class _AppShellState extends State<AppShell> {
     final tab = switch (type) {
       'live' || 'meetup' || 'meetup_join' || 'meetup_cancelled' => 1,
       'comment' => 3,
+      'friend_request' || 'friend_accepted' => 4,
       _ => 0,
     };
     setState(() => _currentIndex = tab);

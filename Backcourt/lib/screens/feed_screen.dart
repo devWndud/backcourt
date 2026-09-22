@@ -10,6 +10,7 @@ import '../theme/app_theme.dart';
 import '../widgets/branded_sheet.dart';
 import '../widgets/common.dart';
 import '../widgets/media_gallery.dart';
+import 'user_profile_screen.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({
@@ -91,7 +92,7 @@ class _FeedScreenState extends State<FeedScreen> {
 
   Future<void> _selectFeed(int value) async {
     setState(() => _selectedFeed = value);
-    if (value != 1 || _feedLocation != null || _locatingNearby) return;
+    if (value != 2 || _feedLocation != null || _locatingNearby) return;
     setState(() => _locatingNearby = true);
     try {
       var permission = await Geolocator.checkPermission();
@@ -121,12 +122,18 @@ class _FeedScreenState extends State<FeedScreen> {
   List<PostRecord> _filterPosts(
     List<PostRecord> posts,
     Set<String> blockedUids,
+    Set<String> followingUids,
   ) {
     final visible = posts
         .where((post) => !blockedUids.contains(post.uid))
         .toList(growable: false);
     if (_selectedFeed == 0) return visible;
-    if (_selectedFeed == 2) {
+    if (_selectedFeed == 1) {
+      return visible
+          .where((post) => followingUids.contains(post.uid))
+          .toList(growable: false);
+    }
+    if (_selectedFeed == 3) {
       return visible
           .where((post) => post.courtId == widget.activeCourt.id)
           .toList(growable: false);
@@ -150,18 +157,35 @@ class _FeedScreenState extends State<FeedScreen> {
   }
 
   Stream<List<PostRecord>> _postStream(BackcourtRepository repository) {
-    if (_selectedFeed == 2) {
+    if (_selectedFeed == 3) {
       return repository.watchCourtPosts(widget.activeCourt.id);
     }
     final location = _feedLocation;
-    if (_selectedFeed == 1 && location != null) {
+    if (_selectedFeed == 2 && location != null) {
       return repository.watchNearbyPosts(
         latitude: location.latitude,
         longitude: location.longitude,
       );
     }
-    if (_selectedFeed == 1) return Stream.value(const <PostRecord>[]);
+    if (_selectedFeed == 2) return Stream.value(const <PostRecord>[]);
     return repository.watchPosts();
+  }
+
+  void _openUserProfile(PostRecord post) {
+    final repository = widget.repository;
+    if (repository == null || post.uid == repository.currentUid) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => UserProfileScreen(
+          repository: repository,
+          uid: post.uid,
+          fallbackName: post.authorName,
+          fallbackUsername: post.authorUsername,
+          fallbackPhotoUrl: post.authorPhotoUrl,
+        ),
+      ),
+    );
   }
 
   Future<void> _openComments(PostRecord post) async {
@@ -265,11 +289,11 @@ class _FeedScreenState extends State<FeedScreen> {
                 ),
                 SizedBox(height: 22),
                 _FeedTabs(selected: _selectedFeed, onChanged: _selectFeed),
-                if (_selectedFeed != 0) ...[
+                if (_selectedFeed == 2 || _selectedFeed == 3) ...[
                   SizedBox(height: 20),
                   _ActiveCourtBanner(
                     court: widget.activeCourt,
-                    nearby: _selectedFeed == 1,
+                    nearby: _selectedFeed == 2,
                     locating: _locatingNearby,
                   ),
                 ],
@@ -279,48 +303,56 @@ class _FeedScreenState extends State<FeedScreen> {
           ),
           if (repository == null)
             _PostSliver(
-              posts: _filterPosts(_demoPosts, const {}),
+              posts: _filterPosts(_demoPosts, const {}, const {}),
               currentUid: null,
               demoLikes: _demoLikes,
               onLike: _toggleLike,
               onComment: _openComments,
               onMore: _openPostActions,
+              onAuthor: _openUserProfile,
             )
           else
             StreamBuilder<Set<String>>(
               stream: repository.watchBlockedUserIds(),
-              builder: (context, blockedSnapshot) =>
-                  StreamBuilder<List<PostRecord>>(
-                    stream: _postStream(repository),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return const SliverToBoxAdapter(
-                          child: _FeedMessage(label: '피드 불러오기 실패'),
-                        );
-                      }
-                      if (!snapshot.hasData) {
-                        return const SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.all(40),
-                            child: Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
+              builder: (context, blockedSnapshot) => StreamBuilder<Set<String>>(
+                stream: repository.watchFollowingUserIds(),
+                builder: (context, followingSnapshot) =>
+                    StreamBuilder<List<PostRecord>>(
+                      stream: _postStream(repository),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return const SliverToBoxAdapter(
+                            child: _FeedMessage(label: '피드 불러오기 실패'),
+                          );
+                        }
+                        if (!snapshot.hasData) {
+                          return const SliverToBoxAdapter(
+                            child: Padding(
+                              padding: EdgeInsets.all(40),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
                             ),
+                          );
+                        }
+                        return _PostSliver(
+                          posts: _filterPosts(
+                            snapshot.data!,
+                            blockedSnapshot.data ?? const {},
+                            followingSnapshot.data ?? const {},
                           ),
+                          currentUid: repository.currentUid,
+                          demoLikes: const {},
+                          onLike: _toggleLike,
+                          onComment: _openComments,
+                          onMore: _openPostActions,
+                          onAuthor: _openUserProfile,
                         );
-                      }
-                      return _PostSliver(
-                        posts: _filterPosts(
-                          snapshot.data!,
-                          blockedSnapshot.data ?? const {},
-                        ),
-                        currentUid: repository.currentUid,
-                        demoLikes: const {},
-                        onLike: _toggleLike,
-                        onComment: _openComments,
-                        onMore: _openPostActions,
-                      );
-                    },
-                  ),
+                      },
+                    ),
+              ),
             ),
         ],
       ),
@@ -336,14 +368,14 @@ class _FeedTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const labels = ['최신', '내 주변', '코트'];
+    const labels = ['최신', '팔로잉', '내 주변', '코트'];
     return Row(
       children: List.generate(labels.length, (index) {
         final active = selected == index;
         return GestureDetector(
           onTap: () => onChanged(index),
           child: Padding(
-            padding: const EdgeInsets.only(right: 22),
+            padding: const EdgeInsets.only(right: 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -438,6 +470,7 @@ class _PostSliver extends StatelessWidget {
     required this.onLike,
     required this.onComment,
     required this.onMore,
+    required this.onAuthor,
   });
 
   final List<PostRecord> posts;
@@ -446,6 +479,7 @@ class _PostSliver extends StatelessWidget {
   final ValueChanged<PostRecord> onLike;
   final ValueChanged<PostRecord> onComment;
   final ValueChanged<PostRecord> onMore;
+  final ValueChanged<PostRecord> onAuthor;
 
   @override
   Widget build(BuildContext context) {
@@ -470,6 +504,7 @@ class _PostSliver extends StatelessWidget {
             onLike: () => onLike(post),
             onComment: () => onComment(post),
             onMore: () => onMore(post),
+            onAuthor: () => onAuthor(post),
           );
         },
       ),
@@ -504,6 +539,7 @@ class _PostCard extends StatelessWidget {
     required this.onLike,
     required this.onComment,
     required this.onMore,
+    required this.onAuthor,
   });
 
   final PostRecord post;
@@ -512,6 +548,7 @@ class _PostCard extends StatelessWidget {
   final VoidCallback onLike;
   final VoidCallback onComment;
   final VoidCallback onMore;
+  final VoidCallback onAuthor;
 
   String get _timeLabel {
     final difference = DateTime.now().difference(post.createdAt);
@@ -536,21 +573,34 @@ class _PostCard extends StatelessWidget {
             padding: const EdgeInsets.all(15),
             child: Row(
               children: [
-                UserAvatar(size: 36, photoUrl: post.authorPhotoUrl),
-                SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        post.authorName,
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      Text(
-                        '${post.courtName} · $_timeLabel',
-                        style: TextStyle(color: AppColors.muted, fontSize: 11),
-                      ),
-                    ],
+                  child: InkWell(
+                    onTap: onAuthor,
+                    borderRadius: BorderRadius.circular(18),
+                    child: Row(
+                      children: [
+                        UserAvatar(size: 36, photoUrl: post.authorPhotoUrl),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                post.authorName,
+                                style: TextStyle(fontWeight: FontWeight.w800),
+                              ),
+                              Text(
+                                '${post.courtName} · $_timeLabel',
+                                style: TextStyle(
+                                  color: AppColors.muted,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 IconButton(

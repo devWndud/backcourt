@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 
 from app.cleanup import cloudinary_signature, media_paths
-from app.push import PushDispatcher
+from app.push import NotificationEventDispatcher, PushDispatcher
 
 
 class AppTest(unittest.TestCase):
@@ -134,6 +134,57 @@ class AppTest(unittest.TestCase):
 
         update = reference.update.call_args.args[0]
         self.assertEqual(update["pushStatus"], "no_devices")
+
+    def test_friend_request_notification_targets_recipient(self) -> None:
+        dispatcher = NotificationEventDispatcher(MagicMock())
+        dispatcher._document = MagicMock(
+            side_effect=lambda collection, document_id: {
+                "friendships": {
+                    "requesterUid": "user-1",
+                    "targetUid": "user-2",
+                    "status": "pending",
+                },
+                "users": {"displayName": "민수"},
+            }[collection]
+        )
+
+        notification, targets = dispatcher._resolve_event(
+            {
+                "type": "friend_request",
+                "actorUid": "user-1",
+                "entityId": "friendship-1",
+            }
+        )
+
+        self.assertEqual(targets, ["user-2"])
+        self.assertEqual(notification["type"], "friend_request")
+        self.assertEqual(notification["title"], "친구 요청")
+
+    def test_friend_accept_notification_targets_requester(self) -> None:
+        dispatcher = NotificationEventDispatcher(MagicMock())
+        dispatcher._document = MagicMock(
+            side_effect=lambda collection, document_id: {
+                "friendships": {
+                    "requesterUid": "user-1",
+                    "targetUid": "user-2",
+                    "acceptedBy": "user-2",
+                    "status": "accepted",
+                },
+                "users": {"displayName": "준호"},
+            }[collection]
+        )
+
+        notification, targets = dispatcher._resolve_event(
+            {
+                "type": "friend_accepted",
+                "actorUid": "user-2",
+                "entityId": "friendship-1",
+            }
+        )
+
+        self.assertEqual(targets, ["user-1"])
+        self.assertEqual(notification["type"], "friend_accepted")
+        self.assertEqual(notification["title"], "친구가 됐어요")
 
     def test_authenticated_delete_endpoints_use_current_user(self) -> None:
         module = importlib.import_module("app.main")

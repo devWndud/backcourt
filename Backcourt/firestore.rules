@@ -538,7 +538,9 @@ service cloud.firestore {
     }
 
     match /favorite_courts/{favoriteId} {
-      allow read: if isOwner(resource.data.uid) || isOperator();
+      allow get: if signedIn()
+        && favoriteId.matches('^' + request.auth.uid + '_.*$');
+      allow list: if isOwner(resource.data.uid) || isOperator();
       allow create: if isOwner(request.resource.data.uid)
         && favoriteId == request.auth.uid + '_' + request.resource.data.courtId
         && request.resource.data.courtId is string

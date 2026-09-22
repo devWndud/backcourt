@@ -144,7 +144,6 @@ class UserAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         color: color ?? AppColors.surfaceHigh,
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.text, width: 1.5),
       ),
       alignment: Alignment.center,
       clipBehavior: Clip.antiAlias,

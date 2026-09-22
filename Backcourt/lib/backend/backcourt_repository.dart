@@ -1027,15 +1027,17 @@ class BackcourtRepository {
   }
 
   Stream<CheckinRecord?> watchTodayCheckin(String courtId) {
-    final id = '${courtId}_${currentUid}_${_dateKey(DateTime.now())}';
     return _firestore
         .collection('checkins')
-        .doc(id)
+        .where('uid', isEqualTo: currentUid)
+        .where('courtId', isEqualTo: courtId)
+        .where('dateKey', isEqualTo: _dateKey(DateTime.now()))
+        .limit(1)
         .snapshots()
-        .map(
-          (snapshot) =>
-              snapshot.exists ? CheckinRecord.fromDocument(snapshot) : null,
-        );
+        .map((snapshot) {
+          if (snapshot.docs.isEmpty) return null;
+          return CheckinRecord.fromDocument(snapshot.docs.first);
+        });
   }
 
   Future<CheckinRecord?> latestEligibleCheckin(String courtId) async {
@@ -1043,10 +1045,15 @@ class BackcourtRepository {
     CheckinRecord? latest;
     for (var daysAgo = 0; daysAgo <= 2; daysAgo++) {
       final date = now.subtract(Duration(days: daysAgo));
-      final id = '${courtId}_${currentUid}_${_dateKey(date)}';
-      final snapshot = await _firestore.collection('checkins').doc(id).get();
-      if (!snapshot.exists) continue;
-      final record = CheckinRecord.fromDocument(snapshot);
+      final snapshot = await _firestore
+          .collection('checkins')
+          .where('uid', isEqualTo: currentUid)
+          .where('courtId', isEqualTo: courtId)
+          .where('dateKey', isEqualTo: _dateKey(date))
+          .limit(1)
+          .get();
+      if (snapshot.docs.isEmpty) continue;
+      final record = CheckinRecord.fromDocument(snapshot.docs.first);
       if (now.difference(record.checkedInAt) <= reviewWindow &&
           (latest == null || record.checkedInAt.isAfter(latest.checkedInAt))) {
         latest = record;

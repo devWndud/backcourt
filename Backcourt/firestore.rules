@@ -126,7 +126,10 @@ service cloud.firestore {
         return signedIn() && request.auth.uid in resource.data.memberUids;
       }
 
-      allow read: if currentUserIsMember();
+      allow get: if signedIn()
+        && (friendshipId.matches('^' + request.auth.uid + '_.*$')
+          || friendshipId.matches('^.*_' + request.auth.uid + '$'));
+      allow list: if currentUserIsMember();
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly([
           'requesterUid', 'targetUid', 'memberUids', 'status',

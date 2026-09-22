@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate website icons from the full-size circular Backcourt mark."""
+"""Resize the user's original circular logo for the web without redrawing it."""
 
 from pathlib import Path
 
@@ -7,7 +7,8 @@ from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parent
-SOURCE = ROOT / "assets" / "icon.png"
+# Keep the user's uploaded artwork as the source, not a redesigned derivative.
+SOURCE = ROOT.parent / "Backcourt-img" / "brand-mark-circle-v2.png"
 BACKGROUND = (11, 11, 11, 255)
 
 

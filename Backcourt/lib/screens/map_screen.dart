@@ -679,14 +679,7 @@ class _MapScreenState extends State<MapScreen> {
       }
     }
     final clusters = markers.where((marker) => marker.courtId == null).toList();
-    final liveMarkers = markers
-        .where(
-          (marker) =>
-              marker.courtId != null &&
-              _liveCourtSummaries.containsKey(marker.courtId),
-        )
-        .toList();
-    if (clusters.isNotEmpty || liveMarkers.isNotEmpty) {
+    if (clusters.isNotEmpty) {
       _displayedClusterLabels = await controller.addSymbols(
         [
           for (final cluster in clusters)
@@ -698,18 +691,6 @@ class _MapScreenState extends State<MapScreen> {
               textHaloColor: '#FF633F',
               textHaloWidth: 1,
             ),
-          for (final marker in liveMarkers)
-            SymbolOptions(
-              geometry: marker.position,
-              textField:
-                  'LIVE ${_liveCourtSummaries[marker.courtId]!.playerCount}명',
-              textSize: 11,
-              textColor: '#0A0A0A',
-              textHaloColor: '#BAF86A',
-              textHaloWidth: 4,
-              textOffset: const Offset(0, -1.8),
-              textAnchor: 'bottom',
-            ),
         ],
         [
           for (final cluster in clusters)
@@ -718,8 +699,6 @@ class _MapScreenState extends State<MapScreen> {
               'count': cluster.count,
               'target_zoom': cluster.targetZoom,
             },
-          for (final marker in liveMarkers)
-            {'kind': 'live-court', 'feature_id': marker.courtId},
         ],
       );
     }
@@ -892,14 +871,6 @@ class _MapScreenState extends State<MapScreen> {
     if (symbol.data?['kind'] == 'cluster') {
       await _openCluster(symbol.options.geometry, symbol.data);
       return;
-    }
-    if (symbol.data?['kind'] != 'live-court') return;
-    final featureId = symbol.data?['feature_id'];
-    for (final circle in _displayedCourtCircles) {
-      if (circle.data?['feature_id'] == featureId) {
-        await _onCircleTapped(circle);
-        return;
-      }
     }
   }
 
@@ -1252,20 +1223,12 @@ class _MapScreenState extends State<MapScreen> {
           ),
         if (widget.useRealMap)
           for (final target in _courtHitTargets)
-            Positioned(
-              left: target.position.dx - 24,
-              top: target.position.dy - 24,
-              width: 48,
-              height: 48,
-              child: Semantics(
-                button: true,
-                label: '코트 선택',
-                child: GestureDetector(
-                  key: ValueKey('court-hit-${target.circle.id}'),
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => _onCircleTapped(target.circle),
-                ),
-              ),
+            _CourtMarkerOverlay(
+              key: ValueKey('court-hit-${target.circle.id}'),
+              target: target,
+              live: _liveCourtSummaries[target.courtId],
+              selected: target.circle == _selectedCourtCircle,
+              onTap: () => _onCircleTapped(target.circle),
             ),
         SafeArea(
           bottom: false,
@@ -1694,6 +1657,164 @@ class _CourtHitTarget {
 
   final Circle circle;
   final Offset position;
+
+  String? get courtId => circle.data?['feature_id'] as String?;
+}
+
+class _CourtMarkerOverlay extends StatelessWidget {
+  const _CourtMarkerOverlay({
+    super.key,
+    required this.target,
+    required this.live,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final _CourtHitTarget target;
+  final _LiveMarkerSummary? live;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final summary = live;
+    if (summary == null) {
+      return Positioned(
+        left: target.position.dx - 24,
+        top: target.position.dy - 24,
+        width: 48,
+        height: 48,
+        child: Semantics(
+          button: true,
+          label: '코트 선택',
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onTap,
+          ),
+        ),
+      );
+    }
+
+    return Positioned(
+      left: target.position.dx - 43,
+      top: target.position.dy - 50,
+      width: 86,
+      height: 74,
+      child: Semantics(
+        button: true,
+        label: 'LIVE ${summary.playerCount}명, 코트 선택',
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: _LiveCourtMapMarker(
+            playerCount: summary.playerCount,
+            selected: selected,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LiveCourtMapMarker extends StatelessWidget {
+  const _LiveCourtMapMarker({
+    required this.playerCount,
+    required this.selected,
+  });
+
+  final int playerCount;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    alignment: Alignment.topCenter,
+    children: [
+      Positioned(
+        top: 0,
+        child: Container(
+          height: 27,
+          padding: const EdgeInsets.symmetric(horizontal: 9),
+          decoration: BoxDecoration(
+            color: const Color(0xF2111111),
+            borderRadius: BorderRadius.circular(9),
+            border: Border.all(color: Colors.white.withValues(alpha: .2)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x38000000),
+                blurRadius: 9,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFBAF86A),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 5),
+              const Text(
+                'LIVE',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  height: 1,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: .65,
+                ),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                '$playerCount명',
+                style: const TextStyle(
+                  color: Color(0xFFD8D8D8),
+                  fontSize: 10,
+                  height: 1,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      const Positioned(
+        top: 27,
+        width: 2,
+        height: 13,
+        child: ColoredBox(color: Color(0xB3111111)),
+      ),
+      Positioned(
+        top: 38,
+        child: Container(
+          width: 23,
+          height: 23,
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: selected ? const Color(0xFFFF633F) : Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x45000000),
+                blurRadius: 8,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: const DecoratedBox(
+            decoration: BoxDecoration(
+              color: Color(0xFFBAF86A),
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
 }
 
 class _CourtSheetLayout {

@@ -50,6 +50,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "652579912887-3v5mnmiuiro1lrtv00i9i5si3p3b4f2u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "kr.backcourt.backcourt",
+            "certificate_hash": "4c6c0d3a5c085f9f5d6ea6faf5c573ac770b0b1a"
+          }
+        },
+        {
+          "client_id": "652579912887-9qgsl02ja6je2dmb0hmbchi2nckl2kni.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "kr.backcourt.backcourt",
+            "certificate_hash": "901303f9c8e9edfbc5f907b85e2a325da4aa29a4"
+          }
+        },
+        {
           "client_id": "652579912887-lsnb4adelispvo5mbbb1aio6454sljs9.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

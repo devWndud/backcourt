@@ -38,8 +38,13 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if signedIn();
+      allow read: if isOwner(uid) || isOperator();
       allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly([
+          'displayName', 'photoUrl', 'role', 'checkinCount', 'postCount',
+          'meetupCount', 'liveCourtCount', 'onboardingComplete',
+          'createdAt', 'updatedAt'
+        ])
         && request.resource.data.role == 'user'
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() >= 2
@@ -48,6 +53,13 @@ service cloud.firestore {
       allow update: if isOwner(uid)
         && request.resource.data.role == resource.data.role
         && !request.resource.data.keys().hasAny(['email'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'email', 'displayName', 'username', 'bio', 'photoUrl',
+          'photoStoragePath', 'birthYear', 'guardianConsentAt', 'homeCourt',
+          'homeCourts', 'homeCourtIds', 'lastActiveCourt', 'position',
+          'playStyles', 'onboardingComplete', 'onboardingCompletedAt',
+          'profileUpdatedAt', 'updatedAt'
+        ])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() >= 2
         && request.resource.data.displayName.size() <= 24
@@ -91,18 +103,18 @@ service cloud.firestore {
     match /courts/{courtId} {
       allow read: if signedIn();
       allow create: if isOperator();
-      allow update: if isOperator()
-        || (signedIn()
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-            'updatedAt', 'lastCheckinAt', 'checkinCount', 'reviewCount',
-            'ratingSum'
-          ]));
+      allow update: if isOperator();
       allow delete: if isOperator();
     }
 
     match /checkins/{checkinId} {
-      allow read: if signedIn();
+      allow read: if isOwner(resource.data.uid) || isOperator();
       allow create: if isOwner(request.resource.data.uid)
+        && request.resource.data.keys().hasOnly([
+          'uid', 'displayName', 'courtId', 'courtName', 'actualLocation',
+          'courtLocation', 'distanceMeters', 'dateKey', 'monthKey',
+          'checkedInAt'
+        ])
         && checkinId == request.resource.data.courtId + '_'
           + request.auth.uid + '_' + request.resource.data.dateKey
         && request.resource.data.distanceMeters is number
@@ -114,6 +126,81 @@ service cloud.firestore {
         && request.resource.data.monthKey is string;
       allow update: if false;
       allow delete: if isOwner(resource.data.uid);
+    }
+
+    match /monthly_checkin_stats/{statId} {
+      function linkedCheckin() {
+        return getAfter(
+          /databases/$(database)/documents/checkins/$(request.resource.data.lastCheckinId)
+        ).data;
+      }
+
+      function validStat() {
+        return isOwner(request.resource.data.uid)
+          && statId == request.resource.data.scopeKey + '_' + request.auth.uid
+          && request.resource.data.scopeKey == request.resource.data.monthKey
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() >= 2
+          && request.resource.data.displayName.size() <= 24
+          && request.resource.data.count is int
+          && request.resource.data.count >= 1
+          && request.resource.data.lastCheckinId is string
+          && linkedCheckin().uid == request.auth.uid
+          && linkedCheckin().monthKey == request.resource.data.monthKey
+          && linkedCheckin().checkedInAt == request.time
+          && request.resource.data.updatedAt == request.time;
+      }
+
+      allow read: if signedIn();
+      allow create: if validStat() && request.resource.data.count == 1;
+      allow update: if validStat()
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.scopeKey == resource.data.scopeKey
+        && request.resource.data.monthKey == resource.data.monthKey
+        && request.resource.data.count == resource.data.count + 1
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'displayName', 'count', 'lastCheckinId', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /monthly_court_checkin_stats/{statId} {
+      function linkedCheckin() {
+        return getAfter(
+          /databases/$(database)/documents/checkins/$(request.resource.data.lastCheckinId)
+        ).data;
+      }
+
+      function validStat() {
+        return isOwner(request.resource.data.uid)
+          && statId == request.resource.data.scopeKey + '_' + request.auth.uid
+          && request.resource.data.scopeKey
+            == request.resource.data.monthKey + '_' + request.resource.data.courtId
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() >= 2
+          && request.resource.data.displayName.size() <= 24
+          && request.resource.data.count is int
+          && request.resource.data.count >= 1
+          && request.resource.data.lastCheckinId is string
+          && linkedCheckin().uid == request.auth.uid
+          && linkedCheckin().monthKey == request.resource.data.monthKey
+          && linkedCheckin().courtId == request.resource.data.courtId
+          && linkedCheckin().checkedInAt == request.time
+          && request.resource.data.updatedAt == request.time;
+      }
+
+      allow read: if signedIn();
+      allow create: if validStat() && request.resource.data.count == 1;
+      allow update: if validStat()
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.scopeKey == resource.data.scopeKey
+        && request.resource.data.monthKey == resource.data.monthKey
+        && request.resource.data.courtId == resource.data.courtId
+        && request.resource.data.count == resource.data.count + 1
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'displayName', 'courtName', 'count', 'lastCheckinId', 'updatedAt'
+        ]);
+      allow delete: if false;
     }
 
     match /active_play_sessions/{uid} {
@@ -317,10 +404,26 @@ service cloud.firestore {
     match /meetups/{meetupId} {
       allow read: if signedIn();
       allow create: if isOwner(request.resource.data.createdBy)
+        && request.resource.data.keys().hasOnly([
+          'courtId', 'courtName', 'location', 'startsAt', 'capacity',
+          'gameType', 'level', 'participantUids', 'createdBy', 'status',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.courtId is string
+        && request.resource.data.courtName is string
+        && request.resource.data.courtName.size() <= 80
+        && request.resource.data.location is latlng
         && request.resource.data.capacity >= 2
         && request.resource.data.capacity <= 30
+        && request.resource.data.gameType in [
+          '3 vs 3 · 반코트', '5 vs 5 · 풀코트', '자유'
+        ]
+        && request.resource.data.level in ['초급', '중급', '상급', '누구나']
         && request.resource.data.participantUids.size() == 1
         && request.auth.uid in request.resource.data.participantUids
+        && request.resource.data.status == 'open'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
         && request.resource.data.startsAt > request.time;
       allow update: if (signedIn()
           && request.resource.data.participantUids.size()
@@ -352,7 +455,7 @@ service cloud.firestore {
     }
 
     match /favorite_courts/{favoriteId} {
-      allow read: if signedIn();
+      allow read: if isOwner(resource.data.uid) || isOperator();
       allow create: if isOwner(request.resource.data.uid)
         && favoriteId == request.auth.uid + '_' + request.resource.data.courtId
         && request.resource.data.courtId is string
@@ -503,12 +606,14 @@ service cloud.firestore {
         return request.resource.data.keys().hasAll([
             'uid', 'displayName', 'username', 'photoUrl', 'courtId',
             'courtName', 'location', 'activity',
+            'geoCell',
             'playerCount', 'neededPlayers', 'distanceMeters', 'arrivalUids',
             'startedAt', 'updatedAt', 'expiresAt'
           ])
           && request.resource.data.keys().hasOnly([
             'uid', 'displayName', 'username', 'photoUrl', 'courtId',
             'courtName', 'location', 'activity',
+            'geoCell',
             'playerCount', 'neededPlayers', 'distanceMeters', 'arrivalUids',
             'startedAt', 'updatedAt', 'expiresAt'
           ])
@@ -523,6 +628,7 @@ service cloud.firestore {
           && request.resource.data.courtId is string
           && request.resource.data.courtName is string
           && request.resource.data.location is latlng
+          && request.resource.data.geoCell is string
           && request.resource.data.activity in [
             'shooting', 'playing', 'looking', 'full', 'wet'
           ]
@@ -577,9 +683,26 @@ service cloud.firestore {
     match /posts/{postId} {
       allow read: if signedIn();
       allow create: if isOwner(request.resource.data.uid)
+        && request.resource.data.keys().hasOnly([
+          'uid', 'authorName', 'authorUsername', 'authorPhotoUrl', 'courtId',
+          'courtName', 'location', 'geoCell', 'text', 'media', 'likeUids',
+          'commentCount', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.authorName is string
+        && request.resource.data.authorName.size() >= 2
+        && request.resource.data.authorName.size() <= 24
+        && request.resource.data.courtId is string
+        && request.resource.data.courtName is string
+        && request.resource.data.location is latlng
+        && request.resource.data.geoCell is string
         && request.resource.data.text is string
         && request.resource.data.text.size() <= 1500
-        && request.resource.data.likeUids.size() == 0;
+        && request.resource.data.media is list
+        && request.resource.data.media.size() <= 7
+        && request.resource.data.likeUids.size() == 0
+        && request.resource.data.commentCount == 0
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
       allow update: if signedIn()
         && ((request.resource.data.likeUids.size() <= 5000
           && ((request.resource.data.likeUids.size()
@@ -657,14 +780,21 @@ service cloud.firestore {
     match /court_name_requests/{requestId} {
       allow create: if isOwner(request.resource.data.uid)
         && request.resource.data.status == 'pending'
-        && request.resource.data.reportType in ['name', 'duplicate', 'closed']
+        && request.resource.data.reportType in [
+          'name', 'duplicate', 'closed', 'new_court'
+        ]
         && request.resource.data.currentName is string
         && request.resource.data.currentName.size() >= 2
         && request.resource.data.reason is string
         && request.resource.data.reason.size() >= 2
         && request.resource.data.reason.size() <= 200
         && request.resource.data.createdAt == request.time
+        && request.resource.data.location is latlng
         && (request.resource.data.reportType != 'name'
+          || (request.resource.data.requestedName is string
+            && request.resource.data.requestedName.size() >= 2
+            && request.resource.data.requestedName.size() <= 50))
+        && (request.resource.data.reportType != 'new_court'
           || (request.resource.data.requestedName is string
             && request.resource.data.requestedName.size() >= 2
             && request.resource.data.requestedName.size() <= 50));

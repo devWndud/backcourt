@@ -1,8 +1,13 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'cloudinary_media_store.dart';
+import 'backcourt_api_client.dart';
+import 'geo_grid.dart';
 import 'models.dart';
 
 class BackcourtRepository {
@@ -10,15 +15,18 @@ class BackcourtRepository {
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     CloudinaryMediaStore? mediaStore,
+    BackcourtApiClient? apiClient,
   }) : _auth = auth ?? FirebaseAuth.instance,
        _firestore = firestore ?? FirebaseFirestore.instance,
-       _mediaStore = mediaStore ?? CloudinaryMediaStore();
+       _mediaStore = mediaStore ?? CloudinaryMediaStore(),
+       _apiClient = apiClient ?? BackcourtApiClient(auth: auth);
 
   static const reviewWindow = Duration(hours: 48);
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
   final CloudinaryMediaStore _mediaStore;
+  final BackcourtApiClient _apiClient;
 
   User get currentUser {
     final user = _auth.currentUser;
@@ -158,6 +166,7 @@ class BackcourtRepository {
     await _currentUserRef.set({
       'homeCourt': courtData,
       'homeCourts': [courtData],
+      'homeCourtIds': [homeCourt.id],
       'lastActiveCourt': courtData,
       'position': position,
       'playStyles': cleanStyles,
@@ -217,6 +226,7 @@ class BackcourtRepository {
       transaction.set(_currentUserRef, {
         'homeCourt': _courtProfileData(courts.first),
         'homeCourts': courts.map(_courtProfileData).toList(growable: false),
+        'homeCourtIds': courts.map((item) => item.id).toList(growable: false),
         'lastActiveCourt': _courtProfileData(court),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -243,6 +253,7 @@ class BackcourtRepository {
       transaction.set(_currentUserRef, {
         'homeCourt': _courtProfileData(courts.first),
         'homeCourts': courts.map(_courtProfileData).toList(growable: false),
+        'homeCourtIds': courts.map((item) => item.id).toList(growable: false),
         'lastActiveCourt': _courtProfileData(nextCourt),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -357,18 +368,53 @@ class BackcourtRepository {
     }
   }
 
-  Stream<Map<String, String>> watchOperatorCourtNames() => _firestore
-      .collection('courts')
-      .where('nameSource', isEqualTo: 'operator')
-      .snapshots()
-      .map((snapshot) {
-        final names = <String, String>{};
-        for (final document in snapshot.docs) {
-          final name = (document.data()['name'] as String?)?.trim();
-          if (name != null && name.isNotEmpty) names[document.id] = name;
-        }
-        return names;
-      });
+  Stream<Map<String, CourtOverride>> watchCourtOverrides() {
+    late final StreamController<Map<String, CourtOverride>> controller;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? names;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? statuses;
+    var nameValues = <String, CourtOverride>{};
+    var statusValues = <String, CourtOverride>{};
+    void emit() => controller.add({...nameValues, ...statusValues});
+    controller = StreamController<Map<String, CourtOverride>>(
+      onListen: () {
+        names = _firestore
+            .collection('courts')
+            .where('nameSource', isEqualTo: 'operator')
+            .snapshots()
+            .listen((snapshot) {
+              nameValues = {
+                for (final document in snapshot.docs)
+                  document.id: CourtOverride.fromDocument(document),
+              };
+              emit();
+            }, onError: controller.addError);
+        statuses = _firestore
+            .collection('courts')
+            .where('status', whereIn: const ['closed', 'duplicate'])
+            .snapshots()
+            .listen((snapshot) {
+              statusValues = {
+                for (final document in snapshot.docs)
+                  document.id: CourtOverride.fromDocument(document),
+              };
+              emit();
+            }, onError: controller.addError);
+      },
+      onCancel: () async {
+        await names?.cancel();
+        await statuses?.cancel();
+      },
+    );
+    return controller.stream;
+  }
+
+  Stream<Map<String, String>> watchOperatorCourtNames() =>
+      watchCourtOverrides().map(
+        (values) => {
+          for (final entry in values.entries)
+            if (entry.value.name.isNotEmpty) entry.key: entry.value.name,
+        },
+      );
 
   Stream<List<FavoriteCourtRecord>> watchFavoriteCourts() => _firestore
       .collection('favorite_courts')
@@ -403,6 +449,7 @@ class BackcourtRepository {
       'courtId': court.id,
       'courtName': court.name,
       'location': GeoPoint(court.latitude, court.longitude),
+      'geoCell': GeoGrid.cellFor(court.latitude, court.longitude),
       'address': court.address,
       'createdAt': FieldValue.serverTimestamp(),
     });
@@ -507,6 +554,37 @@ class BackcourtRepository {
     });
   }
 
+  Future<void> submitNewCourtReport({
+    required String name,
+    required String reason,
+    required double latitude,
+    required double longitude,
+  }) async {
+    final cleanName = name.trim();
+    final cleanReason = reason.trim();
+    if (cleanName.length < 2 || cleanName.length > 50) {
+      throw const BackcourtException('코트명은 2~50자로 입력해주세요.');
+    }
+    if (cleanReason.length < 2 || cleanReason.length > 200) {
+      throw const BackcourtException('코트를 확인할 수 있는 설명을 적어주세요.');
+    }
+    final profile = await getCurrentProfile();
+    final reference = _firestore.collection('court_name_requests').doc();
+    await reference.set({
+      'courtId': 'reported_${reference.id}',
+      'currentName': cleanName,
+      'requestedName': cleanName,
+      'reason': cleanReason,
+      'reportType': CourtReportType.newCourt.value,
+      'uid': currentUid,
+      'requesterName': profile.displayName,
+      'status': 'pending',
+      'location': GeoPoint(latitude, longitude),
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   Stream<List<CourtReport>> watchCourtReports() => _firestore
       .collection('court_name_requests')
       .orderBy('createdAt', descending: true)
@@ -596,8 +674,27 @@ class BackcourtRepository {
                 ? requestData['reason'] as String? ?? ''
                 : resolutionNote.trim(),
           });
+        case CourtReportType.newCourt:
+          final location = requestData['location'];
+          final requestedName =
+              (requestData['requestedName'] as String?)?.trim() ?? '';
+          if (location is! GeoPoint || requestedName.length < 2) {
+            throw const BackcourtException('새 코트 정보가 완전하지 않아요.');
+          }
+          transaction.set(courtRef, {
+            'name': requestedName,
+            'location': location,
+            'source': 'user_report',
+            'nameSource': 'operator',
+            'status': 'active',
+            'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+            'createdByReportId': report.id,
+          });
       }
-      transaction.update(courtRef, courtUpdate);
+      if (reportType != CourtReportType.newCourt) {
+        transaction.update(courtRef, courtUpdate);
+      }
     });
   }
 
@@ -632,10 +729,18 @@ class BackcourtRepository {
     final uid = currentUid;
     final id = '${court.id}_${uid}_${_dateKey(now)}';
     final ref = _firestore.collection('checkins').doc(id);
+    final monthScopeKey = _monthKey(now);
+    final monthlyStatRef = _firestore
+        .collection('monthly_checkin_stats')
+        .doc('${monthScopeKey}_$uid');
+    final courtScopeKey = '${monthScopeKey}_${court.id}';
+    final courtStatRef = _firestore
+        .collection('monthly_court_checkin_stats')
+        .doc('${courtScopeKey}_$uid');
     final profile = await getCurrentProfile();
     await _firestore.runTransaction((transaction) async {
       if ((await transaction.get(ref)).exists) {
-        throw const BackcourtException('이 코트는 오늘 이미 출석했어요.');
+        throw const BackcourtException('이 코트는 오늘 이미 체크인했어요.');
       }
       transaction.set(ref, {
         'uid': uid,
@@ -649,15 +754,34 @@ class BackcourtRepository {
         'monthKey': _monthKey(now),
         'checkedInAt': FieldValue.serverTimestamp(),
       });
-      transaction.update(_currentUserRef, {
-        'checkinCount': FieldValue.increment(1),
-        'lastCheckinAt': FieldValue.serverTimestamp(),
+      final monthlyStat = await transaction.get(monthlyStatRef);
+      final courtStat = await transaction.get(courtStatRef);
+      Map<String, Object?> statData(
+        DocumentSnapshot<Map<String, dynamic>> snapshot,
+        String scopeKey, {
+        String? courtId,
+        String? courtName,
+      }) => {
+        'uid': uid,
+        'displayName': profile.displayName,
+        'scopeKey': scopeKey,
+        'monthKey': monthScopeKey,
+        'courtId': ?courtId,
+        'courtName': ?courtName,
+        'count': ((snapshot.data()?['count'] as num?)?.toInt() ?? 0) + 1,
+        'lastCheckinId': id,
         'updatedAt': FieldValue.serverTimestamp(),
-      });
-      transaction.update(_firestore.collection('courts').doc(court.id), {
-        'lastCheckinAt': FieldValue.serverTimestamp(),
-        'checkinCount': FieldValue.increment(1),
-      });
+      };
+      transaction.set(monthlyStatRef, statData(monthlyStat, monthScopeKey));
+      transaction.set(
+        courtStatRef,
+        statData(
+          courtStat,
+          courtScopeKey,
+          courtId: court.id,
+          courtName: court.name,
+        ),
+      );
     });
     return CheckinRecord(
       id: id,
@@ -702,50 +826,81 @@ class BackcourtRepository {
   Stream<List<RankingEntry>> watchMonthlyRanking() {
     final month = _monthKey(DateTime.now());
     return _firestore
-        .collection('checkins')
-        .where('monthKey', isEqualTo: month)
-        .limit(500)
+        .collection('monthly_checkin_stats')
+        .where('scopeKey', isEqualTo: month)
+        .orderBy('count', descending: true)
+        .limit(20)
         .snapshots()
         .map((snapshot) {
-          final counts = <String, RankingEntry>{};
-          for (final doc in snapshot.docs) {
-            final data = doc.data();
-            final uid = data['uid'] as String;
-            final previous = counts[uid];
-            counts[uid] = RankingEntry(
-              uid: uid,
-              displayName: data['displayName'] as String? ?? '플레이어',
-              count: (previous?.count ?? 0) + 1,
-            );
-          }
-          final result = counts.values.toList()
-            ..sort((a, b) => b.count.compareTo(a.count));
-          return result.take(20).toList(growable: false);
+          return snapshot.docs
+              .map((doc) {
+                final data = doc.data();
+                return RankingEntry(
+                  uid: data['uid'] as String? ?? '',
+                  displayName: data['displayName'] as String? ?? '플레이어',
+                  count: (data['count'] as num?)?.toInt() ?? 0,
+                );
+              })
+              .toList(growable: false);
         });
   }
 
   Stream<int> watchMyMonthlyCheckinCount() {
     final month = _monthKey(DateTime.now());
     return _firestore
-        .collection('checkins')
-        .where('uid', isEqualTo: currentUid)
-        .where('monthKey', isEqualTo: month)
+        .collection('monthly_checkin_stats')
+        .doc('${month}_$currentUid')
         .snapshots()
-        .map((snapshot) => snapshot.size);
+        .map((snapshot) => (snapshot.data()?['count'] as num?)?.toInt() ?? 0);
   }
 
   Stream<int> watchMyMonthlyCourtCheckinCount(String courtId) {
     final month = _monthKey(DateTime.now());
     return _firestore
-        .collection('checkins')
-        .where('uid', isEqualTo: currentUid)
-        .where('monthKey', isEqualTo: month)
+        .collection('monthly_court_checkin_stats')
+        .doc('${month}_${courtId}_$currentUid')
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .where((document) => document.data()['courtId'] == courtId)
-              .length,
-        );
+        .map((snapshot) => (snapshot.data()?['count'] as num?)?.toInt() ?? 0);
+  }
+
+  Stream<UserActivityCounts> watchMyActivityCounts() {
+    late final StreamController<UserActivityCounts> controller;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? checkins;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? meetups;
+    var checkinCount = 0;
+    var meetupCount = 0;
+    void emit() => controller.add(
+      UserActivityCounts(checkins: checkinCount, meetups: meetupCount),
+    );
+    controller = StreamController<UserActivityCounts>(
+      onListen: () {
+        checkins = _firestore
+            .collection('monthly_checkin_stats')
+            .where('uid', isEqualTo: currentUid)
+            .snapshots()
+            .listen((snapshot) {
+              checkinCount = snapshot.docs.fold(
+                0,
+                (total, document) =>
+                    total + ((document.data()['count'] as num?)?.toInt() ?? 0),
+              );
+              emit();
+            }, onError: controller.addError);
+        meetups = _firestore
+            .collection('meetups')
+            .where('createdBy', isEqualTo: currentUid)
+            .snapshots()
+            .listen((snapshot) {
+              meetupCount = snapshot.size;
+              emit();
+            }, onError: controller.addError);
+      },
+      onCancel: () async {
+        await checkins?.cancel();
+        await meetups?.cancel();
+      },
+    );
+    return controller.stream;
   }
 
   Stream<ActivePlaySession?> watchActivePlaySession() => _firestore
@@ -800,7 +955,7 @@ class BackcourtRepository {
         .doc(checkinId)
         .get();
     if (!checkin.exists) {
-      throw const BackcourtException('이 코트에서 GPS 출석 후 시작할 수 있어요.');
+      throw const BackcourtException('이 코트에서 GPS 체크인 후 시작할 수 있어요.');
     }
 
     final profile = await getCurrentProfile();
@@ -934,7 +1089,7 @@ class BackcourtRepository {
     _requireSavedCourt(court);
     final checkin = await latestEligibleCheckin(court.id);
     if (checkin == null) {
-      throw const BackcourtException('이 코트에서 최근 48시간 내 GPS 출석이 필요해요.');
+      throw const BackcourtException('이 코트에서 최근 48시간 내 GPS 체크인이 필요해요.');
     }
     final profile = await getCurrentProfile();
     final ref = _firestore.collection('reviews').doc();
@@ -968,11 +1123,6 @@ class BackcourtRepository {
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
       'editableUntil': Timestamp.fromDate(editableUntil),
-    });
-    batch.update(_firestore.collection('courts').doc(court.id), {
-      'reviewCount': FieldValue.increment(1),
-      'ratingSum': FieldValue.increment(rating),
-      'updatedAt': FieldValue.serverTimestamp(),
     });
     await batch.commit();
   }
@@ -1059,21 +1209,11 @@ class BackcourtRepository {
     if (post.uid != currentUid) {
       throw const BackcourtException('내 게시물만 삭제할 수 있어요.');
     }
-    final comments = await _firestore
-        .collection('comments')
-        .where('postId', isEqualTo: post.id)
-        .limit(400)
-        .get();
-    final batch = _firestore.batch();
-    for (final comment in comments.docs) {
-      batch.delete(comment.reference);
+    try {
+      await _apiClient.deletePost(post.id);
+    } on BackcourtApiException catch (error) {
+      throw BackcourtException(error.message);
     }
-    batch.delete(_firestore.collection('posts').doc(post.id));
-    batch.update(_currentUserRef, {
-      'postCount': FieldValue.increment(-1),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-    await batch.commit();
   }
 
   Future<void> reportPost(PostRecord post, String reason) async {
@@ -1146,7 +1286,7 @@ class BackcourtRepository {
       throw const BackcourtException('내 리뷰에만 첨부를 추가할 수 있어요.');
     }
     if (DateTime.now().isAfter(review.editableUntil)) {
-      throw const BackcourtException('출석 후 48시간이 지나 첨부를 추가할 수 없어요.');
+      throw const BackcourtException('체크인 후 48시간이 지나 첨부를 추가할 수 없어요.');
     }
     final media = await _uploadFiles(
       files: [
@@ -1198,6 +1338,39 @@ class BackcourtRepository {
             .toList(),
       );
 
+  Stream<List<MeetupRecord>> watchTodayMeetups() {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, now.day);
+    final end = start.add(const Duration(days: 1));
+    return _firestore
+        .collection('meetups')
+        .where('startsAt', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+        .where('startsAt', isLessThan: Timestamp.fromDate(end))
+        .orderBy('startsAt')
+        .limit(50)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .where((doc) => doc.data()['status'] != 'cancelled')
+              .map(MeetupRecord.fromDocument)
+              .toList(growable: false),
+        );
+  }
+
+  Stream<List<MeetupRecord>> watchCourtMeetups(String courtId) => _firestore
+      .collection('meetups')
+      .where('courtId', isEqualTo: courtId)
+      .where('startsAt', isGreaterThanOrEqualTo: Timestamp.now())
+      .orderBy('startsAt')
+      .limit(50)
+      .snapshots()
+      .map(
+        (snapshot) => snapshot.docs
+            .where((doc) => doc.data()['status'] != 'cancelled')
+            .map(MeetupRecord.fromDocument)
+            .toList(growable: false),
+      );
+
   Future<void> createMeetup({
     required CourtSummary court,
     required DateTime startsAt,
@@ -1226,10 +1399,6 @@ class BackcourtRepository {
       'createdBy': currentUid,
       'status': 'open',
       'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-    batch.update(_currentUserRef, {
-      'meetupCount': FieldValue.increment(1),
       'updatedAt': FieldValue.serverTimestamp(),
     });
     batch.set(
@@ -1331,6 +1500,25 @@ class BackcourtRepository {
         return statuses;
       });
 
+  Stream<List<LiveCourtStatus>> watchLiveCourtStatusesNear(CourtSummary court) {
+    final cells = GeoGrid.nearbyCells(court.latitude, court.longitude);
+    return _firestore
+        .collection('live_court_statuses')
+        .where('geoCell', whereIn: cells)
+        .where('expiresAt', isGreaterThan: Timestamp.now())
+        .orderBy('expiresAt')
+        .limit(100)
+        .snapshots()
+        .map((snapshot) {
+          final statuses = snapshot.docs
+              .map(LiveCourtStatus.fromDocument)
+              .where((status) => status.isActive)
+              .toList();
+          statuses.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+          return statuses;
+        });
+  }
+
   Future<void> publishLiveCourtStatus({
     required CourtSummary court,
     required LiveCourtActivity activity,
@@ -1378,6 +1566,7 @@ class BackcourtRepository {
         'courtId': court.id,
         'courtName': court.name,
         'location': GeoPoint(court.latitude, court.longitude),
+        'geoCell': GeoGrid.cellFor(court.latitude, court.longitude),
         'activity': activity.value,
         'playerCount': playerCount,
         'neededPlayers': activity == LiveCourtActivity.looking
@@ -1392,10 +1581,6 @@ class BackcourtRepository {
         'expiresAt': Timestamp.fromDate(now.add(const Duration(minutes: 90))),
       });
       if (isFreshSignal || !sameCourt) {
-        transaction.update(_currentUserRef, {
-          'liveCourtCount': FieldValue.increment(1),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
         transaction.set(
           eventRef,
           _notificationEventData(
@@ -1451,6 +1636,60 @@ class BackcourtRepository {
       .snapshots()
       .map((snapshot) => snapshot.docs.map(PostRecord.fromDocument).toList());
 
+  Stream<List<PostRecord>> watchCourtPosts(String courtId) => _firestore
+      .collection('posts')
+      .where('courtId', isEqualTo: courtId)
+      .orderBy('createdAt', descending: true)
+      .limit(50)
+      .snapshots()
+      .map((snapshot) => snapshot.docs.map(PostRecord.fromDocument).toList());
+
+  Stream<List<PostRecord>> watchNearbyPosts({
+    required double latitude,
+    required double longitude,
+  }) {
+    final cells = GeoGrid.nearbyCells(latitude, longitude);
+    return _firestore
+        .collection('posts')
+        .where('geoCell', whereIn: cells)
+        .orderBy('createdAt', descending: true)
+        .limit(100)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map(PostRecord.fromDocument)
+              .where((post) {
+                final lat = post.latitude;
+                final lon = post.longitude;
+                return lat != null &&
+                    lon != null &&
+                    _distanceMeters(latitude, longitude, lat, lon) <= 5000;
+              })
+              .toList(growable: false),
+        );
+  }
+
+  static double _distanceMeters(
+    double latitude,
+    double longitude,
+    double targetLatitude,
+    double targetLongitude,
+  ) {
+    const earthRadius = 6371000.0;
+    const degreesToRadians = 0.017453292519943295;
+    final lat1 = latitude * degreesToRadians;
+    final lat2 = targetLatitude * degreesToRadians;
+    final deltaLat = (targetLatitude - latitude) * degreesToRadians;
+    final deltaLon = (targetLongitude - longitude) * degreesToRadians;
+    final a =
+        math.sin(deltaLat / 2) * math.sin(deltaLat / 2) +
+        math.cos(lat1) *
+            math.cos(lat2) *
+            math.sin(deltaLon / 2) *
+            math.sin(deltaLon / 2);
+    return earthRadius * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+  }
+
   Stream<List<PostRecord>> watchMyPosts() => _firestore
       .collection('posts')
       .where('uid', isEqualTo: currentUid)
@@ -1487,15 +1726,12 @@ class BackcourtRepository {
       'courtId': court.id,
       'courtName': court.name,
       'location': GeoPoint(court.latitude, court.longitude),
+      'geoCell': GeoGrid.cellFor(court.latitude, court.longitude),
       'text': text.trim(),
       'media': media.map((item) => item.toMap()).toList(),
       'likeUids': <String>[],
       'commentCount': 0,
       'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-    batch.update(_currentUserRef, {
-      'postCount': FieldValue.increment(1),
       'updatedAt': FieldValue.serverTimestamp(),
     });
     await batch.commit();
@@ -1524,65 +1760,11 @@ class BackcourtRepository {
       throw const BackcourtException('안전한 탈퇴를 위해 로그아웃 후 다시 로그인해주세요.');
     }
 
-    final uid = currentUid;
-    final profile = await getCurrentProfile();
-    final deleteQueries = <Query<Map<String, dynamic>>>[
-      _firestore.collection('posts').where('uid', isEqualTo: uid),
-      _firestore.collection('comments').where('uid', isEqualTo: uid),
-      _firestore.collection('reviews').where('uid', isEqualTo: uid),
-      _firestore.collection('checkins').where('uid', isEqualTo: uid),
-      _firestore.collection('play_sessions').where('uid', isEqualTo: uid),
-      _firestore.collection('monthly_play_stats').where('uid', isEqualTo: uid),
-      _firestore.collection('weekly_play_stats').where('uid', isEqualTo: uid),
-      _firestore.collection('court_play_stats').where('uid', isEqualTo: uid),
-      _firestore.collection('favorite_courts').where('uid', isEqualTo: uid),
-      _firestore
-          .collection('blocked_users')
-          .where('blockerUid', isEqualTo: uid),
-      _firestore.collection('notifications').where('targetUid', isEqualTo: uid),
-      _firestore
-          .collection('content_reports')
-          .where('reporterUid', isEqualTo: uid),
-      _firestore.collection('meetups').where('createdBy', isEqualTo: uid),
-    ];
-    final documents = <DocumentReference<Map<String, dynamic>>>{};
-    for (final query in deleteQueries) {
-      final snapshot = await query.limit(400).get();
-      documents.addAll(snapshot.docs.map((doc) => doc.reference));
-    }
-
-    final joinedMeetups = await _firestore
-        .collection('meetups')
-        .where('participantUids', arrayContains: uid)
-        .limit(200)
-        .get();
-    final batch = _firestore.batch();
-    for (final doc in joinedMeetups.docs) {
-      if (doc.data()['createdBy'] != uid) {
-        batch.update(doc.reference, {
-          'participantUids': FieldValue.arrayRemove([uid]),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      }
-    }
-    for (final ref in documents) {
-      batch.delete(ref);
-    }
-    batch.delete(_firestore.collection('active_play_sessions').doc(uid));
-    if (profile.username?.isNotEmpty == true) {
-      batch.delete(_firestore.collection('usernames').doc(profile.username));
-    }
-    batch.delete(_firestore.collection('private_users').doc(uid));
-    batch.delete(_firestore.collection('users').doc(uid));
-    await batch.commit();
-
     try {
-      await currentUser.delete();
-    } on FirebaseAuthException catch (error) {
-      if (error.code == 'requires-recent-login') {
-        throw const BackcourtException('로그아웃 후 다시 로그인해서 탈퇴를 완료해주세요.');
-      }
-      rethrow;
+      await _apiClient.deleteAccount();
+      await _auth.signOut();
+    } on BackcourtApiException catch (error) {
+      throw BackcourtException(error.message);
     }
   }
 }

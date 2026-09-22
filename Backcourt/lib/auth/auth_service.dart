@@ -10,7 +10,20 @@ class AuthService {
   final FirebaseAuth _firebaseAuth;
   bool _googleInitialized = false;
 
-  Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
+  Stream<User?> get authStateChanges => _firebaseAuth.userChanges();
+
+  static const phoneLoginEnabled = bool.fromEnvironment(
+    'ENABLE_PHONE_LOGIN',
+    defaultValue: false,
+  );
+  static const kakaoLoginEnabled = bool.fromEnvironment(
+    'ENABLE_KAKAO_LOGIN',
+    defaultValue: false,
+  );
+  static const appleLoginEnabled = bool.fromEnvironment(
+    'ENABLE_APPLE_LOGIN',
+    defaultValue: false,
+  );
 
   Future<void> signInWithApple() async {
     final appleProvider = AppleAuthProvider()..addScope('email');
@@ -55,6 +68,20 @@ class AuthService {
       password: password,
     );
     await credential.user?.sendEmailVerification();
+  }
+
+  Future<void> sendPasswordReset(String email) =>
+      _firebaseAuth.sendPasswordResetEmail(email: email);
+
+  Future<void> resendEmailVerification() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) throw const AuthFlowException('로그인이 필요해요.');
+    await user.sendEmailVerification();
+  }
+
+  Future<bool> reloadEmailVerification() async {
+    await _firebaseAuth.currentUser?.reload();
+    return _firebaseAuth.currentUser?.emailVerified ?? false;
   }
 
   Future<String> sendPhoneCode(String phoneNumber) async {

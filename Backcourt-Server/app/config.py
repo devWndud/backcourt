@@ -11,6 +11,9 @@ class Settings:
     admin_static_dir: Path
     site_static_dir: Path
     allowed_origins: tuple[str, ...]
+    cloudinary_cloud_name: str
+    cloudinary_api_key: str
+    cloudinary_api_secret: str
 
     @classmethod
     def from_environment(cls) -> "Settings":
@@ -35,6 +38,9 @@ class Settings:
                 )
             ),
             allowed_origins=origins,
+            cloudinary_cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", "djrcsqpux"),
+            cloudinary_api_key=os.getenv("CLOUDINARY_API_KEY", ""),
+            cloudinary_api_secret=os.getenv("CLOUDINARY_API_SECRET", ""),
         )
 
 

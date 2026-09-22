@@ -77,7 +77,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('일상에서,\n다시 코트로.'), findsOneWidget);
-    expect(find.byKey(const ValueKey('login-kakao')), findsOneWidget);
+    expect(find.byKey(const ValueKey('login-kakao')), findsNothing);
     expect(find.byKey(const ValueKey('login-google')), findsOneWidget);
     expect(find.byKey(const ValueKey('login-direct')), findsOneWidget);
     expect(find.byKey(const ValueKey('firebase-setup-banner')), findsOneWidget);
@@ -87,7 +87,7 @@ void main() {
     expect(find.textContaining('Firebase 프로젝트 설정'), findsOneWidget);
   });
 
-  testWidgets('Apple 로그인은 iOS에서만 표시된다', (tester) async {
+  testWidgets('설정되지 않은 Apple 로그인은 표시하지 않는다', (tester) async {
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -97,7 +97,7 @@ void main() {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     await tester.pumpWidget(const BackcourtApp(firebaseReadyOverride: false));
     await tester.pump();
-    expect(find.byKey(const ValueKey('login-apple')), findsOneWidget);
+    expect(find.byKey(const ValueKey('login-apple')), findsNothing);
 
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     await tester.pumpWidget(const BackcourtApp(firebaseReadyOverride: false));
@@ -106,7 +106,7 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
-  testWidgets('핵심 탭 이동과 GPS 출석 흐름이 동작한다', (tester) async {
+  testWidgets('핵심 탭 이동과 GPS 체크인 흐름이 동작한다', (tester) async {
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -128,17 +128,17 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('nav-2')));
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('출석'), findsWidgets);
+    expect(find.text('체크인'), findsWidgets);
     expect(find.byKey(const ValueKey('court-pass-card')), findsOneWidget);
     expect(find.text('자주 가는 코트까지 1회'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('check-in-button')));
     await tester.pump();
-    expect(find.text('출석 완료'), findsOneWidget);
+    expect(find.text('체크인 완료'), findsOneWidget);
     expect(find.text('자주 가는 코트'), findsOneWidget);
-    expect(find.text('홈코트까지 5회'), findsOneWidget);
+    expect(find.text('코트 단골까지 5회'), findsOneWidget);
     final now = DateTime.now();
-    expect(find.text('${now.month}.${now.day} 출석 완료'), findsOneWidget);
+    expect(find.text('${now.month}.${now.day} 체크인 완료'), findsOneWidget);
   });
 
   testWidgets('코트 랭킹이 전체·달·주 기간을 전환한다', (tester) async {

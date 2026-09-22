@@ -6,10 +6,29 @@ from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
+from app.cleanup import cloudinary_signature, media_paths
 from app.push import PushDispatcher
 
 
 class AppTest(unittest.TestCase):
+    def test_cloudinary_cleanup_metadata_and_signature(self) -> None:
+        self.assertEqual(
+            media_paths(
+                {
+                    "photoStoragePath": "cloudinary:image:profile",
+                    "media": [
+                        {"storagePath": "cloudinary:video:post"},
+                        {"url": "https://example.com/no-path"},
+                    ],
+                }
+            ),
+            {"cloudinary:image:profile", "cloudinary:video:post"},
+        )
+        self.assertEqual(
+            cloudinary_signature("folder/file", 123, "secret"),
+            "fe73c01d50492d8b4b0af99dcb33da516c50751c",
+        )
+
     def test_health_admin_and_auth_guard(self) -> None:
         module = importlib.import_module("app.main")
         with (
@@ -32,7 +51,7 @@ class AppTest(unittest.TestCase):
                 self.assertIn("이용약관", terms.text)
                 deletion = client.get("/delete-account/")
                 self.assertEqual(deletion.status_code, 200)
-                self.assertIn("계정 삭제", deletion.text)
+                self.assertIn("계정 및 데이터 삭제", deletion.text)
                 admin = client.get("/adminnnn/")
                 self.assertEqual(admin.status_code, 200)
                 self.assertIn("빽코트 Admin", admin.text)
@@ -115,6 +134,33 @@ class AppTest(unittest.TestCase):
 
         update = reference.update.call_args.args[0]
         self.assertEqual(update["pushStatus"], "no_devices")
+
+    def test_authenticated_delete_endpoints_use_current_user(self) -> None:
+        module = importlib.import_module("app.main")
+        database = MagicMock()
+        with (
+            patch.object(module, "_initialize_firebase", return_value=database),
+            patch.object(module, "PushDispatcher") as dispatcher_type,
+            patch.object(module, "NotificationEventDispatcher") as event_dispatcher_type,
+            patch.object(module, "delete_post") as delete_post,
+            patch.object(module, "delete_account") as delete_account,
+        ):
+            dispatcher_type.return_value = MagicMock()
+            event_dispatcher_type.return_value = MagicMock()
+            module.app.dependency_overrides[module.current_user] = lambda: {
+                "uid": "user-1"
+            }
+            try:
+                with TestClient(module.app) as client:
+                    post_result = client.delete("/api/posts/post-1")
+                    self.assertEqual(post_result.status_code, 200)
+                    delete_post.assert_called_once_with(database, "user-1", "post-1")
+
+                    account_result = client.delete("/api/account")
+                    self.assertEqual(account_result.status_code, 200)
+                    delete_account.assert_called_once_with(database, "user-1")
+            finally:
+                module.app.dependency_overrides.clear()
 
 
 if __name__ == "__main__":

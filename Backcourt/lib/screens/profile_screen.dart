@@ -35,14 +35,20 @@ class ProfileScreen extends StatelessWidget {
     if (backend != null) {
       return StreamBuilder<AppUserProfile?>(
         stream: backend.watchCurrentProfile(),
-        builder: (context, profileSnapshot) => StreamBuilder<List<PostRecord>>(
-          stream: backend.watchMyPosts(),
-          builder: (context, postSnapshot) => _buildContent(
-            context,
-            profile: profileSnapshot.data,
-            posts: postSnapshot.data,
-          ),
-        ),
+        builder: (context, profileSnapshot) =>
+            StreamBuilder<UserActivityCounts>(
+              stream: backend.watchMyActivityCounts(),
+              builder: (context, activitySnapshot) =>
+                  StreamBuilder<List<PostRecord>>(
+                    stream: backend.watchMyPosts(),
+                    builder: (context, postSnapshot) => _buildContent(
+                      context,
+                      profile: profileSnapshot.data,
+                      posts: postSnapshot.data,
+                      activity: activitySnapshot.data,
+                    ),
+                  ),
+            ),
       );
     }
     return _buildContent(context);
@@ -52,6 +58,7 @@ class ProfileScreen extends StatelessWidget {
     BuildContext context, {
     AppUserProfile? profile,
     List<PostRecord>? posts,
+    UserActivityCounts? activity,
   }) {
     final backend = repository;
     return SafeArea(
@@ -69,6 +76,9 @@ class ProfileScreen extends StatelessWidget {
                 _ProfileIntro(
                   profile: profile,
                   postCount: posts?.length ?? profile?.postCount ?? 0,
+                  checkinCount:
+                      activity?.checkins ?? profile?.checkinCount ?? 0,
+                  meetupCount: activity?.meetups ?? profile?.meetupCount ?? 0,
                   onEdit: backend == null || profile == null
                       ? null
                       : () => _showProfileEditor(context, profile),
@@ -80,7 +90,12 @@ class ProfileScreen extends StatelessWidget {
                       '${DateTime.now().year}.${DateTime.now().month.toString().padLeft(2, '0')}',
                 ),
                 SizedBox(height: 15),
-                _MonthlyStats(profile: profile, repository: backend),
+                _MonthlyStats(
+                  profile: profile,
+                  repository: backend,
+                  totalCheckins:
+                      activity?.checkins ?? profile?.checkinCount ?? 0,
+                ),
                 SizedBox(height: 30),
                 _PostsHeader(
                   count: posts?.length ?? profile?.postCount ?? 0,
@@ -765,11 +780,15 @@ class _ProfileIntro extends StatelessWidget {
   const _ProfileIntro({
     required this.profile,
     required this.postCount,
+    required this.checkinCount,
+    required this.meetupCount,
     required this.onEdit,
   });
 
   final AppUserProfile? profile;
   final int postCount;
+  final int checkinCount;
+  final int meetupCount;
   final VoidCallback? onEdit;
 
   @override
@@ -861,15 +880,15 @@ class _ProfileIntro extends StatelessWidget {
             const _VerticalDivider(height: 30, horizontalMargin: 0),
             Expanded(
               child: Stat(
-                value: '${profile?.checkinCount ?? 0}',
-                label: '출석',
+                value: '$checkinCount',
+                label: '체크인',
                 align: CrossAxisAlignment.center,
               ),
             ),
             const _VerticalDivider(height: 30, horizontalMargin: 0),
             Expanded(
               child: Stat(
-                value: '${profile?.meetupCount ?? 0}',
+                value: '$meetupCount',
                 label: '약속',
                 align: CrossAxisAlignment.center,
               ),
@@ -995,10 +1014,11 @@ class _ProfileActionButton extends StatelessWidget {
 }
 
 class _MonthlyStats extends StatelessWidget {
-  const _MonthlyStats({this.profile, this.repository});
+  const _MonthlyStats({this.profile, this.repository, this.totalCheckins = 0});
 
   final AppUserProfile? profile;
   final BackcourtRepository? repository;
+  final int totalCheckins;
 
   @override
   Widget build(BuildContext context) {
@@ -1012,7 +1032,7 @@ class _MonthlyStats extends StatelessWidget {
           final index = uid == null
               ? -1
               : rankings.indexWhere((entry) => entry.uid == uid);
-          final badgeProgress = (profile?.checkinCount ?? 0) % 10;
+          final badgeProgress = totalCheckins % 10;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1021,7 +1041,7 @@ class _MonthlyStats extends StatelessWidget {
                   Expanded(
                     child: Stat(
                       value: '${checkinSnapshot.data ?? 0}회',
-                      label: '이번 달 출석',
+                      label: '이번 달 체크인',
                     ),
                   ),
                   const _VerticalDivider(height: 34),

@@ -260,10 +260,17 @@ class NotificationEventDispatcher:
             .where(filter=FieldFilter("courtId", "==", court_id))
             .limit(400)
         )
-        return {
+        targets = {
             str((snapshot.to_dict() or {}).get("uid") or "")
             for snapshot in query.stream()
         }
+        home_court_query = (
+            self._db.collection("users")
+            .where(filter=FieldFilter("homeCourtIds", "array_contains", court_id))
+            .limit(400)
+        )
+        targets.update(snapshot.id for snapshot in home_court_query.stream())
+        return targets
 
     def _document(self, collection: str, document_id: str) -> dict[str, Any]:
         data = self._optional_document(collection, document_id)

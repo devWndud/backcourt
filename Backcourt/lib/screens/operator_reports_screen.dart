@@ -115,6 +115,7 @@ class _OperatorReportsScreenState extends State<OperatorReportsScreen> {
       CourtReportType.name => '코트명이 지도 데이터에 반영됐어요.',
       CourtReportType.duplicate => '중복 코트로 처리했어요.',
       CourtReportType.closed => '폐쇄 코트로 처리했어요.',
+      CourtReportType.newCourt => '새 코트를 지도에 등록했어요.',
     };
   }
 
@@ -1008,6 +1009,7 @@ class _DecisionSheetState extends State<_DecisionSheet> {
       '승인 즉시 코트명이 “${report.requestedName ?? ''}”으로 바뀝니다.',
     CourtReportType.duplicate => '승인 즉시 해당 코트가 중복 상태로 표시됩니다.',
     CourtReportType.closed => '승인 즉시 해당 코트가 폐쇄 상태로 표시됩니다.',
+    CourtReportType.newCourt => '승인 즉시 제보된 위치에 새 코트가 등록됩니다.',
   };
 }
 
@@ -1351,6 +1353,13 @@ class _ReportMeta {
       shortLabel: '폐쇄',
       eyebrow: 'CLOSED COURT',
       title: '폐쇄 코트 제보',
+    ),
+    CourtReportType.newCourt => const _ReportMeta(
+      icon: Icons.add_location_alt_rounded,
+      color: Color(0xFF7FD8A4),
+      shortLabel: '새 코트',
+      eyebrow: 'NEW COURT',
+      title: '새 코트 제보',
     ),
   };
 

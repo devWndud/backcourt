@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,6 +14,7 @@ import 'backend/push_notification_service.dart';
 import 'firebase_options.dart';
 import 'screens/app_access_gate.dart';
 import 'screens/checkin_screen.dart';
+import 'screens/email_verification_screen.dart';
 import 'screens/feed_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/map_screen.dart';
@@ -120,6 +123,14 @@ class _AuthGateState extends State<_AuthGate> {
           options: DefaultFirebaseOptions.currentPlatform,
         );
       }
+      await FirebaseAppCheck.instance.activate(
+        providerAndroid: kDebugMode
+            ? const AndroidDebugProvider()
+            : const AndroidPlayIntegrityProvider(),
+        providerApple: kDebugMode
+            ? const AppleDebugProvider()
+            : const AppleAppAttestWithDeviceCheckFallbackProvider(),
+      );
       return true;
     } catch (_) {
       return false;
@@ -151,9 +162,16 @@ class _AuthGateState extends State<_AuthGate> {
                   authService: authService,
                 );
               }
+              final signedInUser = authSnapshot.data!;
+              final usesPassword = signedInUser.providerData.any(
+                (provider) => provider.providerId == 'password',
+              );
+              if (usesPassword && !signedInUser.emailVerified) {
+                return EmailVerificationScreen(authService: authService);
+              }
               final repository = _repository ??= BackcourtRepository();
               return _UserBootstrap(
-                user: authSnapshot.data!,
+                user: signedInUser,
                 repository: repository,
                 appBuilder: (profile) =>
                     widget.appBuilder(authService, repository, profile),
@@ -373,6 +391,14 @@ class _AppShellState extends State<AppShell> {
     setState(() => _currentIndex = tab);
   }
 
+  void _handleNotificationOpen(AppNotificationRecord notification) {
+    _handlePushOpen({
+      'type': notification.type.value,
+      'courtId': notification.courtId,
+      'entityId': notification.entityId,
+    });
+  }
+
   Future<void> _signOut() async {
     await _pushNotifications?.unregister();
     await widget.onSignOut?.call();
@@ -416,6 +442,7 @@ class _AppShellState extends State<AppShell> {
             ? null
             : _activeCourt,
         onCourtSelected: _selectCourt,
+        onNotificationOpen: _handleNotificationOpen,
       ),
       PlayScreen(
         repository: widget.repository,
@@ -544,7 +571,7 @@ class _BottomNav extends StatelessWidget {
   static const _items = [
     (Icons.map_outlined, Icons.map_rounded, '코트'),
     (Icons.sensors_outlined, Icons.sensors_rounded, '플레이'),
-    (Icons.near_me_outlined, Icons.near_me_rounded, '출석'),
+    (Icons.near_me_outlined, Icons.near_me_rounded, '체크인'),
     (Icons.dynamic_feed_outlined, Icons.dynamic_feed_rounded, '피드'),
     (Icons.person_outline_rounded, Icons.person_rounded, 'MY'),
   ];

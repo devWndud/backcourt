@@ -252,7 +252,7 @@ class _ReviewComposerSheetState extends State<ReviewComposerSheet> {
                           ),
                           SizedBox(width: 5),
                           Text(
-                            '사진 10MB · 영상 100MB · 출석 인증 리뷰',
+                            '사진 10MB · 영상 100MB · 체크인 인증 리뷰',
                             style: TextStyle(
                               color: AppColors.muted,
                               fontSize: 11,

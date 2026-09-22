@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:video_player/video_player.dart';
 
 import 'models.dart';
 
@@ -54,6 +56,17 @@ class CloudinaryMediaStore {
         isVideo ? '영상은 최대 100MB까지 올릴 수 있어요.' : '사진은 최대 10MB까지 올릴 수 있어요.',
       );
     }
+    if (isVideo) {
+      final controller = VideoPlayerController.file(File(file.path));
+      try {
+        await controller.initialize();
+        if (controller.value.duration > const Duration(seconds: 30)) {
+          throw const CloudinaryMediaException('영상은 30초까지 올릴 수 있어요.');
+        }
+      } finally {
+        await controller.dispose();
+      }
+    }
 
     final resourceType = isVideo ? 'video' : 'image';
     final uri = Uri.https(
@@ -64,11 +77,7 @@ class CloudinaryMediaStore {
       ..fields['upload_preset'] = uploadPreset.trim()
       ..fields['folder'] = 'backcourt/$folder'
       ..files.add(
-        http.MultipartFile.fromBytes(
-          'file',
-          await file.readAsBytes(),
-          filename: file.name,
-        ),
+        http.MultipartFile('file', file.openRead(), size, filename: file.name),
       );
 
     try {

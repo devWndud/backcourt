@@ -570,7 +570,7 @@ class _ConsentCard extends StatelessWidget {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      '미성년자의 위치 기반 출석 및 커뮤니티 이용 동의',
+                      '미성년자의 위치 기반 체크인 및 커뮤니티 이용 동의',
                       style: TextStyle(
                         color: AppColors.muted,
                         fontSize: 11,

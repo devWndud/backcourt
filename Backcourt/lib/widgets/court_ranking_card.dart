@@ -197,7 +197,7 @@ class _CourtRankingCardState extends State<CourtRankingCard> {
                   return const _RankingMessage(
                     icon: Icons.sports_basketball_outlined,
                     title: '기록 없음',
-                    caption: 'GPS 출석 · 플레이 기록',
+                    caption: 'GPS 체크인 · 플레이 기록',
                   );
                 }
                 return Column(

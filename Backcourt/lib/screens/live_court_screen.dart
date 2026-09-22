@@ -137,7 +137,7 @@ class _LiveCourtScreenState extends State<LiveCourtScreen> {
     final repository = widget.repository;
     if (repository == null) return _buildContent(_previewStatuses);
     return StreamBuilder<List<LiveCourtStatus>>(
-      stream: repository.watchLiveCourtStatuses(),
+      stream: repository.watchLiveCourtStatusesNear(widget.activeCourt),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _buildContent(const [], error: true);

@@ -6,13 +6,14 @@ from contextlib import asynccontextmanager
 from typing import Annotated, Any, Literal
 
 import firebase_admin
-from fastapi import Depends, FastAPI, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from firebase_admin import firestore
 from pydantic import BaseModel, Field
 
 from .config import settings
+from .cleanup import MediaCleanupError, delete_account, delete_post
 from .push import NotificationEventDispatcher, PushDispatcher
 from .security import current_user
 
@@ -146,6 +147,39 @@ def test_push(
         }
     )
     return {"status": "queued", "notificationId": reference.id}
+
+
+@app.delete("/api/posts/{post_id}")
+def remove_post(
+    post_id: str,
+    user: Annotated[dict[str, Any], Depends(current_user)],
+    database: Annotated[Any, Depends(_database)],
+) -> dict[str, str]:
+    try:
+        delete_post(database, str(user["uid"]), post_id)
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail="Post owner required") from error
+    except MediaCleanupError as error:
+        raise HTTPException(
+            status_code=503,
+            detail="미디어 삭제 설정을 확인해주세요.",
+        ) from error
+    return {"status": "deleted"}
+
+
+@app.delete("/api/account")
+def remove_account(
+    user: Annotated[dict[str, Any], Depends(current_user)],
+    database: Annotated[Any, Depends(_database)],
+) -> dict[str, str]:
+    try:
+        delete_account(database, str(user["uid"]))
+    except MediaCleanupError as error:
+        raise HTTPException(
+            status_code=503,
+            detail="미디어 삭제 설정을 확인해주세요.",
+        ) from error
+    return {"status": "deleted"}
 
 
 if settings.admin_static_dir.is_dir():

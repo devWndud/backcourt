@@ -14,6 +14,7 @@ import '../backend/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
 import '../widgets/court_ranking_card.dart';
+import '../widgets/media_gallery.dart';
 import 'notifications_sheet.dart';
 import 'review_sheet.dart';
 
@@ -34,6 +35,7 @@ class MapScreen extends StatefulWidget {
     this.onCourtSelected,
     this.pickerMode = false,
     this.onPickerClose,
+    this.onNotificationOpen,
   });
 
   final bool useRealMap;
@@ -45,6 +47,7 @@ class MapScreen extends StatefulWidget {
   final ValueChanged<CourtSummary>? onCourtSelected;
   final bool pickerMode;
   final VoidCallback? onPickerClose;
+  final ValueChanged<AppNotificationRecord>? onNotificationOpen;
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -98,8 +101,9 @@ class _MapScreenState extends State<MapScreen> {
       DraggableScrollableController();
   final Set<_CourtFilter> _activeFilters = {};
   final Map<String, String> _databaseCourtNames = {};
+  final Map<String, CourtOverride> _courtOverrides = {};
   final Map<String, _LiveMarkerSummary> _liveCourtSummaries = {};
-  StreamSubscription<Map<String, String>>? _courtNameSubscription;
+  StreamSubscription<Map<String, CourtOverride>>? _courtNameSubscription;
   StreamSubscription<List<LiveCourtStatus>>? _liveCourtSubscription;
   Completer<void>? _initialCourtNamesReady;
   SharedPreferencesAsync? _preferences;
@@ -162,17 +166,25 @@ class _MapScreenState extends State<MapScreen> {
       return;
     }
     final ready = _initialCourtNamesReady = Completer<void>();
-    _courtNameSubscription = repository.watchOperatorCourtNames().listen(
-      (names) {
+    _courtNameSubscription = repository.watchCourtOverrides().listen(
+      (overrides) {
+        _courtOverrides
+          ..clear()
+          ..addAll(overrides);
         _databaseCourtNames
           ..clear()
-          ..addAll(names);
+          ..addEntries(
+            overrides.entries
+                .where((entry) => entry.value.name.isNotEmpty)
+                .map((entry) => MapEntry(entry.key, entry.value.name)),
+          );
+        _applyCourtOverridesToIndex();
         if (!ready.isCompleted) ready.complete();
         if (!mounted) return;
         setState(() {});
         final selected = _selectedOsmCourt;
         if (selected != null) _notifyOsmCourtSelected(selected);
-        if (_searchQuery.trim().isNotEmpty) _refreshFilteredMarkers();
+        _refreshFilteredMarkers();
       },
       onError: (_) {
         if (!ready.isCompleted) ready.complete();
@@ -246,6 +258,7 @@ class _MapScreenState extends State<MapScreen> {
     );
     final geoJson = jsonDecode(rawGeoJson) as Map<String, dynamic>;
     _indexOsmCourts(geoJson);
+    _applyCourtOverridesToIndex();
 
     final courtNamesReady = _initialCourtNamesReady;
     if (courtNamesReady != null && !courtNamesReady.isCompleted) {
@@ -280,6 +293,29 @@ class _MapScreenState extends State<MapScreen> {
     _osmCourtCount = _osmCourts.length;
   }
 
+  void _applyCourtOverridesToIndex() {
+    _osmCourts.removeWhere((id, _) => id.startsWith('reported_'));
+    for (final override in _courtOverrides.values) {
+      if (!override.isCustom || override.isHidden) continue;
+      final latitude = override.latitude;
+      final longitude = override.longitude;
+      if (latitude == null || longitude == null) continue;
+      _osmCourts[override.id] = _OsmCourt(
+        featureId: override.id,
+        name: override.name.isEmpty ? '제보된 농구장' : override.name,
+        position: LatLng(latitude, longitude),
+        detail: '운영자 확인',
+        facts: const ['제보 등록'],
+        address: override.address,
+      );
+    }
+    _osmCourtCount = _osmCourts.values
+        .where(
+          (court) => !(_courtOverrides[court.featureId]?.isHidden ?? false),
+        )
+        .length;
+  }
+
   String _displayNameFor(_OsmCourt court) =>
       _databaseCourtNames[court.featureId] ?? court.name;
 
@@ -288,6 +324,7 @@ class _MapScreenState extends State<MapScreen> {
     final origin = _currentLocation;
     return _osmCourts.values
         .where((court) {
+          if (_courtOverrides[court.featureId]?.isHidden == true) return false;
           final databaseName = _databaseCourtNames[court.featureId];
           if (query.isNotEmpty &&
               !court.searchText.contains(query) &&
@@ -359,6 +396,33 @@ class _MapScreenState extends State<MapScreen> {
     });
     await _restoreSelectedCircle();
     _refreshFilteredMarkers();
+  }
+
+  Future<void> _openNewCourtReport() async {
+    final repository = widget.repository;
+    if (repository == null) {
+      _showLocationMessage('로그인 후 코트를 제보할 수 있어요.');
+      return;
+    }
+    if (_currentLocation == null) await _moveToMyLocation();
+    final location = _currentLocation;
+    if (!mounted || location == null) return;
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _NewCourtReportSheet(
+        onSubmit: (name, reason) => repository.submitNewCourtReport(
+          name: name,
+          reason: reason,
+          latitude: location.latitude,
+          longitude: location.longitude,
+        ),
+      ),
+    );
+    if (saved == true && mounted) {
+      _showLocationMessage('새 코트 제보를 보냈어요.');
+    }
   }
 
   void _clearSearch() {
@@ -1237,7 +1301,10 @@ class _MapScreenState extends State<MapScreen> {
                       const NmLogo(),
                     const Spacer(),
                     if (!widget.pickerMode)
-                      NotificationBell(repository: widget.repository),
+                      NotificationBell(
+                        repository: widget.repository,
+                        onOpen: widget.onNotificationOpen,
+                      ),
                   ],
                 ),
                 SizedBox(height: 16),
@@ -1274,6 +1341,13 @@ class _MapScreenState extends State<MapScreen> {
                         label: '내 주변 5km',
                         selected: _activeFilters.contains(_CourtFilter.nearby),
                         onTap: () => _toggleFilter(_CourtFilter.nearby),
+                      ),
+                      SizedBox(width: 8),
+                      _FilterChip(
+                        key: const ValueKey('report-new-court'),
+                        label: '코트 제보',
+                        selected: false,
+                        onTap: _openNewCourtReport,
                       ),
                     ],
                   ),
@@ -1911,7 +1985,7 @@ class _CourtDetailSheetState extends State<_CourtDetailSheet> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(saved ? '내 코트에 저장' : '내 코트에서 제거')));
+      ).showSnackBar(SnackBar(content: Text(saved ? '즐겨찾기에 저장' : '즐겨찾기에서 제거')));
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2011,7 +2085,7 @@ class _CourtDetailSheetState extends State<_CourtDetailSheet> {
                       final saved = snapshot.data ?? false;
                       return IconButton(
                         key: const ValueKey('favorite-court-button'),
-                        tooltip: '내 코트',
+                        tooltip: '즐겨찾기',
                         onPressed: _savingFavorite ? null : _toggleFavorite,
                         icon: Icon(
                           saved
@@ -2286,12 +2360,10 @@ class _ReviewPreview extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     child: SizedBox.square(
                       dimension: 72,
-                      child: media.type == 'image'
-                          ? Image.network(media.url, fit: BoxFit.cover)
-                          : ColoredBox(
-                              color: AppColors.surfaceHigh,
-                              child: Icon(Icons.play_circle_fill_rounded),
-                            ),
+                      child: MediaThumbnail(
+                        media: media,
+                        allMedia: review.media,
+                      ),
                     ),
                   );
                 },
@@ -2332,6 +2404,110 @@ class _CourtFact extends StatelessWidget {
       ),
     );
   }
+}
+
+class _NewCourtReportSheet extends StatefulWidget {
+  const _NewCourtReportSheet({required this.onSubmit});
+
+  final Future<void> Function(String name, String reason) onSubmit;
+
+  @override
+  State<_NewCourtReportSheet> createState() => _NewCourtReportSheetState();
+}
+
+class _NewCourtReportSheetState extends State<_NewCourtReportSheet> {
+  final _name = TextEditingController();
+  final _reason = TextEditingController();
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _reason.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      await widget.onSubmit(_name.text, _reason.text);
+      if (mounted) Navigator.pop(context, true);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is BackcourtException ? error.message : '제보를 보내지 못했어요.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedPadding(
+    duration: const Duration(milliseconds: 180),
+    padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+    child: Material(
+      color: AppColors.surface,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.line,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                '새 코트 제보',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '현재 위치로 접수됩니다.',
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
+              ),
+              const SizedBox(height: 18),
+              TextField(
+                controller: _name,
+                maxLength: 50,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(hintText: '코트 이름'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _reason,
+                maxLength: 200,
+                minLines: 3,
+                maxLines: 4,
+                decoration: const InputDecoration(hintText: '위치를 확인할 수 있는 설명'),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: _saving ? null : _submit,
+                child: Text(_saving ? '보내는 중' : '제보하기'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class _CourtNameRequestSheet extends StatefulWidget {
@@ -2448,6 +2624,12 @@ class _CourtNameRequestSheetState extends State<_CourtNameRequestSheet> {
         eyebrow: 'CLOSED COURT',
         title: '폐쇄 코트',
         hint: '철거 · 공사 · 출입 제한',
+      ),
+      CourtReportType.newCourt => (
+        icon: Icons.add_location_alt_rounded,
+        eyebrow: 'NEW COURT',
+        title: '새 코트',
+        hint: '지도의 코트 제보 버튼 이용',
       ),
     };
     return Padding(

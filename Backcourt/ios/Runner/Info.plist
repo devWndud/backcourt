@@ -40,7 +40,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>내 주변 농구 코트를 찾고 현장 출석을 인증하기 위해 위치가 필요합니다.</string>
+	<string>내 주변 농구 코트를 찾고 현장 체크인을 인증하기 위해 위치가 필요합니다.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>프로필 사진과 코트 피드를 촬영하기 위해 카메라가 필요합니다.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>코트 리뷰와 피드에 사진 및 영상을 첨부하기 위해 사진 보관함 접근이 필요합니다.</string>
 	<key>UIApplicationSceneManifest</key>

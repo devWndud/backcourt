@@ -126,11 +126,11 @@ class _CheckinScreenState extends State<CheckinScreen> {
         });
       }
       HapticFeedback.mediumImpact();
-      _show('출석 완료');
+      _show('체크인 완료');
     } on TimeoutException {
       _show('현재 위치를 확인하지 못했어요. 다시 시도해주세요.');
     } catch (error) {
-      _show(error is BackcourtException ? error.message : '출석 인증에 실패했어요.');
+      _show(error is BackcourtException ? error.message : '체크인에 실패했어요.');
     } finally {
       if (mounted) setState(() => _checking = false);
     }
@@ -159,7 +159,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        '출석',
+                        '체크인',
                         style: TextStyle(
                           color: AppColors.text,
                           fontSize: 28,
@@ -205,7 +205,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                   checkedIn: _checkedIn,
                 ),
                 SizedBox(height: 30),
-                _SectionHeader(title: '출석 랭킹', trailing: '${now.month}월'),
+                _SectionHeader(title: '체크인 랭킹', trailing: '${now.month}월'),
                 SizedBox(height: 12),
                 _AttendanceRankingCard(repository: widget.repository),
               ],
@@ -310,8 +310,8 @@ class _CheckInPanel extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             checkedIn
-                ? '${now.month}.${now.day} 출석 완료'
-                : '코트 100m 안에서 출석할 수 있어요',
+                ? '${now.month}.${now.day} 체크인 완료'
+                : '코트 100m 안에서 체크인할 수 있어요',
             style: TextStyle(
               color: checkedIn ? AppColors.success : AppColors.soft,
               fontSize: 13,
@@ -354,7 +354,7 @@ class _CheckInPanel extends StatelessWidget {
                       ),
                     )
                   : Text(
-                      checkedIn ? '출석 완료' : 'GPS로 출석하기',
+                      checkedIn ? '체크인 완료' : 'GPS로 체크인',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
@@ -425,15 +425,15 @@ class _MonthlyCourtSurface extends StatelessWidget {
 
   String get _status {
     if (count >= 12) return '이번 달 완성';
-    if (count >= 10) return '홈코트';
+    if (count >= 10) return '코트 단골';
     if (count >= 5) return '자주 가는 코트';
-    return '출석 중';
+    return '체크인 중';
   }
 
   String get _next {
     if (count >= 12) return '다음 달에 다시 시작';
     if (count >= 10) return '완성까지 ${12 - count}회';
-    if (count >= 5) return '홈코트까지 ${10 - count}회';
+    if (count >= 5) return '코트 단골까지 ${10 - count}회';
     return '자주 가는 코트까지 ${5 - count}회';
   }
 
@@ -625,7 +625,7 @@ class _PlayRecordCardState extends State<_PlayRecordCard> {
     final repository = widget.repository;
     if (repository == null) return;
     if (_activeSession == null && !widget.checkedIn) {
-      _show('GPS 출석 필요');
+      _show('GPS 체크인 필요');
       return;
     }
     setState(() => _busy = true);
@@ -907,7 +907,7 @@ class _PlayRecordSurface extends StatelessWidget {
                           ? '기록 종료'
                           : checkedIn
                           ? '플레이 기록 시작'
-                          : '출석 후 기록 가능',
+                          : '체크인 후 기록 가능',
                       style: TextStyle(fontWeight: FontWeight.w900),
                     ),
             ),
@@ -975,7 +975,7 @@ class _AttendanceRankingSurface extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            '아직 출석 기록이 없어요',
+            '아직 체크인 기록이 없어요',
             style: TextStyle(color: AppColors.muted, fontSize: 12),
           ),
         ),

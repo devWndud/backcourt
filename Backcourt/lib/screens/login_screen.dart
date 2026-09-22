@@ -99,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SizedBox(height: 14),
               Text(
-                '코트 · LIVE · 출석 · 피드',
+                '코트 · LIVE · 체크인 · 피드',
                 style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 15,
@@ -136,20 +136,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 SizedBox(height: 12),
               ],
-              _LoginButton(
-                key: const ValueKey('login-kakao'),
-                label: '카카오로 시작하기',
-                background: const Color(0xFFFEE500),
-                foreground: const Color(0xFF191919),
-                leading: Text(
-                  'K',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+              if (AuthService.kakaoLoginEnabled) ...[
+                _LoginButton(
+                  key: const ValueKey('login-kakao'),
+                  label: '카카오로 시작하기',
+                  background: const Color(0xFFFEE500),
+                  foreground: const Color(0xFF191919),
+                  leading: Text(
+                    'K',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                  ),
+                  onTap: () => _showMessage('카카오 로그인 서버 설정을 확인해주세요.'),
                 ),
-                onTap: () =>
-                    _showMessage('카카오 로그인은 FastAPI 인증 서버를 연결한 뒤 활성화돼요.'),
-              ),
-              SizedBox(height: 10),
-              if (defaultTargetPlatform == TargetPlatform.iOS) ...[
+                SizedBox(height: 10),
+              ],
+              if (defaultTargetPlatform == TargetPlatform.iOS &&
+                  AuthService.appleLoginEnabled) ...[
                 _LoginButton(
                   key: const ValueKey('login-apple'),
                   label: 'Apple로 계속하기',
@@ -181,7 +183,9 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 10),
               _LoginButton(
                 key: const ValueKey('login-direct'),
-                label: '이메일 또는 전화번호',
+                label: AuthService.phoneLoginEnabled
+                    ? '이메일 또는 전화번호'
+                    : '이메일로 계속하기',
                 background: AppColors.surfaceHigh,
                 foreground: AppColors.text,
                 leading: Icon(Icons.mail_outline_rounded, size: 20),
@@ -374,9 +378,23 @@ class _DirectAuthSheetState extends State<DirectAuthSheet> {
     );
   }
 
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
+    if (!email.contains('@')) {
+      setState(() => _error = '이메일 주소를 먼저 입력해주세요.');
+      return;
+    }
+    await _run(
+      () => widget.authService.sendPasswordReset(email),
+      closeAfterSuccess: false,
+      successMessage: '비밀번호 재설정 메일을 보냈어요.',
+    );
+  }
+
   Future<void> _run(
     Future<void> Function() action, {
     bool closeAfterSuccess = true,
+    String? successMessage,
   }) async {
     if (_loading) return;
     setState(() {
@@ -385,6 +403,11 @@ class _DirectAuthSheetState extends State<DirectAuthSheet> {
     });
     try {
       await action();
+      if (successMessage != null && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(successMessage)));
+      }
       if (closeAfterSuccess && mounted) Navigator.pop(context);
     } catch (error) {
       if (mounted) setState(() => _error = _authMessage(error));
@@ -461,14 +484,16 @@ class _DirectAuthSheetState extends State<DirectAuthSheet> {
                   ],
                 ),
                 SizedBox(height: 20),
-                _DirectAuthModeSwitch(
-                  value: _mode,
-                  onChanged: (value) => setState(() {
-                    _mode = value;
-                    _error = null;
-                  }),
-                ),
-                SizedBox(height: 18),
+                if (AuthService.phoneLoginEnabled) ...[
+                  _DirectAuthModeSwitch(
+                    value: _mode,
+                    onChanged: (value) => setState(() {
+                      _mode = value;
+                      _error = null;
+                    }),
+                  ),
+                  SizedBox(height: 18),
+                ],
                 if (emailMode) ...[
                   TextField(
                     key: const ValueKey('auth-email-field'),
@@ -509,7 +534,6 @@ class _DirectAuthSheetState extends State<DirectAuthSheet> {
                   ),
                   SizedBox(height: 8),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         _createAccount ? '이미 계정이 있나요?' : '처음이신가요?',
@@ -531,6 +555,17 @@ class _DirectAuthSheetState extends State<DirectAuthSheet> {
                         ),
                         child: Text(_createAccount ? '로그인' : '회원가입'),
                       ),
+                      const Spacer(),
+                      if (!_createAccount)
+                        TextButton(
+                          onPressed: _loading ? null : _resetPassword,
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.muted,
+                            padding: const EdgeInsets.symmetric(horizontal: 7),
+                            minimumSize: const Size(0, 40),
+                          ),
+                          child: const Text('비밀번호 찾기'),
+                        ),
                     ],
                   ),
                 ] else ...[

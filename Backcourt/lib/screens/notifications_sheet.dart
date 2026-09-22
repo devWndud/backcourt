@@ -9,9 +9,10 @@ import '../widgets/branded_sheet.dart';
 import '../widgets/common.dart';
 
 class NotificationBell extends StatelessWidget {
-  const NotificationBell({super.key, required this.repository});
+  const NotificationBell({super.key, required this.repository, this.onOpen});
 
   final BackcourtRepository? repository;
+  final ValueChanged<AppNotificationRecord>? onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +35,8 @@ class NotificationBell extends StatelessWidget {
               icon: count > 0
                   ? Icons.notifications_rounded
                   : Icons.notifications_none_rounded,
-              onTap: () => showNotificationsSheet(context, backend),
+              onTap: () =>
+                  showNotificationsSheet(context, backend, onOpen: onOpen),
             ),
             if (count > 0)
               Positioned(
@@ -70,18 +72,21 @@ class NotificationBell extends StatelessWidget {
 
 Future<void> showNotificationsSheet(
   BuildContext context,
-  BackcourtRepository repository,
-) => showModalBottomSheet<void>(
+  BackcourtRepository repository, {
+  ValueChanged<AppNotificationRecord>? onOpen,
+}) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
   backgroundColor: Colors.transparent,
-  builder: (context) => _NotificationsSheet(repository: repository),
+  builder: (context) =>
+      _NotificationsSheet(repository: repository, onOpen: onOpen),
 );
 
 class _NotificationsSheet extends StatefulWidget {
-  const _NotificationsSheet({required this.repository});
+  const _NotificationsSheet({required this.repository, this.onOpen});
 
   final BackcourtRepository repository;
+  final ValueChanged<AppNotificationRecord>? onOpen;
 
   @override
   State<_NotificationsSheet> createState() => _NotificationsSheetState();
@@ -138,8 +143,17 @@ class _NotificationsSheetState extends State<_NotificationsSheet> {
                     ),
                     itemCount: items.length,
                     separatorBuilder: (_, _) => SizedBox(height: 9),
-                    itemBuilder: (context, index) =>
-                        _NotificationTile(notification: items[index]),
+                    itemBuilder: (context, index) => _NotificationTile(
+                      notification: items[index],
+                      onTap: () async {
+                        await widget.repository.markNotificationRead(
+                          items[index].id,
+                        );
+                        if (!context.mounted) return;
+                        Navigator.pop(context);
+                        widget.onOpen?.call(items[index]);
+                      },
+                    ),
                   );
                 },
               ),
@@ -179,9 +193,10 @@ class _EmptyNotifications extends StatelessWidget {
 }
 
 class _NotificationTile extends StatelessWidget {
-  const _NotificationTile({required this.notification});
+  const _NotificationTile({required this.notification, required this.onTap});
 
   final AppNotificationRecord notification;
+  final VoidCallback onTap;
 
   IconData get _icon => switch (notification.type) {
     AppNotificationType.live => Icons.sensors_rounded,
@@ -202,72 +217,76 @@ class _NotificationTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(15),
-    decoration: BoxDecoration(
-      color: notification.isUnread
-          ? AppColors.accent.withValues(alpha: .09)
-          : AppColors.surfaceHigh,
-      borderRadius: BorderRadius.circular(19),
-      border: Border.all(
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(19),
+    child: Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
         color: notification.isUnread
-            ? AppColors.accent.withValues(alpha: .2)
-            : AppColors.text.withValues(alpha: .055),
-      ),
-    ),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: AppColors.accent.withValues(alpha: .13),
-            borderRadius: BorderRadius.circular(13),
-          ),
-          child: Icon(_icon, color: AppColors.accent, size: 19),
+            ? AppColors.accent.withValues(alpha: .09)
+            : AppColors.surfaceHigh,
+        borderRadius: BorderRadius.circular(19),
+        border: Border.all(
+          color: notification.isUnread
+              ? AppColors.accent.withValues(alpha: .2)
+              : AppColors.text.withValues(alpha: .055),
         ),
-        SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      notification.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: .13),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(_icon, color: AppColors.accent, size: 19),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        notification.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    _time,
-                    style: TextStyle(color: AppColors.muted, fontSize: 10),
-                  ),
-                ],
-              ),
-              SizedBox(height: 5),
-              Text(
-                notification.body,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: AppColors.soft,
-                  fontSize: 11,
-                  height: 1.4,
-                  fontWeight: FontWeight.w600,
+                    SizedBox(width: 8),
+                    Text(
+                      _time,
+                      style: TextStyle(color: AppColors.muted, fontSize: 10),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                SizedBox(height: 5),
+                Text(
+                  notification.body,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: AppColors.soft,
+                    fontSize: 11,
+                    height: 1.4,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }

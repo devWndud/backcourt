@@ -155,7 +155,8 @@ class AppUserProfile {
 enum CourtReportType {
   name('name'),
   duplicate('duplicate'),
-  closed('closed');
+  closed('closed'),
+  newCourt('new_court');
 
   const CourtReportType(this.value);
 
@@ -164,8 +165,48 @@ enum CourtReportType {
   static CourtReportType fromValue(Object? value) => switch (value) {
     'duplicate' => duplicate,
     'closed' => closed,
+    'new_court' => newCourt,
     _ => name,
   };
+}
+
+class CourtOverride {
+  const CourtOverride({
+    required this.id,
+    required this.name,
+    required this.status,
+    this.latitude,
+    this.longitude,
+    this.address,
+    this.source,
+  });
+
+  factory CourtOverride.fromDocument(
+    DocumentSnapshot<Map<String, dynamic>> document,
+  ) {
+    final data = document.data() ?? const <String, dynamic>{};
+    final location = data['location'];
+    return CourtOverride(
+      id: document.id,
+      name: (data['name'] as String?)?.trim() ?? '',
+      status: data['status'] as String? ?? 'active',
+      latitude: location is GeoPoint ? location.latitude : null,
+      longitude: location is GeoPoint ? location.longitude : null,
+      address: data['address'] as String?,
+      source: data['source'] as String?,
+    );
+  }
+
+  final String id;
+  final String name;
+  final String status;
+  final double? latitude;
+  final double? longitude;
+  final String? address;
+  final String? source;
+
+  bool get isHidden => status == 'closed' || status == 'duplicate';
+  bool get isCustom => source == 'operator' || source == 'user_report';
 }
 
 enum CourtReportStatus {
@@ -313,6 +354,13 @@ class RankingEntry {
   final String uid;
   final String displayName;
   final int count;
+}
+
+class UserActivityCounts {
+  const UserActivityCounts({required this.checkins, required this.meetups});
+
+  final int checkins;
+  final int meetups;
 }
 
 class ActivePlaySession {

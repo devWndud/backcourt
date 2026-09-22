@@ -835,7 +835,7 @@ class _SelectedCourtCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '내 코트',
+                  '홈코트',
                   style: TextStyle(
                     color: AppColors.accent,
                     fontSize: 10,

@@ -120,6 +120,7 @@ const typeMeta = {
   name: { label: "코트명 수정", icon: "Aa", className: "" },
   duplicate: { label: "중복 코트", icon: "⧉", className: "type-icon--duplicate" },
   closed: { label: "폐쇄 코트", icon: "×", className: "type-icon--closed" },
+  new_court: { label: "새 코트", icon: "+", className: "" },
 };
 
 const statusMeta = {
@@ -754,6 +755,17 @@ function renderContentReportDetail(report) {
 }
 
 function comparisonTemplate(report, currentOfficialName) {
+  if (report.reportType === "new_court") {
+    return `
+      <section class="detail-section">
+        <h3>등록 예정</h3>
+        <div class="comparison">
+          <div class="comparison-card"><span>현재 데이터</span><strong>미등록</strong></div>
+          <div class="comparison-arrow">→</div>
+          <div class="comparison-card comparison-card--new"><span>승인 시</span><strong>${escapeHtml(report.requestedName || report.currentName || "-")}</strong></div>
+        </div>
+      </section>`;
+  }
   if (report.reportType === "name") {
     return `
       <section class="detail-section">
@@ -819,6 +831,7 @@ function openDecisionDialog(decision) {
 function approvalDescription(report) {
   if (state.mode === "content") return "신고된 콘텐츠가 삭제되고 신고가 처리 완료됩니다.";
   if (report.reportType === "name") return `코트명이 “${report.requestedName || "-"}”(으)로 즉시 변경됩니다.`;
+  if (report.reportType === "new_court") return "제보된 위치에 새 코트가 즉시 등록됩니다.";
   if (report.reportType === "closed") return "해당 코트가 폐쇄 상태로 전환됩니다.";
   return "해당 코트가 중복 상태로 전환됩니다.";
 }
@@ -897,6 +910,22 @@ async function reviewReport(report, decision, resolutionNote) {
       statusUpdatedBy: state.user.uid,
     };
 
+    if (request.reportType === "new_court") {
+      const requestedName = String(request.requestedName || request.currentName || "").trim();
+      const location = request.location;
+      if (requestedName.length < 2 || !location) throw new Error("새 코트 정보가 완전하지 않아요.");
+      transaction.set(courtRef, {
+        name: requestedName,
+        location,
+        source: "user_report",
+        nameSource: "operator",
+        status: "active",
+        createdByReportId: report.id,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      return;
+    }
     if (request.reportType === "name") {
       const requestedName = String(request.requestedName || "").trim();
       if (requestedName.length < 2) throw new Error("변경할 코트명이 올바르지 않아요.");

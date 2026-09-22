@@ -50,12 +50,19 @@ class _MeetupsScreenState extends State<MeetupsScreen> {
     _GameData('내일 10:00', '서울숲 농구장', '3 vs 3 · 반코트', 5, 6, '5.2km', '초급'),
   ];
 
+  Stream<List<MeetupRecord>> _meetupStream(BackcourtRepository repository) =>
+      switch (_filter) {
+        1 => repository.watchTodayMeetups(),
+        2 => repository.watchCourtMeetups(widget.activeCourt.id),
+        _ => repository.watchMeetups(),
+      };
+
   @override
   Widget build(BuildContext context) {
     final repository = widget.repository;
     if (repository != null) {
       return StreamBuilder<List<MeetupRecord>>(
-        stream: repository.watchMeetups(),
+        stream: _meetupStream(repository),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return _buildContent(const [], error: true);

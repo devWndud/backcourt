@@ -135,7 +135,7 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('nav-2')));
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('출석'), findsWidgets);
+    expect(find.text('체크인'), findsWidgets);
     await binding.takeScreenshot('03_checkin');
 
     await tester.tap(find.byKey(const ValueKey('nav-3')));

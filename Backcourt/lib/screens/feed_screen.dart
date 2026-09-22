@@ -9,6 +9,7 @@ import '../backend/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/branded_sheet.dart';
 import '../widgets/common.dart';
+import '../widgets/media_gallery.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({
@@ -148,6 +149,21 @@ class _FeedScreenState extends State<FeedScreen> {
         .toList(growable: false);
   }
 
+  Stream<List<PostRecord>> _postStream(BackcourtRepository repository) {
+    if (_selectedFeed == 2) {
+      return repository.watchCourtPosts(widget.activeCourt.id);
+    }
+    final location = _feedLocation;
+    if (_selectedFeed == 1 && location != null) {
+      return repository.watchNearbyPosts(
+        latitude: location.latitude,
+        longitude: location.longitude,
+      );
+    }
+    if (_selectedFeed == 1) return Stream.value(const <PostRecord>[]);
+    return repository.watchPosts();
+  }
+
   Future<void> _openComments(PostRecord post) async {
     final repository = widget.repository;
     if (repository == null) return;
@@ -275,7 +291,7 @@ class _FeedScreenState extends State<FeedScreen> {
               stream: repository.watchBlockedUserIds(),
               builder: (context, blockedSnapshot) =>
                   StreamBuilder<List<PostRecord>>(
-                    stream: repository.watchPosts(),
+                    stream: _postStream(repository),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         return const SliverToBoxAdapter(
@@ -553,7 +569,7 @@ class _PostCard extends StatelessWidget {
           if (post.media.isNotEmpty)
             AspectRatio(
               aspectRatio: 1.1,
-              child: _PostMedia(media: post.media.first),
+              child: MediaGallery(media: post.media),
             )
           else
             AspectRatio(
@@ -611,30 +627,6 @@ class _PostCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PostMedia extends StatelessWidget {
-  const _PostMedia({required this.media});
-
-  final MediaItem media;
-
-  @override
-  Widget build(BuildContext context) {
-    if (media.type == 'video') {
-      return ColoredBox(
-        color: AppColors.surfaceHigh,
-        child: Center(child: Icon(Icons.play_circle_fill_rounded, size: 58)),
-      );
-    }
-    return Image.network(
-      media.url,
-      fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => ColoredBox(
-        color: AppColors.surfaceHigh,
-        child: Center(child: Icon(Icons.broken_image_outlined)),
       ),
     );
   }

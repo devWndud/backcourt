@@ -441,6 +441,51 @@ class BackcourtRepository {
             snapshot.exists ? AppUserProfile.fromDocument(snapshot) : null,
       );
 
+  Future<List<AppUserProfile>> searchPublicProfiles(String query) async {
+    final keyword = query.trim().replaceFirst(RegExp(r'^@+'), '');
+    if (keyword.isEmpty) return const [];
+
+    final usernameKeyword = keyword.toLowerCase();
+    final collection = _firestore.collection('public_profiles');
+    final snapshots = await Future.wait([
+      collection
+          .orderBy('username')
+          .startAt([usernameKeyword])
+          .endAt(['$usernameKeyword\uf8ff'])
+          .limit(20)
+          .get(),
+      collection
+          .orderBy('displayName')
+          .startAt([keyword])
+          .endAt(['$keyword\uf8ff'])
+          .limit(20)
+          .get(),
+    ]);
+
+    final profiles = <String, AppUserProfile>{};
+    for (final snapshot in snapshots) {
+      for (final document in snapshot.docs) {
+        if (document.id == currentUid) continue;
+        profiles[document.id] = AppUserProfile.fromDocument(document);
+      }
+    }
+    final results = profiles.values.toList(growable: false);
+    results.sort((a, b) {
+      int score(AppUserProfile profile) {
+        final username = profile.username?.toLowerCase();
+        if (username == usernameKeyword) return 0;
+        if (profile.displayName == keyword) return 1;
+        if (username?.startsWith(usernameKeyword) == true) return 2;
+        return 3;
+      }
+
+      final scoreCompare = score(a).compareTo(score(b));
+      if (scoreCompare != 0) return scoreCompare;
+      return a.displayName.compareTo(b.displayName);
+    });
+    return results;
+  }
+
   Stream<List<PostRecord>> watchUserPosts(String uid) => _firestore
       .collection('posts')
       .where('uid', isEqualTo: uid)

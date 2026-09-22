@@ -139,6 +139,11 @@ void main() {
     expect(find.text('코트 단골까지 5회'), findsOneWidget);
     final now = DateTime.now();
     expect(find.text('${now.month}.${now.day} 체크인 완료'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('nav-3')));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const ValueKey('feed-account-search')), findsOneWidget);
+    expect(find.text('이름 또는 @아이디'), findsOneWidget);
   });
 
   testWidgets('코트 랭킹이 전체·달·주 기간을 전환한다', (tester) async {

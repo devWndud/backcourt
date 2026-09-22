@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -34,6 +35,10 @@ class FeedScreen extends StatefulWidget {
 class _FeedScreenState extends State<FeedScreen> {
   int _selectedFeed = 0;
   final Set<String> _demoLikes = {};
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
+  String _searchQuery = '';
+  Future<List<AppUserProfile>>? _searchFuture;
   Position? _feedLocation;
   bool _locatingNearby = false;
 
@@ -50,6 +55,59 @@ class _FeedScreenState extends State<FeedScreen> {
       createdAt: DateTime.now(),
     ),
   ];
+
+  bool get _isSearching => _searchQuery.isNotEmpty;
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    final query = value.trim();
+    setState(() {
+      _searchQuery = query;
+      _searchFuture = null;
+    });
+    if (query.isEmpty) return;
+    _searchDebounce = Timer(const Duration(milliseconds: 280), () {
+      if (!mounted || query != _searchController.text.trim()) return;
+      final repository = widget.repository;
+      setState(() {
+        _searchFuture = repository?.searchPublicProfiles(query);
+      });
+    });
+  }
+
+  void _clearSearch() {
+    _searchDebounce?.cancel();
+    _searchController.clear();
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _searchQuery = '';
+      _searchFuture = null;
+    });
+  }
+
+  void _openSearchProfile(AppUserProfile profile) {
+    final repository = widget.repository;
+    if (repository == null || profile.uid == repository.currentUid) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => UserProfileScreen(
+          repository: repository,
+          uid: profile.uid,
+          fallbackName: profile.displayName,
+          fallbackUsername: profile.username,
+          fallbackPhotoUrl: profile.photoUrl,
+        ),
+      ),
+    );
+  }
 
   Future<void> _openComposer() async {
     final repository = widget.repository;
@@ -287,21 +345,38 @@ class _FeedScreenState extends State<FeedScreen> {
                     onTap: _openComposer,
                   ),
                 ),
-                SizedBox(height: 22),
-                _FeedTabs(selected: _selectedFeed, onChanged: _selectFeed),
-                if (_selectedFeed == 2 || _selectedFeed == 3) ...[
-                  SizedBox(height: 20),
-                  _ActiveCourtBanner(
-                    court: widget.activeCourt,
-                    nearby: _selectedFeed == 2,
-                    locating: _locatingNearby,
-                  ),
+                SizedBox(height: 18),
+                _AccountSearchBar(
+                  controller: _searchController,
+                  onChanged: _onSearchChanged,
+                  onClear: _clearSearch,
+                ),
+                if (!_isSearching) ...[
+                  SizedBox(height: 22),
+                  _FeedTabs(selected: _selectedFeed, onChanged: _selectFeed),
+                  if (_selectedFeed == 2 || _selectedFeed == 3) ...[
+                    SizedBox(height: 20),
+                    _ActiveCourtBanner(
+                      court: widget.activeCourt,
+                      nearby: _selectedFeed == 2,
+                      locating: _locatingNearby,
+                    ),
+                  ],
                 ],
                 SizedBox(height: 20),
               ],
             ),
           ),
-          if (repository == null)
+          if (_isSearching)
+            repository == null
+                ? const SliverToBoxAdapter(
+                    child: _FeedMessage(label: '계정 검색은 로그인 후 사용할 수 있어요.'),
+                  )
+                : _ProfileSearchSliver(
+                    future: _searchFuture,
+                    onTap: _openSearchProfile,
+                  )
+          else if (repository == null)
             _PostSliver(
               posts: _filterPosts(_demoPosts, const {}, const {}),
               currentUid: null,
@@ -356,6 +431,170 @@ class _FeedScreenState extends State<FeedScreen> {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _AccountSearchBar extends StatelessWidget {
+  const _AccountSearchBar({
+    required this.controller,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    height: 48,
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: AppColors.text.withValues(alpha: .06)),
+    ),
+    child: TextField(
+      key: const ValueKey('feed-account-search'),
+      controller: controller,
+      onChanged: onChanged,
+      textInputAction: TextInputAction.search,
+      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+      decoration: InputDecoration(
+        border: InputBorder.none,
+        hintText: '이름 또는 @아이디',
+        hintStyle: TextStyle(
+          color: AppColors.muted,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+        prefixIcon: Icon(
+          Icons.search_rounded,
+          color: AppColors.muted,
+          size: 22,
+        ),
+        suffixIcon: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller,
+          builder: (context, value, _) => value.text.isEmpty
+              ? const SizedBox.shrink()
+              : IconButton(
+                  onPressed: onClear,
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: AppColors.muted,
+                    size: 19,
+                  ),
+                ),
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 14),
+      ),
+    ),
+  );
+}
+
+class _ProfileSearchSliver extends StatelessWidget {
+  const _ProfileSearchSliver({required this.future, required this.onTap});
+
+  final Future<List<AppUserProfile>>? future;
+  final ValueChanged<AppUserProfile> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    if (future == null) {
+      return const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.only(top: 20),
+          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        ),
+      );
+    }
+    return FutureBuilder<List<AppUserProfile>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const SliverToBoxAdapter(
+            child: _FeedMessage(label: '검색 결과를 불러오지 못했어요.'),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+          );
+        }
+        final profiles = snapshot.data!;
+        if (profiles.isEmpty) {
+          return const SliverToBoxAdapter(
+            child: _FeedMessage(label: '검색 결과 없음'),
+          );
+        }
+        return SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+          sliver: SliverList.separated(
+            itemCount: profiles.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final profile = profiles[index];
+              return Material(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(18),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () => onTap(profile),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        UserAvatar(size: 44, photoUrl: profile.photoUrl),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                profile.displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              if (profile.username?.isNotEmpty == true) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  '@${profile.username}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: AppColors.muted,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: AppColors.muted,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

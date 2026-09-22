@@ -531,11 +531,24 @@ class BackcourtRepository {
       await ref.delete();
       return;
     }
-    await ref.set({
+    final profile = await getCurrentProfile();
+    final eventRef = _firestore.collection('notification_events').doc();
+    final batch = _firestore.batch();
+    batch.set(ref, {
       'followerUid': currentUid,
       'followingUid': uid,
       'createdAt': FieldValue.serverTimestamp(),
     });
+    batch.set(
+      eventRef,
+      _notificationEventData(
+        type: AppNotificationType.follow,
+        title: '새 팔로워',
+        body: '${profile.displayName}님이 회원님을 팔로우했어요.',
+        entityId: ref.id,
+      ),
+    );
+    await batch.commit();
   }
 
   String friendshipId(String uid) {

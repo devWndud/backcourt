@@ -22,6 +22,7 @@ import 'screens/player_setup_screen.dart';
 import 'screens/play_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/profile_setup_screen.dart';
+import 'screens/user_profile_screen.dart';
 import 'theme/app_theme.dart';
 
 class BackcourtApp extends StatelessWidget {
@@ -383,6 +384,24 @@ class _AppShellState extends State<AppShell> {
   void _handlePushOpen(Map<String, dynamic> data) {
     if (!mounted) return;
     final type = data['type']?.toString();
+    if (type == 'follow') {
+      final actorUid = data['actorUid']?.toString() ?? '';
+      final repository = widget.repository;
+      if (repository != null &&
+          actorUid.isNotEmpty &&
+          actorUid != repository.currentUid) {
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => UserProfileScreen(
+              repository: repository,
+              uid: actorUid,
+              fallbackName: '플레이어',
+            ),
+          ),
+        );
+      }
+      return;
+    }
     final tab = switch (type) {
       'live' || 'meetup' || 'meetup_join' || 'meetup_cancelled' => 1,
       'comment' => 3,
@@ -397,6 +416,7 @@ class _AppShellState extends State<AppShell> {
       'type': notification.type.value,
       'courtId': notification.courtId,
       'entityId': notification.entityId,
+      'actorUid': notification.actorUid,
     });
   }
 

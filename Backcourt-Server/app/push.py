@@ -211,6 +211,16 @@ class NotificationEventDispatcher:
             title = "새 댓글"
             body = f"{source.get('authorName') or '플레이어'} · {source.get('text') or ''}"
             notification_entity_id = str(source.get("postId") or entity_id)
+        elif event_type == "follow":
+            source = self._document("follows", entity_id)
+            follower_uid = str(source.get("followerUid") or "")
+            following_uid = str(source.get("followingUid") or "")
+            if follower_uid != actor_uid or following_uid == actor_uid:
+                raise ValueError("Invalid follow event")
+            profile = self._document("users", actor_uid)
+            targets = {following_uid}
+            title = "새 팔로워"
+            body = f"{profile.get('displayName') or '플레이어'}님이 회원님을 팔로우했어요."
         elif event_type in {"friend_request", "friend_accepted"}:
             source = self._document("friendships", entity_id)
             requester_uid = str(source.get("requesterUid") or "")
@@ -488,7 +498,7 @@ class PushDispatcher:
             "notificationId": notification_id,
             "type": str(data.get("type") or "live"),
         }
-        for key in ("courtId", "entityId"):
+        for key in ("courtId", "entityId", "actorUid"):
             value = data.get(key)
             if value is not None:
                 result[key] = str(value)

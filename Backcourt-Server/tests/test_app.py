@@ -113,6 +113,7 @@ class AppTest(unittest.TestCase):
                 "type": "comment",
                 "courtId": "court-1",
                 "entityId": "post-1",
+                "actorUid": "user-1",
             },
         )
         self.assertEqual(
@@ -122,6 +123,7 @@ class AppTest(unittest.TestCase):
                 "type": "comment",
                 "courtId": "court-1",
                 "entityId": "post-1",
+                "actorUid": "user-1",
             },
         )
 
@@ -185,6 +187,31 @@ class AppTest(unittest.TestCase):
         self.assertEqual(targets, ["user-1"])
         self.assertEqual(notification["type"], "friend_accepted")
         self.assertEqual(notification["title"], "친구가 됐어요")
+
+    def test_follow_notification_targets_followed_user(self) -> None:
+        dispatcher = NotificationEventDispatcher(MagicMock())
+        dispatcher._document = MagicMock(
+            side_effect=lambda collection, document_id: {
+                "follows": {
+                    "followerUid": "user-1",
+                    "followingUid": "user-2",
+                },
+                "users": {"displayName": "민수"},
+            }[collection]
+        )
+
+        notification, targets = dispatcher._resolve_event(
+            {
+                "type": "follow",
+                "actorUid": "user-1",
+                "entityId": "user-1_user-2",
+            }
+        )
+
+        self.assertEqual(targets, ["user-2"])
+        self.assertEqual(notification["type"], "follow")
+        self.assertEqual(notification["title"], "새 팔로워")
+        self.assertEqual(notification["actorUid"], "user-1")
 
     def test_authenticated_delete_endpoints_use_current_user(self) -> None:
         module = importlib.import_module("app.main")

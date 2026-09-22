@@ -635,6 +635,7 @@ enum AppNotificationType {
   meetupJoin('meetup_join'),
   meetupCancelled('meetup_cancelled'),
   comment('comment'),
+  follow('follow'),
   friendRequest('friend_request'),
   friendAccepted('friend_accepted'),
   courtReport('court_report');
@@ -648,6 +649,7 @@ enum AppNotificationType {
     'meetup_join' => meetupJoin,
     'meetup_cancelled' => meetupCancelled,
     'comment' => comment,
+    'follow' => follow,
     'friend_request' => friendRequest,
     'friend_accepted' => friendAccepted,
     'court_report' => courtReport,

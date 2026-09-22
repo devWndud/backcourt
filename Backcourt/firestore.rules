@@ -589,6 +589,12 @@ service cloud.firestore {
         ).data;
       }
 
+      function followSource() {
+        return getAfter(
+          /databases/$(database)/documents/follows/$(request.resource.data.entityId)
+        ).data;
+      }
+
       function friendshipAfter() {
         return getAfter(
           /databases/$(database)/documents/friendships/$(request.resource.data.entityId)
@@ -604,7 +610,8 @@ service cloud.firestore {
           && request.resource.data.actorUid == request.auth.uid
           && request.resource.data.type in [
             'live', 'meetup', 'meetup_join', 'meetup_cancelled',
-            'comment', 'friend_request', 'friend_accepted', 'court_report'
+            'comment', 'follow', 'friend_request', 'friend_accepted',
+            'court_report'
           ]
           && request.resource.data.title is string
           && request.resource.data.title.size() >= 1
@@ -658,6 +665,15 @@ service cloud.firestore {
           && commentSource().createdAt == request.time;
       }
 
+      function validFollowEvent() {
+        return request.resource.data.type == 'follow'
+          && followSource().followerUid == request.auth.uid
+          && followSource().followingUid != request.auth.uid
+          && request.resource.data.entityId == request.auth.uid + '_'
+            + followSource().followingUid
+          && followSource().createdAt == request.time;
+      }
+
       function validFriendRequestEvent() {
         return request.resource.data.type == 'friend_request'
           && friendshipAfter().requesterUid == request.auth.uid
@@ -703,6 +719,7 @@ service cloud.firestore {
           || validMeetupJoinEvent()
           || validMeetupCancelledEvent()
           || validCommentEvent()
+          || validFollowEvent()
           || validFriendRequestEvent()
           || validFriendAcceptedEvent()
           || validReportEvent());

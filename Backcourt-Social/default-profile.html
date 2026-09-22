@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>빽코트 기본 프로필</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #11110f;
+        color: #f5f5f1;
+      }
+
+      * { box-sizing: border-box; }
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 32px; }
+      main { width: min(760px, 100%); }
+      .top { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 16px; }
+      h1 { margin: 0; font-size: clamp(24px, 4vw, 38px); line-height: 1; letter-spacing: -0.05em; }
+      p { margin: 8px 0 0; color: #91918b; font-size: 14px; }
+      button { flex: 0 0 auto; border: 0; border-radius: 999px; padding: 12px 17px; background: #ff6a14; color: #11110f; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
+      .board { display: grid; grid-template-columns: minmax(0, 1fr) 148px; gap: 16px; padding: 16px; border: 1px solid #2a2a27; border-radius: 26px; background: #181816; }
+      .avatar { overflow: hidden; aspect-ratio: 1; border-radius: 20px; background: #ebece8; }
+      .avatar svg, .circle svg, .mini svg { display: block; width: 100%; height: 100%; }
+      .samples { display: flex; flex-direction: column; justify-content: space-between; gap: 18px; }
+      .sample-label { margin-bottom: 9px; color: #777772; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+      .circle { overflow: hidden; width: 100%; aspect-ratio: 1; border: 1px solid #32322f; border-radius: 50%; background: #ebece8; }
+      .mini-row { display: flex; align-items: center; gap: 10px; }
+      .mini { overflow: hidden; width: 44px; aspect-ratio: 1; border-radius: 50%; background: #ebece8; }
+      .lines { display: grid; gap: 7px; flex: 1; }
+      .line { height: 8px; border-radius: 10px; background: #2b2b28; }
+      .line:last-child { width: 62%; background: #242421; }
+
+      @media (max-width: 620px) {
+        body { padding: 20px; }
+        .top { align-items: center; }
+        .board { grid-template-columns: 1fr; }
+        .samples { flex-direction: row; align-items: center; }
+        .circle { width: 110px; }
+        .sample-label { display: none; }
+        .mini-row { flex: 1; }
+      }
+
+      body.export { display: block; padding: 0; background: #ebece8; }
+      body.export main { width: 100vw; }
+      body.export .top, body.export .samples { display: none; }
+      body.export .board { display: block; padding: 0; border: 0; border-radius: 0; }
+      body.export .avatar { width: 100vw; height: 100vh; border-radius: 0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="top">
+        <div>
+          <h1>기본 프로필</h1>
+          <p>이름 대신 사용하는 빽코트 기본 이미지</p>
+        </div>
+        <button id="download" type="button">PNG 저장</button>
+      </div>
+
+      <section class="board">
+        <div class="avatar" data-avatar></div>
+        <aside class="samples">
+          <div>
+            <div class="sample-label">circular crop</div>
+            <div class="circle" data-avatar></div>
+          </div>
+          <div class="mini-row">
+            <div class="mini" data-avatar></div>
+            <div class="lines" aria-hidden="true"><div class="line"></div><div class="line"></div></div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <template id="avatar-template">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" role="img" aria-label="빽코트 기본 프로필 이미지">
+        <rect width="1080" height="1080" fill="#EBECE8"/>
+        <circle cx="540" cy="407" r="166" fill="#B8BAB5"/>
+        <path fill="#B8BAB5" d="M186 1030c12-219 160-376 354-376s342 157 354 376H186Z"/>
+      </svg>
+    </template>
+
+    <script>
+      const template = document.querySelector('#avatar-template');
+      document.querySelectorAll('[data-avatar]').forEach((target) => target.append(template.content.cloneNode(true)));
+      if (new URLSearchParams(location.search).has('export')) document.body.classList.add('export');
+      document.querySelector('#download').addEventListener('click', () => {
+        const svg = template.content.querySelector('svg').cloneNode(true);
+        svg.setAttribute('width', '2048');
+        svg.setAttribute('height', '2048');
+        const source = new XMLSerializer().serializeToString(svg);
+        const url = URL.createObjectURL(new Blob([source], { type: 'image/svg+xml;charset=utf-8' }));
+        const image = new Image();
+        image.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = 2048;
+          canvas.height = 2048;
+          canvas.getContext('2d').drawImage(image, 0, 0, 2048, 2048);
+          URL.revokeObjectURL(url);
+          const link = document.createElement('a');
+          link.download = 'backcourt-default-profile.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        };
+        image.src = url;
+      });
+    </script>
+  </body>
+</html>

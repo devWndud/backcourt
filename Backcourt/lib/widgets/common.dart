@@ -2,6 +2,23 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
+const defaultProfileAsset = 'assets/images/default_profile.png';
+
+class DefaultProfileImage extends StatelessWidget {
+  const DefaultProfileImage({super.key, this.size});
+
+  final double? size;
+
+  @override
+  Widget build(BuildContext context) => Image.asset(
+    defaultProfileAsset,
+    width: size,
+    height: size,
+    fit: BoxFit.cover,
+    filterQuality: FilterQuality.medium,
+  );
+}
+
 class NmLogo extends StatelessWidget {
   const NmLogo({super.key, this.compact = false});
 
@@ -113,15 +130,8 @@ class RoundIconButton extends StatelessWidget {
 }
 
 class UserAvatar extends StatelessWidget {
-  const UserAvatar({
-    super.key,
-    required this.initials,
-    this.size = 34,
-    this.color,
-    this.photoUrl,
-  });
+  const UserAvatar({super.key, this.size = 34, this.color, this.photoUrl});
 
-  final String initials;
   final double size;
   final Color? color;
   final String? photoUrl;
@@ -144,36 +154,11 @@ class UserAvatar extends StatelessWidget {
               width: size,
               height: size,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) =>
-                  _AvatarInitials(initials: initials, size: size, color: color),
+              errorBuilder: (_, _, _) => DefaultProfileImage(size: size),
             )
-          : _AvatarInitials(initials: initials, size: size, color: color),
+          : DefaultProfileImage(size: size),
     );
   }
-}
-
-class _AvatarInitials extends StatelessWidget {
-  const _AvatarInitials({
-    required this.initials,
-    required this.size,
-    required this.color,
-  });
-
-  final String initials;
-  final double size;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Text(
-      initials,
-      style: TextStyle(
-        color: color == null ? AppColors.text : AppColors.onAccent,
-        fontWeight: FontWeight.w900,
-        fontSize: size * .28,
-      ),
-    ),
-  );
 }
 
 class AvatarStack extends StatelessWidget {
@@ -184,13 +169,6 @@ class AvatarStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const labels = ['JH', 'MK', 'SO', 'YU'];
-    const colors = [
-      Color(0xFFE9FF6B),
-      Color(0xFFFFC0AD),
-      Color(0xFF92D7FF),
-      Color(0xFFE1C5FF),
-    ];
     return SizedBox(
       width: size + (count - 1) * (size * .62),
       height: size,
@@ -199,11 +177,7 @@ class AvatarStack extends StatelessWidget {
           count,
           (index) => Positioned(
             left: index * (size * .62),
-            child: UserAvatar(
-              initials: labels[index % labels.length],
-              size: size,
-              color: colors[index % colors.length],
-            ),
+            child: UserAvatar(size: size),
           ),
         ),
       ),

@@ -536,11 +536,7 @@ class _PostCard extends StatelessWidget {
             padding: const EdgeInsets.all(15),
             child: Row(
               children: [
-                UserAvatar(
-                  initials: post.authorName.characters.take(2).toString(),
-                  size: 36,
-                  photoUrl: post.authorPhotoUrl,
-                ),
+                UserAvatar(size: 36, photoUrl: post.authorPhotoUrl),
                 SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -977,11 +973,7 @@ class _CommentTile extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      UserAvatar(
-        initials: comment.authorName.characters.take(2).toString(),
-        size: 34,
-        photoUrl: comment.authorPhotoUrl,
-      ),
+      UserAvatar(size: 34, photoUrl: comment.authorPhotoUrl),
       SizedBox(width: 10),
       Expanded(
         child: Column(

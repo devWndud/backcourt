@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../backend/backcourt_repository.dart';
 import '../backend/models.dart';
 import '../theme/app_theme.dart';
+import '../widgets/common.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({
@@ -282,7 +283,6 @@ class _ProfilePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasName = name.isNotEmpty;
-    final initial = hasName ? name.substring(0, 1).toUpperCase() : '?';
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -312,14 +312,8 @@ class _ProfilePreview extends StatelessWidget {
                 width: 1.5,
               ),
             ),
-            child: Text(
-              initial,
-              style: TextStyle(
-                color: AppColors.onAccent,
-                fontSize: 23,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
+            clipBehavior: Clip.antiAlias,
+            child: const DefaultProfileImage(size: 58),
           ),
           SizedBox(width: 15),
           Expanded(

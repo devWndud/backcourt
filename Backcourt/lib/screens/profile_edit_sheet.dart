@@ -9,6 +9,7 @@ import '../backend/backcourt_repository.dart';
 import '../backend/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/branded_sheet.dart';
+import '../widgets/common.dart';
 
 class ProfileEditSheet extends StatefulWidget {
   const ProfileEditSheet({
@@ -205,7 +206,6 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
                     children: [
                       Center(
                         child: _EditableAvatar(
-                          displayName: _nameController.text,
                           currentPhotoUrl: widget.profile.photoUrl,
                           selectedPhoto: _profilePhoto,
                           onTap: _pickProfilePhoto,
@@ -330,13 +330,11 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
 
 class _EditableAvatar extends StatelessWidget {
   const _EditableAvatar({
-    required this.displayName,
     required this.currentPhotoUrl,
     required this.selectedPhoto,
     required this.onTap,
   });
 
-  final String displayName;
   final String? currentPhotoUrl;
   final XFile? selectedPhoto;
   final VoidCallback onTap;
@@ -405,19 +403,7 @@ class _EditableAvatar extends StatelessWidget {
     return _fallback();
   }
 
-  Widget _fallback() => ColoredBox(
-    color: AppColors.accentSoft,
-    child: Center(
-      child: Text(
-        displayName.characters.take(2).toString(),
-        style: TextStyle(
-          color: AppColors.onAccent,
-          fontSize: 23,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    ),
-  );
+  Widget _fallback() => const DefaultProfileImage();
 }
 
 class _ProfileField extends StatelessWidget {

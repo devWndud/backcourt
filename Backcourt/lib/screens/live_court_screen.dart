@@ -545,11 +545,7 @@ class _LiveStatusCard extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            UserAvatar(
-              initials: status.displayName.characters.first.toUpperCase(),
-              size: 40,
-              color: status.activity.color,
-            ),
+            UserAvatar(size: 40, color: status.activity.color),
             SizedBox(width: 12),
             Expanded(
               child: Column(

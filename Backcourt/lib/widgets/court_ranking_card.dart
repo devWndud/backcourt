@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../backend/backcourt_repository.dart';
 import '../backend/models.dart';
 import '../theme/app_theme.dart';
+import 'common.dart';
 
 typedef CourtRankingStream =
     Stream<List<MonthlyPlayStat>> Function(CourtRankingPeriod period);
@@ -293,21 +294,7 @@ class _RankingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = stat.displayName.trim().isEmpty ? '플레이어' : stat.displayName;
     final photoUrl = stat.photoUrl;
-    final fallback = ColoredBox(
-      color: rank == 1
-          ? AppColors.accentSoft
-          : AppColors.text.withValues(alpha: .08),
-      child: Center(
-        child: Text(
-          name.characters.take(1).toString(),
-          style: TextStyle(
-            color: rank == 1 ? AppColors.onAccent : AppColors.soft,
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ),
-    );
+    const fallback = DefaultProfileImage();
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),

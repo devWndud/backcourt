@@ -640,12 +640,7 @@ class _BlockedUsersSheet extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            UserAvatar(
-                              initials: user.displayName.characters
-                                  .take(2)
-                                  .toString(),
-                              size: 36,
-                            ),
+                            UserAvatar(size: 36),
                             SizedBox(width: 11),
                             Expanded(
                               child: Text(
@@ -806,11 +801,7 @@ class _ProfileIntro extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _ProfileAvatar(
-              displayName: displayName,
-              photoUrl: profile?.photoUrl,
-              onTap: onEdit,
-            ),
+            _ProfileAvatar(photoUrl: profile?.photoUrl, onTap: onEdit),
             SizedBox(width: 15),
             Expanded(
               child: Column(
@@ -926,31 +917,14 @@ class _ProfileIntro extends StatelessWidget {
 }
 
 class _ProfileAvatar extends StatelessWidget {
-  const _ProfileAvatar({
-    required this.displayName,
-    required this.photoUrl,
-    required this.onTap,
-  });
+  const _ProfileAvatar({required this.photoUrl, required this.onTap});
 
-  final String displayName;
   final String? photoUrl;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final fallback = ColoredBox(
-      color: AppColors.accentSoft,
-      child: Center(
-        child: Text(
-          displayName.characters.take(2).toString(),
-          style: TextStyle(
-            color: AppColors.onAccent,
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ),
-    );
+    const fallback = DefaultProfileImage();
     final avatar = Container(
       width: 76,
       height: 76,

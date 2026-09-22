@@ -9,6 +9,7 @@ import 'package:backcourt/backend/models.dart';
 import 'package:backcourt/backend/push_notification_service.dart';
 import 'package:backcourt/screens/operator_reports_screen.dart';
 import 'package:backcourt/screens/map_screen.dart';
+import 'package:backcourt/screens/home_court_setup_screen.dart';
 import 'package:backcourt/screens/player_setup_screen.dart';
 import 'package:backcourt/theme/app_theme.dart';
 import 'package:backcourt/widgets/court_ranking_card.dart';
@@ -293,6 +294,64 @@ void main() {
     await tester.pump();
     expect(pickedCourt?.id, 'sample-0');
     expect(pickedCourt?.name, '한강 시민공원 농구장');
+  });
+
+  testWidgets('홈코트가 비어 있으면 지도에서 최대 3개를 선택해 저장한다', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    const courts = [
+      CourtSummary(
+        id: 'court-1',
+        name: '천안시청 농구장',
+        latitude: 36.8151,
+        longitude: 127.1139,
+      ),
+      CourtSummary(
+        id: 'court-2',
+        name: '종합운동장 농구장',
+        latitude: 36.8181,
+        longitude: 127.1112,
+      ),
+      CourtSummary(
+        id: 'court-3',
+        name: '신부공원 농구장',
+        latitude: 36.8211,
+        longitude: 127.1512,
+      ),
+    ];
+    var pickerIndex = 0;
+    List<CourtSummary>? savedCourts;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: HomeCourtSetupScreen(
+          pickerOverride: (_) async => courts[pickerIndex++],
+          saveOverride: (selected) async => savedCourts = selected,
+        ),
+      ),
+    );
+
+    expect(find.text('자주 가는 코트'), findsOneWidget);
+    expect(find.text('0/3'), findsOneWidget);
+    for (var index = 0; index < 3; index++) {
+      await tester.tap(find.byKey(const ValueKey('home-court-setup-add')));
+      await tester.pumpAndSettle();
+    }
+
+    expect(find.text('3/3'), findsOneWidget);
+    expect(find.byKey(const ValueKey('home-court-setup-add')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('home-court-setup-save')));
+    await tester.pump();
+
+    expect(savedCourts?.map((court) => court.id), [
+      'court-1',
+      'court-2',
+      'court-3',
+    ]);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('코트 미선택 안내를 누르면 코트 탭으로 이동한다', (tester) async {

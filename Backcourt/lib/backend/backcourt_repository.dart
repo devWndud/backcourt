@@ -262,6 +262,39 @@ class BackcourtRepository {
     }, SetOptions(merge: true));
   }
 
+  Future<void> saveHomeCourts(List<CourtSummary> selectedCourts) async {
+    final courts = <CourtSummary>[];
+    final seenIds = <String>{};
+    for (final court in selectedCourts) {
+      if (seenIds.add(court.id)) courts.add(court);
+    }
+    if (courts.isEmpty || courts.length > 3) {
+      throw const BackcourtException('홈코트는 1~3개 선택해주세요.');
+    }
+    for (final court in courts) {
+      _requireSavedCourt(court);
+    }
+    final homeCourtData = _courtProfileData(courts.first);
+    final homeCourtsData = courts
+        .map(_courtProfileData)
+        .toList(growable: false);
+    final batch = _firestore.batch();
+    batch.set(_currentUserRef, {
+      'homeCourt': homeCourtData,
+      'homeCourts': homeCourtsData,
+      'homeCourtIds': courts.map((court) => court.id).toList(growable: false),
+      'lastActiveCourt': homeCourtData,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    batch.set(_currentPublicProfileRef, {
+      'uid': currentUid,
+      'homeCourt': homeCourtData,
+      'homeCourts': homeCourtsData,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    await batch.commit();
+  }
+
   Future<void> addHomeCourt(CourtSummary court) async {
     _requireSavedCourt(court);
     await _firestore.runTransaction((transaction) async {

@@ -16,6 +16,7 @@ import 'screens/app_access_gate.dart';
 import 'screens/checkin_screen.dart';
 import 'screens/email_verification_screen.dart';
 import 'screens/feed_screen.dart';
+import 'screens/home_court_setup_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/map_screen.dart';
 import 'screens/player_setup_screen.dart';
@@ -250,6 +251,9 @@ class _UserBootstrapState extends State<_UserBootstrap> {
                 repository: widget.repository,
                 profile: profile,
               );
+            }
+            if (profile.homeCourts.isEmpty) {
+              return HomeCourtSetupScreen(repository: widget.repository);
             }
             return widget.appBuilder(profile);
           },
